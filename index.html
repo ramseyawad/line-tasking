@@ -450,7 +450,10 @@ th.today,td.today{background:#FFFBEB}
   #jobs.tiles .jobrow{grid-area:j;border-left:1px solid var(--line)}
   #jobs.tiles .jh{border-bottom:0}
 }
-.acbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.acwrap{position:sticky;top:var(--hdrH,60px);z-index:19;background:rgba(241,244,248,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--line,#E2E8F0)}
+.acbar{display:flex;flex-wrap:wrap;gap:5px;max-width:1600px;margin:0 auto;padding:7px 20px}
+@media(max-width:760px){.acbar{flex-wrap:nowrap;overflow-x:auto;padding:6px 12px}.acbar button{flex:0 0 auto}}
+
 .acbar button{position:relative;flex:1 1 0;min-width:44px;font:inherit;font-size:13px;font-weight:800;padding:7px 4px;border-radius:8px;border:1px solid var(--line,#E2E8F0);background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.05)}
 .acbar button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
 .acbar button:disabled{background:#F1F4F8;color:#B6C0CD;box-shadow:none;cursor:default}
@@ -460,7 +463,7 @@ th.today,td.today{background:#FFFBEB}
 .acbar button.aog{box-shadow:0 0 0 2px #DC2626}
 .acbar button i{position:absolute;top:-6px;right:-5px;font-style:normal;font-size:10px;background:var(--ink,#0F172A);color:#fff;border-radius:99px;padding:0 5px;line-height:15px}
 .acbar button[data-jump="Off Aircraft"]{flex:1.6 1 0}
-.job{scroll-margin-top:80px}
+.job{scroll-margin-top:calc(var(--hdrH,60px) + var(--acH,46px) + 12px)}
 .job.flash{animation:jflash 1.6s ease-out}
 @keyframes jflash{0%,40%{box-shadow:0 0 0 4px #3B82F6}100%{box-shadow:var(--sh)}}
 </style>
@@ -485,6 +488,7 @@ th.today,td.today{background:#FFFBEB}
     <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
   </div>
 </header>
+<div class="acwrap" id="acWrap"><div class="acbar" id="acBar"></div></div>
 
 <main>
 <!-- BOARD -->
@@ -498,7 +502,6 @@ th.today,td.today{background:#FFFBEB}
   </div>
   <div class="shiftbar" id="shiftBar"></div>
   <div class="tradestrip" id="tradeStrip"></div>
-  <div class="acbar" id="acBar"></div>
   <div class="grid">
     <div class="stack">
       <div class="card">
@@ -1089,7 +1092,10 @@ function addTag(t){const v=t.value.trim();if(!v)return;const id=t.dataset.tagadd
 $("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.dataset?.tagadd&&e.key==="Enter"){e.preventDefault();addTag(t)}});
 
 
+const sizeBars=()=>{const r=document.documentElement.style;r.setProperty("--hdrH",document.querySelector("header").offsetHeight+"px");r.setProperty("--acH",$("#acWrap").offsetHeight+"px")};
+addEventListener("resize",sizeBars);setTimeout(sizeBars,0);
 $("#acBar").addEventListener("click",e=>{const b=e.target.closest("button[data-jump]");if(!b)return;const t=b.dataset.jump;
+  if($("#tab-board").classList.contains("hide"))document.querySelector('nav button[data-tab="board"]').click();
   const find=()=>document.querySelector(`#jobs .job[data-tail="${t}"]`);
   if(!find()){$("#q").value="";setFilter("active")}
   const el=find();if(!el)return;
