@@ -209,6 +209,41 @@ tr:last-child td{border-bottom:0}
 .msec{padding:12px 14px;border-top:1px solid var(--line);background:#FAFBFD}
 .msec .engbar{margin-bottom:8px}
 .jr .hint{font-size:12.5px;color:var(--mute);font-style:italic;padding:4px 0}
+/* shifts, notes, handover, diary */
+.shiftbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:10px 12px;margin-bottom:16px}
+.stabs{display:flex;gap:4px;background:#F1F4F8;padding:3px;border-radius:10px}
+.stab{font:inherit;font-weight:700;font-size:13px;border:0;background:transparent;color:var(--mute);padding:7px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.stab.live{background:var(--ink);color:#fff}
+.stab.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#22C55E;box-shadow:0 0 6px #22C55E}
+.stab.past{color:var(--green)}
+.stab:disabled{cursor:default;opacity:.55}
+.shiftinfo{font-size:12.5px;color:var(--mute)}
+.shiftinfo b{color:var(--ink)}
+.notesbox{border:0;border-radius:0 0 var(--r) var(--r);padding:12px 16px;min-height:110px;resize:vertical;font-size:13.5px;line-height:1.5}
+.notesbox:focus{box-shadow:inset 0 0 0 2px rgba(37,99,235,.25)}
+.hosum{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;line-height:1.5}
+.hogrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.hogrid{grid-template-columns:1fr}}
+.hoside h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink2)}
+.sig{width:100%;height:110px;border:1.5px dashed var(--line2);border-radius:10px;background:#fff;touch-action:none;cursor:crosshair;display:block}
+.sig.na{opacity:.35;pointer-events:none}
+.sigbar{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
+.honext{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.honext .lbl{font-size:12px;font-weight:800;color:var(--mute);text-transform:uppercase}
+.honext input,.honext select{width:auto}
+.drow{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.drow:last-child{border-bottom:0}
+.dbadge{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-weight:900;color:#fff;font-size:16px;flex:none}
+.dbadge.E{background:#CA8A04}.dbadge.L{background:#2563EB}.dbadge.N{background:#4F46E5}
+.drow .who{flex:1;min-width:0}.drow .who b{display:block}
+.tagf{width:150px;font-size:12.5px;padding:4px 8px;font-weight:700;color:#B91C1C;border-color:transparent;background:#FEF2F2}
+.tagf:placeholder-shown{background:#F8FAFC;color:var(--mute);font-weight:500}
+.jmeta{display:flex;gap:6px;padding:0 14px 8px;flex-wrap:wrap;align-items:center;border-bottom:1px dashed var(--line)}
+.jh{border-bottom:0!important}
+.cfb{display:inline-block;font-size:10px;font-weight:900;color:#fff;background:#7C3AED;border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+.ti.info{grid-template-columns:auto 1fr!important}
+.ibadge{font-size:10px;font-weight:900;color:#0369A1;background:#E0F2FE;border-radius:4px;padding:2px 5px;margin-top:3px}
+.ti.info .tt{font-weight:500;color:var(--ink2)}
 /* per-task engineers */
 .ti{align-items:start!important}
 .ti .tst{margin-top:1px}
@@ -333,6 +368,8 @@ th.today,td.today{background:#FFFBEB}
 .jc-tasks li.t-done:before{border-color:#22C55E;background:#22C55E}
 .jc-tasks li .tw{display:block;font-size:.85vw;color:#93C5FD;font-weight:700;text-decoration:none}
 .jc-tasks li.t-done .tw{color:#475569}
+.jc-tasks li.t-info{color:#7DD3FC;font-weight:500}
+.jc-tasks li.t-info:before{border-color:#0EA5E9;border-radius:.15vw}
 .jc-tasks li em{font-style:normal;font-size:.75vw;color:#F59E0B;font-weight:800;letter-spacing:.05vw;text-transform:uppercase;margin-left:.3vw}
 .jc-who{display:flex;flex-wrap:wrap;gap:.45vw;border-top:1px solid rgba(255,255,255,.07);padding-top:.8vw}
 .jc-who span{background:rgba(255,255,255,.07);border-radius:99px;padding:.25vw .8vw;font-size:1.05vw;font-weight:700;color:#fff;white-space:nowrap}
@@ -351,6 +388,7 @@ th.today,td.today{background:#FFFBEB}
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
     <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
     <button data-tab="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History</button>
+    <button data-tab="diary"><svg class="i" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M8 7h8M8 11h6"/></svg>Diary</button>
     <button data-tab="users" id="navUsers" class="hide"><svg class="i" viewBox="0 0 24 24"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users<i class="nbadge hide" id="reqBadge">0</i></button>
   </nav>
   <div class="hdr-right">
@@ -373,6 +411,7 @@ th.today,td.today{background:#FFFBEB}
     <button class="kpi" data-k="done" style="--c:var(--green)"><span class="dot"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><div><b id="kpDone">0</b><span>Done this shift</span></div></button>
     <button class="kpi" data-k="team" style="--c:#0EA5E9"><span class="dot"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div><b id="kpTeam">0/0</b><span>Free / on shift</span></div></button>
   </div>
+  <div class="shiftbar" id="shiftBar"></div>
   <div class="tradestrip" id="tradeStrip"></div>
   <div class="grid">
     <div class="stack">
@@ -393,12 +432,22 @@ th.today,td.today{background:#FFFBEB}
         <div id="jobs"></div>
       </div>
     </div>
+    <div class="stack">
+    <div class="card">
+      <div class="card-h"><h2>Shift notes</h2><span class="sub" style="margin-left:auto">Goes into this shift's diary</span></div>
+      <textarea id="shiftNotes" class="notesbox" rows="5" placeholder="Anything that happened this shift – phone calls, decisions, who was told what…"></textarea>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Useful information</h2><span class="sub" style="margin-left:auto">Stays shift to shift</span></div>
+      <textarea id="usefulInfo" class="notesbox" rows="6" placeholder="Contacts, numbers, standing instructions…"></textarea>
+    </div>
     <div class="card" id="team">
       <div class="card-h"><h2>Team</h2><span class="sub" style="margin-left:auto" id="teamSub"></span></div>
       <div class="team-sec" style="--c:var(--green)"><h3><i></i>Available<em id="cFree">0</em></h3><div id="freeList"></div></div>
       <div class="team-sec" style="--c:var(--blue)"><h3><i></i>Working<em id="cBusy">0</em></h3><div id="busyList"></div></div>
       <div class="team-sec hide" id="dutySec" style="--c:#4F46E5"><h3><i></i>Line roles<em id="cDuty">0</em></h3><div id="dutyList"></div></div>
       <details class="team-sec offs" style="--c:#CBD5E1"><summary><h3 style="margin:0"><i></i>Off shift<em id="cOff">0</em></h3></summary><div id="offList" style="margin-top:8px"></div></details>
+    </div>
     </div>
   </div>
 </section>
@@ -475,6 +524,14 @@ th.today,td.today{background:#FFFBEB}
     </div>
   </div>
 </section>
+<!-- DIARY -->
+<section id="tab-diary" class="hide">
+  <div class="card">
+    <div class="card-h"><h2>Shift diary</h2><span class="sub" style="margin-left:auto">Locked record of every handover – view or export to PDF</span></div>
+    <div id="diaryList"></div>
+  </div>
+</section>
+
 <!-- USERS (admin) -->
 <section id="tab-users" class="hide">
   <div class="grid" style="grid-template-columns:minmax(0,1fr) 340px">
@@ -545,9 +602,11 @@ th.today,td.today{background:#FFFBEB}
     <div class="jh">
       <select id="nTail" class="tailsel"></select>
       <label class="bayf">(<span>BAY</span><input id="nBay" placeholder="–">)</label>
+      <input id="nTag" class="tagf" placeholder="Status e.g. AOG, NS3">
+      <input id="nLsj" class="tagf" style="width:110px" placeholder="LSJ set">
     </div>
     <div id="nSummary"></div>
-    <div class="jr"><div class="jl">Job</div><div class="jtask"><textarea id="nTask" rows="3" placeholder="One task per line, e.g.&#10;3,6,7 day GOOPs&#10;Re A/F toilet"></textarea></div></div>
+    <div class="jr"><div class="jl">Job</div><div class="jtask"><textarea id="nTask" rows="3" placeholder="One task per line, e.g.&#10;3,6,7 day GOOPs&#10;Re A/F toilet&#10;INFO AD harnesses expire 01/12  (lines starting INFO are notes, not tasks)"></textarea></div></div>
     <div class="msec">
       <div class="engbar"><select id="nTrade"></select><label class="switch"><input type="checkbox" id="nBusy"> Include busy</label><span class="selcount" id="nSelCount"></span></div>
       <div id="nEng" class="picker"></div>
@@ -561,6 +620,35 @@ th.today,td.today{background:#FFFBEB}
   <div class="card-b"><table class="mntbl"><thead><tr><th></th><th>Target</th><th>Minimum</th></tr></thead><tbody id="mnRows"></tbody></table>
   <p class="sub" style="margin:10px 0 0">Green = at or above target · Amber = below target · Red = below minimum manning. Leave blank to just show the count.</p>
   <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="mnCancel">Cancel</button><button class="btn pri" id="mnSave">Save</button></div></div>
+</div></div>
+<div id="hoModal" class="modal hide"><div class="mcard card" style="width:min(820px,100%)">
+  <div class="mhead"><h2>Hand over shift</h2><span class="sub" id="hoSub"></span><button class="btn icon" id="hoClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b">
+    <div id="hoSummary" class="hosum"></div>
+    <div class="hogrid">
+      <div class="hoside" data-side="off"><h3>Going off shift</h3>
+        <label class="f">Name</label><input id="hoOffName" placeholder="Rank & name">
+        <label class="f" style="margin-top:8px">Signature</label><canvas class="sig" id="sigOff" width="640" height="200"></canvas>
+        <div class="sigbar"><button class="linkbtn" data-clear="sigOff">Clear</button><label class="switch"><input type="checkbox" id="hoOffNA"> Not available to sign</label></div>
+        <input id="hoOffWhy" class="hide" placeholder="Reason / signed on behalf by…">
+      </div>
+      <div class="hoside" data-side="on"><h3>Coming on shift</h3>
+        <label class="f">Name</label><input id="hoOnName" placeholder="Rank & name">
+        <label class="f" style="margin-top:8px">Signature</label><canvas class="sig" id="sigOn" width="640" height="200"></canvas>
+        <div class="sigbar"><button class="linkbtn" data-clear="sigOn">Clear</button><label class="switch"><input type="checkbox" id="hoOnNA"> Not available to sign</label></div>
+        <input id="hoOnWhy" class="hide" placeholder="Reason / signed on behalf by…">
+      </div>
+    </div>
+    <div class="honext"><span class="lbl">Next shift</span><input type="date" id="hoDate"><select id="hoType"><option value="E">Earlies</option><option value="L">Lates</option><option value="N">Nights</option></select><label class="switch"><input type="checkbox" id="hoRoster" checked> Put next shift's people on from the roster</label></div>
+    <div id="hoErr" class="gmsg hide" style="margin-top:12px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="hoCancel">Cancel</button><button class="btn pri" id="hoGo">Sign &amp; hand over</button></div>
+  </div>
+</div></div>
+<div id="csModal" class="modal hide"><div class="mcard card" style="width:min(420px,100%)">
+  <div class="mhead"><h2>Correct current shift</h2><button class="btn icon" id="csClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><p class="sub" style="margin-top:0">Use this if the app has the wrong shift or date. Nothing is handed over.</p>
+    <div style="display:flex;gap:8px"><input type="date" id="csDate"><select id="csType"><option value="E">Earlies</option><option value="L">Lates</option><option value="N">Nights</option></select></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="csCancel">Cancel</button><button class="btn pri" id="csSave">Save</button></div></div>
 </div></div>
 <div id="display" class="hide">
   <button class="db-exit" id="dbExit">✕ Exit (Esc)</button>
@@ -622,10 +710,11 @@ function setOnShift(en,on){en.onShift=on;if(!on){const ts=now();D.jobs.filter(ac
 /* ---------- tabs & clock ---------- */
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{window.scrollTo(0,0);
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
-  ["board","shift","history","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));
-  render();
+  ["board","shift","history","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="diary")loadDiary();
+  render();loadDiary();
 });
-const tick=()=>{const d=new Date(),h=d.getHours();$("#clock").textContent=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});$("#shiftName").textContent=(h>=6&&h<18?"Early shift · 06–18":"Late shift · 18–06")};
+const tick=()=>{const d=new Date();$("#clock").textContent=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});if(D.shift)$("#shiftName").textContent=SHIFT_NAME[D.shift.type]+" · "+new Date(D.shift.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})};
+const SHIFT_NAME={E:"Earlies",L:"Lates",N:"Nights"};
 tick();setInterval(tick,15000);
 
 /* ---------- board ---------- */
@@ -634,9 +723,9 @@ $("#addJob").onclick=()=>{
   const task=$("#nTask").value.trim();
   if(!task){$("#nTask").focus();return}
   const engs=[...PICK].filter(id=>eng(id)?.onShift);
-  D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),task,status:engs.length?"planned":"open",
+  D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),task,status:engs.length?"planned":"open",
     created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null}))});
-  $("#nTask").value="";$("#nBay").value="";
+  $("#nTask").value="";$("#nBay").value="";$("#nTag").value="";$("#nLsj").value="";
   PICK.clear();closeNew();
   save();toast("Job added – "+D.jobs[D.jobs.length-1].tail);$("#nTask").focus();
 };
@@ -684,7 +773,7 @@ function complete(jobId){
   const j=job(jobId);const t=now();
   j.started=j.started||t;
   j.assignments.forEach(a=>{if(!a.to){a.from=a.from||j.started;a.to=t}});
-  items(j).forEach(x=>{if(x.s!=="done"){x.s="done";x.at=t}});
+  items(j).forEach(x=>{if(!x.info&&x.s!=="done"){x.s="done";x.at=t}});
   j.status="done";j.completed=t;save();toast(j.tail+" complete",()=>{reopen(jobId)});
 }
 function reopen(jobId){
@@ -699,11 +788,15 @@ function del(jobId){
 function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&!val){render();return}if(j[field]!==val){j[field]=val;j.edited=now()}if(field==="task"){items(j);EDIT.delete(jobId)}save()}
 // Each line of a job's task box is its own task with a status: todo → work → done
 const EDIT=new Set();
+const INFO_RE=/^INFO\b[\s:–-]*/i;
+const itxt=it=>it.info?it.t.replace(INFO_RE,""):it.t;
+const tasksOnly=j=>items(j).filter(x=>!x.info);
 function items(j){
   const lines=String(j.task||"").split("\n").map(t=>t.trim()).filter(Boolean),old=j.items||[];
   const used=new Set();
   j.items=lines.map((t,i)=>{let o=old.findIndex((x,k)=>!used.has(k)&&x.t===t);if(o<0&&old[i]&&!used.has(i)&&!lines.includes(old[i].t))o=i;
-    if(o>=0){used.add(o);return {t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[]}}return {t,s:j.status==="done"?"done":"todo",at:null,who:[]}});
+    const info=INFO_RE.test(t);
+    if(o>=0){used.add(o);return {t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[],info,cf:!!old[o].cf}}return {t,s:j.status==="done"?"done":"todo",at:null,who:[],info,cf:false}});
   return j.items;
 }
 const shortName=e=>{const x=eng(e)||(D.archived||[]).find(a=>a.id===e);if(!x)return "(removed)";return x.title?x.title+" "+x.name.trim().split(/\s+/).pop():x.name};
@@ -716,10 +809,10 @@ function assignItem(jobId,idx,engId){
 function unassignItem(jobId,idx,engId){const j=job(jobId);const it=items(j)[idx];if(!it)return;it.who=it.who.filter(x=>x!==engId);save()}
 const ITEM={todo:{n:"Not started",i:"○",next:"work"},work:{n:"In progress",i:"▶",next:"done"},done:{n:"Done",i:"✓",next:"todo"}};
 function cycleItem(jobId,idx){
-  const j=job(jobId);if(!j||j.status==="done")return;const it=items(j)[idx];if(!it)return;
+  const j=job(jobId);if(!j||j.status==="done")return;const it=items(j)[idx];if(!it||it.info)return;
   it.s=ITEM[it.s].next;it.at=now();
   if(it.s!=="todo"&&j.status!=="work"&&current(j).length){j.status="work";j.started=j.started||it.at;j.assignments.forEach(a=>{if(!a.to&&!a.from)a.from=it.at})}
-  if(j.items.every(x=>x.s==="done")){complete(jobId);toast(`All tasks done – ${j.tail} complete`,()=>{reopen(jobId);const k=job(jobId);items(k);k.items[idx].s="work";start(jobId)});return}
+  if(tasksOnly(j).length&&tasksOnly(j).every(x=>x.s==="done")){complete(jobId);toast(`All tasks done – ${j.tail} complete`,()=>{reopen(jobId);const k=job(jobId);items(k);k.items[idx].s="work";start(jobId)});return}
   save();
 }
 
@@ -837,13 +930,15 @@ function renderBoard(){
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
+      <div class="jmeta"><input class="tagf" data-f="tag" data-id="${j.id}" value="${esc(j.tag||"")}" ${done?"disabled":""} placeholder="+ status (AOG, NS3…)"><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">${j.cf?`<span class="cfb" style="font-size:11px;padding:2px 6px" title="Carried over from previous shifts">CF ×${j.cf}</span>`:""}</div>
       ${rows}
-      <div class="jr"><div class="jl">Job${(()=>{const it=items(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
+      <div class="jr"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
+          if(it.info)return `<div class="ti info"><span class="ibadge">INFO</span><div class="tbody"><span class="tt">${esc(itxt(it))}</span></div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}"><button class="tst" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}">${ITEM[it.s].i}</button>
-          <div class="tbody"><span class="tt">${esc(it.t)}</span><div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?"":`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>
+          <div class="tbody"><span class="tt">${esc(it.t)}${it.cf&&it.s!=="done"?'<span class="cfb" title="Carried forward from a previous shift">CF</span>':""}</span><div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?"":`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>
           <span class="tl">${ITEM[it.s].n}</span></div>`}).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
@@ -888,8 +983,8 @@ function jobText(j,head){
   const state=j.status==="work"?"IN WORK":j.status==="planned"?"NEXT – not started":"UNMANNED";
   const tasks=j.task.split("\n").map(t=>t.trim()).filter(Boolean);
   return (head?"Tasking update "+stamp()+"\n\n":"")+
-    `${j.tail}${j.bay?" – Bay "+j.bay:""} (${state})\n`+
-    items(j).map(t=>(t.s==="done"?"✅ ":t.s==="work"?"🔶 ":"⬜ ")+t.t+(t.who.length?" – "+t.who.map(shortName).join(", "):"")).join("\n")+"\n"+
+    `${j.tail}${j.bay?" – Bay "+j.bay:""}${j.tag?" – "+j.tag:""} (${state})\n`+
+    items(j).map(t=>(t.info?"ℹ️ ":t.s==="done"?"✅ ":t.s==="work"?"🔶 ":"⬜ ")+itxt(t)+(t.who.length?" – "+t.who.map(shortName).join(", "):"")).join("\n")+"\n"+
     "👷 "+(who.length?who.join(", "):"Nobody assigned yet");
 }
 function boardText(){
@@ -1028,8 +1123,140 @@ $("#exportCsv").onclick=()=>{
 };
 
 
+
+/* ---------- shifts, handover & diary ---------- */
+const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
+const SHIFT_CODES={E:["E"],L:["L","LCL","LWL"],N:["N"]};
+function guessShift(d=new Date()){const h=d.getHours(),x=new Date(d);let t=h<6?"N":h<14?"E":h<22?"L":"N";if(h<6)x.setDate(x.getDate()-1);return{date:iso(x),type:t}}
+function curShift(){if(!D.shift){const g=guessShift();D.shift={id:uid(),date:g.date,type:g.type,startedAt:now(),notes:""}}return D.shift}
+const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
+let DIARY=[];
+async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary()}
+const tm=iso=>iso?new Date(iso).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"";
+const dlong=ds=>new Date(ds+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+function renderShiftBar(){
+  const sh=curShift();
+  const done=t=>DIARY.find(r=>r.date===sh.date&&r.type===t);
+  $("#shiftBar").innerHTML=`<div class="stabs">${["E","L","N"].map(t=>{const r=done(t);return t===sh.type?`<button class="stab live" disabled>${SHIFT[t]}</button>`:r?`<button class="stab past" data-rec="${r.id}" title="Handed over ${tm(r.endedAt)} – view diary">✓ ${SHIFT[t]}</button>`:`<button class="stab" disabled>${SHIFT[t]}</button>`}).join("")}</div>
+    <span class="shiftinfo"><b>${SHIFT[sh.type]} · ${dlong(sh.date)}</b> – started ${tm(sh.startedAt)} <button class="linkbtn" id="csOpen">Correct</button></span>
+    <span style="margin-left:auto;display:flex;gap:8px"><button class="btn sm" id="exportNow" title="Preview this shift's diary so far">Export so far</button><button class="btn pri sm" id="hoOpen">Hand over shift</button></span>`;
+}
+$("#shiftBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.rec){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}
+  else if(b.id==="hoOpen")openHandover();
+  else if(b.id==="exportNow")exportRecord(buildRecord(null),true);
+  else if(b.id==="csOpen"){const sh=curShift();$("#csDate").value=sh.date;$("#csType").value=sh.type;$("#csModal").classList.remove("hide")}});
+const closeCs=()=>$("#csModal").classList.add("hide");$("#csClose").onclick=closeCs;$("#csCancel").onclick=closeCs;
+$("#csSave").onclick=()=>{const sh=curShift();sh.date=$("#csDate").value||sh.date;sh.type=$("#csType").value;closeCs();save()};
+// notes & useful info
+$("#shiftNotes").addEventListener("change",e=>{curShift().notes=e.target.value;save()});
+$("#usefulInfo").addEventListener("change",e=>{D.info=e.target.value;save()});
+function renderNotes(){if(document.activeElement!==$("#shiftNotes"))$("#shiftNotes").value=curShift().notes||"";if(document.activeElement!==$("#usefulInfo"))$("#usefulInfo").value=D.info||""}
+
+// signature pads
+function sigPad(c){const x=c.getContext("2d");let down=false,drawn=false;x.lineWidth=3;x.lineCap="round";x.strokeStyle="#0B1220";
+  const pos=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]};
+  c.onpointerdown=e=>{down=true;c.setPointerCapture(e.pointerId);const[a,b]=pos(e);x.beginPath();x.moveTo(a,b)};
+  c.onpointermove=e=>{if(!down)return;const[a,b]=pos(e);x.lineTo(a,b);x.stroke();drawn=true};
+  c.onpointerup=()=>down=false;
+  return{clear(){x.clearRect(0,0,c.width,c.height);drawn=false},get drawn(){return drawn},url(){return drawn?c.toDataURL("image/png"):""}}}
+const SIG={sigOff:sigPad($("#sigOff")),sigOn:sigPad($("#sigOn"))};
+$("#hoModal").addEventListener("click",e=>{const b=e.target.closest("[data-clear]");if(b)SIG[b.dataset.clear].clear()});
+[["hoOffNA","sigOff","hoOffWhy"],["hoOnNA","sigOn","hoOnWhy"]].forEach(([cb,sg,why])=>$("#"+cb).onchange=e=>{$("#"+sg).classList.toggle("na",e.target.checked);$("#"+why).classList.toggle("hide",!e.target.checked)});
+const closeHo=()=>$("#hoModal").classList.add("hide");$("#hoClose").onclick=closeHo;$("#hoCancel").onclick=closeHo;
+function openHandover(){
+  const sh=curShift(),nx=nextShift(sh),ss=shiftStart();
+  const doneJ=D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss),open=D.jobs.filter(active);
+  $("#hoSub").textContent=`${SHIFT[sh.type]} · ${dlong(sh.date)}`;
+  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> outstanding will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens.</span>`;
+  SIG.sigOff.clear();SIG.sigOn.clear();["hoOffNA","hoOnNA"].forEach(i=>{$("#"+i).checked=false;$("#"+i).onchange({target:$("#"+i)})});
+  $("#hoOffName").value=window.__waCloud?.me?.()?.full_name||"";$("#hoOnName").value="";$("#hoOffWhy").value="";$("#hoOnWhy").value="";
+  $("#hoDate").value=nx.date;$("#hoType").value=nx.type;$("#hoErr").classList.add("hide");
+  $("#hoModal").classList.remove("hide");
+}
+$("#hoGo").onclick=async()=>{
+  const side=(k)=>{const name=$(`#ho${k}Name`).value.trim(),na=$(`#ho${k}NA`).checked,why=$(`#ho${k}Why`).value.trim(),sig=SIG["sig"+k].url();
+    return{name,sig,override:na,reason:na?why:"",at:now()}};
+  const off=side("Off"),on=side("On"),err=[];
+  [["Going off",off],["Coming on",on]].forEach(([l,x])=>{if(!x.name)err.push(l+": enter a name");else if(!x.override&&!x.sig)err.push(l+": sign, or tick Not available");else if(x.override&&!x.reason)err.push(l+": give a reason for no signature")});
+  if(err.length){$("#hoErr").textContent=err.join(" · ");$("#hoErr").classList.remove("hide");return}
+  $("#hoGo").disabled=true;
+  const win=window.open("","_blank");if(win)win.document.write("<p style='font-family:Arial;padding:24px'>Saving the shift diary…</p>");
+  const rec=buildRecord({off,on,by:window.__waCloud?.me?.()?.full_name||off.name});
+  const ok=await saveRecord(rec);
+  $("#hoGo").disabled=false;
+  if(!ok){win?.close();$("#hoErr").textContent="Couldn't save the diary record – check connection and try again.";$("#hoErr").classList.remove("hide");return}
+  // carry over unfinished work
+  D.jobs.filter(active).forEach(j=>{j.cf=(j.cf||0)+1;items(j).forEach(it=>{if(!it.info&&it.s!=="done")it.cf=true})});
+  const nx={date:$("#hoDate").value,type:$("#hoType").value};
+  D.shift={id:uid(),date:nx.date,type:nx.type,startedAt:now(),notes:""};
+  let msg=`Handed over – ${SHIFT[nx.type]} started`;
+  if($("#hoRoster").checked&&rosterDays().includes(nx.date)){const n=applyRoster(nx.date,SHIFT_CODES[nx.type]);msg+=` · ${n} on shift from roster`}else save();
+  closeHo();toast(msg);loadDiary();exportRecord(rec,false,win);
+};
+async function saveRecord(rec){
+  if(window.__waCloud?.addDiary)return await window.__waCloud.addDiary(rec);
+  (D.diary=D.diary||[]).unshift(rec);save();return true;
+}
+function snapJob(j){
+  const nm=id=>engName(id);
+  const crew=j.status==="done"?[...new Set(j.assignments.filter(a=>a.from).map(a=>a.eng))]:current(j);
+  return{tail:j.tail,bay:j.bay||"",tag:j.tag||"",lsj:j.lsj||"",status:j.status,created:j.created,started:j.started,completed:j.completed,cf:j.cf||0,
+    crew:crew.map(id=>{const e=eng(id)||(D.archived||[]).find(x=>x.id===id);return{n:nm(id),t:e?.cat?catShort(e):""}}),
+    items:items(j).map(it=>({t:itxt(it),s:it.s,info:it.info,cf:it.cf,at:it.at,who:it.who.map(nm)}))};
+}
+function buildRecord(handover){
+  const sh=curShift(),ss=shiftStart();
+  const onS=D.engineers.filter(e=>e.onShift);
+  const grp=[["Management",[0]],["B1 Cert",[1]],["B2 Cert",[2]],["A Certs",[3,4,5,6]]],keys=["mgmt","b1","b2","a"],M=D.manning||{};
+  return{v:1,id:uid(),date:sh.date,type:sh.type,startedAt:sh.startedAt,endedAt:handover?now():null,draft:!handover,
+    notes:sh.notes||"",info:D.info||"",
+    manning:grp.map(([n,t],i)=>({n,count:onS.filter(e=>!duty(e)&&t.includes(tradeIx(e))).length,target:M[keys[i]]?.t??null,min:M[keys[i]]?.m??null})),
+    onShift:onS.sort(byTrade).map(e=>({n:e.name,t:catShort(e),duty:duty(e)})),
+    done:D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss).map(snapJob),
+    open:D.jobs.filter(active).map(snapJob),
+    handover:handover||null};
+}
+function exportRecord(r,draft,win){
+  const st={todo:"☐",work:"▶",done:"☑"},stn={todo:"Not started",work:"In progress",done:"Done"};
+  const block=j=>`<table class="ac"><tr class="h"><th>${esc(j.tail)}</th><th>${esc(j.tag||"")}</th><th>${j.bay?"Bay "+esc(j.bay):""}</th><th>${esc(j.lsj||"")}</th></tr>
+    ${j.items.map(it=>`<tr><td class="k">${it.info?"INFO":st[it.s]}</td><td colspan="2">${esc(it.t)}${it.cf&&it.s!=="done"&&!it.info?' <span class="cf">CF</span>':""}${it.who.length?`<div class="w">${it.who.map(esc).join(", ")}</div>`:""}</td><td class="s">${it.info?"":stn[it.s]+(it.at&&it.s!=="todo"?" "+tm(it.at):"")}</td></tr>`).join("")}
+    <tr class="f"><td colspan="4">Crew: ${j.crew.map(c=>esc(c.n)+(c.t?` (${esc(c.t)})`:"")).join(", ")||"–"} · Raised ${fmt(j.created)}${j.started?" · Started "+fmt(j.started):""}${j.completed?" · Completed "+fmt(j.completed):""}${j.cf?` · Carried forward ×${j.cf}`:""}</td></tr></table>`;
+  const sig=(l,x)=>`<div class="sg"><div class="sl">${l}</div>${x?`<div class="sn">${esc(x.name)}</div>${x.sig?`<img src="${x.sig}">`:`<div class="ov">Not available to sign – ${esc(x.reason)}</div>`}<div class="st">${fmt(x.at)}</div>`:`<div class="ov">Not yet signed</div>`}</div>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Shift diary – ${SHIFT[r.type]} ${r.date}</title><style>
+  body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;font-size:12px}h1{font-size:20px;margin:0}h2{font-size:14px;border-bottom:2px solid #111;padding-bottom:3px;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+  .meta{color:#444;margin-top:4px}.draft{border:2px solid #B45309;color:#B45309;padding:6px 10px;font-weight:bold;margin:10px 0;display:inline-block}
+  table{border-collapse:collapse;width:100%}table.ac{margin-bottom:10px;page-break-inside:avoid}.ac th,.ac td{border:1px solid #9CA3AF;padding:4px 6px;vertical-align:top;text-align:left}
+  .ac tr.h th{background:#BFDBFE;font-size:13px}.ac tr.h th:first-child{width:90px}.ac td.k{width:46px;text-align:center;font-weight:bold}.ac td.s{width:120px;font-size:11px;color:#333}.ac tr.f td{background:#F3F4F6;font-size:11px;color:#333}
+  .w{font-size:11px;color:#1D4ED8}.cf{background:#7C3AED;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px}
+  .mn{width:auto}.mn td,.mn th{border:1px solid #9CA3AF;padding:4px 14px}.mn th{background:#F3F4F6}.low{color:#B45309;font-weight:bold}.crit{color:#B91C1C;font-weight:bold}
+  .pre{white-space:pre-wrap;border:1px solid #D1D5DB;padding:8px;min-height:30px}
+  .sgs{display:flex;gap:24px}.sg{flex:1;border:1px solid #9CA3AF;padding:8px;min-height:120px}.sl{font-size:10px;text-transform:uppercase;color:#555;font-weight:bold}.sn{font-weight:bold;margin:4px 0}.sg img{max-width:100%;height:70px;object-fit:contain}.ov{color:#B45309;font-style:italic;margin:8px 0}.st{font-size:10px;color:#555}
+  .foot{margin-top:20px;font-size:10px;color:#666;border-top:1px solid #ccc;padding-top:6px}
+  @media print{body{margin:12mm}.np{display:none}}</style></head><body>
+  <div class="np" style="margin-bottom:12px"><button onclick="print()">Print / Save as PDF</button></div>
+  <h1>Line Tasking – Shift Diary</h1>
+  <div class="meta"><b>${SHIFT[r.type]}</b> · ${dlong(r.date)} · Shift ${tm(r.startedAt)} – ${r.endedAt?tm(r.endedAt):"in progress"}</div>
+  ${draft||r.draft?`<div class="draft">DRAFT – shift not yet handed over</div>`:""}
+  <h2>Manning</h2><table class="mn"><tr><th>Group</th><th>On shift</th><th>Target</th><th>Minimum</th></tr>${r.manning.map(m=>`<tr><td>${m.n}</td><td class="${m.min&&m.count<m.min?"crit":m.target&&m.count<m.target?"low":""}">${m.count}</td><td>${m.target??"–"}</td><td>${m.min??"–"}</td></tr>`).join("")}</table>
+  <p style="font-size:11px">${r.onShift.map(e=>esc(e.n)+(e.t?` (${esc(e.t)})`:"")+(e.duty?` – ${esc(e.duty)}`:"")).join(" · ")||"–"}</p>
+  <h2>Completed this shift (${r.done.length})</h2>${r.done.map(block).join("")||"<p>None</p>"}
+  <h2>Outstanding / due – carried forward (${r.open.length})</h2>${r.open.map(block).join("")||"<p>None</p>"}
+  <h2>Shift notes</h2><div class="pre">${esc(r.notes)||"–"}</div>
+  <h2>Useful information</h2><div class="pre">${esc(r.info)||"–"}</div>
+  <h2>Handover</h2><div class="sgs">${sig("Going off shift",r.handover?.off)}${sig("Coming on shift",r.handover?.on)}</div>
+  <div class="foot">Record ${r.id} · Generated ${fmt(new Date().toISOString())}${r.handover?.by?" · Handed over by "+esc(r.handover.by):""} · Key: ☐ not started ▶ in progress ☑ done · CF carried forward</div>
+  <script>setTimeout(()=>print(),400)<\/script></body></html>`;
+  const w=win||window.open("","_blank");if(!w){toast("Allow pop-ups to export the diary");return}
+  w.document.open();w.document.write(html);w.document.close();
+}
+function renderDiary(){
+  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${r.done.length} completed · ${r.open.length} carried forward · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
+}
+$("#diaryList").addEventListener("click",e=>{const b=e.target.closest("[data-rec]");if(b){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}});
+
 /* ---------- wall board ---------- */
-const shiftStart=()=>{const d=new Date(),h=d.getHours();d.setMinutes(0,0,0);if(h>=6&&h<18)d.setHours(6);else{if(h<6)d.setDate(d.getDate()-1);d.setHours(18)}return d};
+const shiftStart=()=>new Date(curShift().startedAt);
 const since=iso=>{const m=Math.max(0,Math.round((Date.now()-new Date(iso))/60000));return m<60?m+" min":Math.floor(m/60)+"h "+String(m%60).padStart(2,"0")+"m"};
 function card(j){
   const done=j.status==="done";
@@ -1038,10 +1265,10 @@ function card(j){
   const tasks=j.task.split("\n").map(t=>t.trim()).filter(Boolean);
   const off=j.tail==="Off Aircraft";
   const cls=done?"green":j.status==="work"?"amber":"red";
-  const its=items(j),nd=its.filter(x=>x.s==="done").length;
+  const its=tasksOnly(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
-  return `<div class="jc ${cls}"><div class="jc-top"><span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}<span class="jc-st">${st}</span></div>
-    <ul class="jc-tasks">${items(j).map(t=>`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
+  return `<div class="jc ${cls}"><div class="jc-top"><span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.tag?`<span class="jc-bay" style="background:#7F1D1D;color:#FECACA">${esc(j.tag)}</span>`:""}<span class="jc-st">${st}</span></div>
+    <ul class="jc-tasks">${items(j).map(t=>t.info?`<li class="t-info">${esc(itxt(t))}</li>`:`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
 }
@@ -1098,7 +1325,8 @@ setInterval(()=>{if(!$("#tab-board").classList.contains("hide")&&!document.activ
 if(location.hash==="#display"){$("#display").classList.remove("hide")}
 
 /* ---------- render ---------- */
-function render(){renderBoard();renderDisplay();
+function render(){curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();
+  if(!$("#tab-diary").classList.contains("hide"))renderDiary();
   if(!$("#tab-shift").classList.contains("hide"))renderShift();
   if(!$("#tab-history").classList.contains("hide"))renderHistory();}
 window.addEventListener("storage",e=>{if(e.key===KEY){try{D=JSON.parse(e.newValue)}catch(_){}render()}});
@@ -1146,7 +1374,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#userAv").textContent=(prof.full_name||prof.username).replace(/^(AS1\(T\)|AS1|SAC|Cpl|Sgt|FS|Flt\s*Lt|Mr|Mrs|Ms|CT)\.?\s+/i,"").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
     $("#userAv").style.background="#2563EB";
     $("#navUsers").classList.toggle("hide",prof.role!=="admin");
-    await pull(true);
+    await pull(true);loadDiary();
     if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){VER=p.new.version;D=fix(p.new.data);cache();render()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
     if(prof.role==="admin"){loadUsers();sb.channel("wa-p").on("postgres_changes",{event:"*",schema:"public",table:"wa_profiles"},loadUsers).subscribe()}
   }
@@ -1169,7 +1397,9 @@ if(SB_URL&&SB_KEY&&window.supabase){
     else VER=data;
     if(again){again=false;push()}
   }
-  window.__waCloud={push};
+  window.__waCloud={push,me:()=>ME,
+    async addDiary(rec){const {error}=await sb.from("wa_diary").insert({shift_date:rec.date,shift_type:rec.type,data:rec});if(error){toast("Diary not saved – "+error.message);return false}return true},
+    async listDiary(){const {data,error}=await sb.from("wa_diary").select("id,data,created_at").order("created_at",{ascending:false}).limit(200);if(error)return [];return data.map(r=>({...r.data,id:r.id}))}};
   // ---- profile ----
   $("#userBtn").onclick=()=>{$("#pfInfo").innerHTML=`<b>${esc(ME.full_name||"")}</b><div class="sub">Username: ${esc(ME.username)} · ${ME.role==="admin"?"Admin":"User"}</div>`;$("#prof").classList.remove("hide")};
   $("#pfClose").onclick=()=>$("#prof").classList.add("hide");
