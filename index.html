@@ -220,6 +220,9 @@ tr:last-child td{border-bottom:0}
 .shiftinfo{font-size:12.5px;color:var(--mute)}
 .shiftinfo b{color:var(--ink)}
 .notesbox{border:0;border-radius:0 0 var(--r) var(--r);padding:12px 16px;min-height:110px;resize:vertical;font-size:13.5px;line-height:1.5}
+.infobox{display:block;width:100%;border:0;border-radius:0;padding:18px 20px;min-height:calc(100vh - 220px);resize:vertical;font-size:14.5px;line-height:1.6}
+.infobox:focus{box-shadow:none}
+.infofoot{padding:8px 16px;border-top:1px solid var(--line)}
 .notesbox:focus{box-shadow:inset 0 0 0 2px rgba(37,99,235,.25)}
 .hosum{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;line-height:1.5}
 .hogrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -388,6 +391,7 @@ th.today,td.today{background:#FFFBEB}
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
     <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
     <button data-tab="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History</button>
+    <button data-tab="info"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Useful info</button>
     <button data-tab="diary"><svg class="i" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M8 7h8M8 11h6"/></svg>Diary</button>
     <button data-tab="users" id="navUsers" class="hide"><svg class="i" viewBox="0 0 24 24"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users<i class="nbadge hide" id="reqBadge">0</i></button>
   </nav>
@@ -436,10 +440,6 @@ th.today,td.today{background:#FFFBEB}
     <div class="card">
       <div class="card-h"><h2>Shift notes</h2><span class="sub" style="margin-left:auto">Goes into this shift's diary</span></div>
       <textarea id="shiftNotes" class="notesbox" rows="5" placeholder="Anything that happened this shift – phone calls, decisions, who was told what…"></textarea>
-    </div>
-    <div class="card">
-      <div class="card-h"><h2>Useful information</h2><span class="sub" style="margin-left:auto">Stays shift to shift</span></div>
-      <textarea id="usefulInfo" class="notesbox" rows="6" placeholder="Contacts, numbers, standing instructions…"></textarea>
     </div>
     <div class="card" id="team">
       <div class="card-h"><h2>Team</h2><span class="sub" style="margin-left:auto" id="teamSub"></span></div>
@@ -524,6 +524,15 @@ th.today,td.today{background:#FFFBEB}
     </div>
   </div>
 </section>
+<!-- USEFUL INFO -->
+<section id="tab-info" class="hide">
+  <div class="card">
+    <div class="card-h"><h2>Useful information</h2><span class="sub" id="infoMeta" style="margin-left:auto">Stays shift to shift · included in every diary export</span></div>
+    <textarea id="usefulInfo" class="infobox" placeholder="Contacts, phone numbers, email addresses, standing instructions, stores, MOC, spares procedures…&#10;&#10;Tip: use a line of capitals as a heading, e.g.&#10;SPARES / DEMANDS&#10;Fwd stores Brize 01993 847863"></textarea>
+    <div class="infofoot"><span class="sub" id="infoSaved">Saves automatically</span></div>
+  </div>
+</section>
+
 <!-- DIARY -->
 <section id="tab-diary" class="hide">
   <div class="card">
@@ -710,7 +719,7 @@ function setOnShift(en,on){en.onShift=on;if(!on){const ts=now();D.jobs.filter(ac
 /* ---------- tabs & clock ---------- */
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{window.scrollTo(0,0);
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
-  ["board","shift","history","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="diary")loadDiary();
+  ["board","shift","history","info","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="diary")loadDiary();
   render();loadDiary();
 });
 const tick=()=>{const d=new Date();$("#clock").textContent=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});if(D.shift)$("#shiftName").textContent=SHIFT_NAME[D.shift.type]+" · "+new Date(D.shift.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})};
@@ -1150,8 +1159,11 @@ const closeCs=()=>$("#csModal").classList.add("hide");$("#csClose").onclick=clos
 $("#csSave").onclick=()=>{const sh=curShift();sh.date=$("#csDate").value||sh.date;sh.type=$("#csType").value;closeCs();save()};
 // notes & useful info
 $("#shiftNotes").addEventListener("change",e=>{curShift().notes=e.target.value;save()});
-$("#usefulInfo").addEventListener("change",e=>{D.info=e.target.value;save()});
-function renderNotes(){if(document.activeElement!==$("#shiftNotes"))$("#shiftNotes").value=curShift().notes||"";if(document.activeElement!==$("#usefulInfo"))$("#usefulInfo").value=D.info||""}
+let infoT;
+const saveInfo=()=>{clearTimeout(infoT);if(D.info===$("#usefulInfo").value)return;D.info=$("#usefulInfo").value;D.infoAt=now();D.infoBy=window.__waCloud?.me?.()?.full_name||"";save();$("#infoSaved").textContent="Saved "+tm(D.infoAt)};
+$("#usefulInfo").addEventListener("input",()=>{$("#infoSaved").textContent="Saving…";clearTimeout(infoT);infoT=setTimeout(saveInfo,1500)});
+$("#usefulInfo").addEventListener("change",saveInfo);
+function renderNotes(){if(document.activeElement!==$("#shiftNotes"))$("#shiftNotes").value=curShift().notes||"";if(document.activeElement!==$("#usefulInfo"))$("#usefulInfo").value=D.info||"";$("#infoMeta").textContent=D.infoAt?`Last updated ${fmt(D.infoAt)}${D.infoBy?" by "+D.infoBy:""} · included in every diary export`:"Stays shift to shift · included in every diary export"}
 
 // signature pads
 function sigPad(c){const x=c.getContext("2d");let down=false,drawn=false;x.lineWidth=3;x.lineCap="round";x.strokeStyle="#0B1220";
