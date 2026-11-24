@@ -502,6 +502,18 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .line-add:focus{border-style:solid;border-color:var(--blue);background:#fff}
 .line-add::placeholder{color:var(--blue);font-weight:600}
 #display .cards.scrolling>.track{will-change:transform;backface-visibility:hidden}
+/* compositor-only glow so scrolling stays smooth */
+.jc{position:relative}
+.jc.amber,.jc.red{animation:none}
+.jc.amber::after,.jc.red::after{content:"";position:absolute;inset:-.12vw;border-radius:inherit;pointer-events:none;box-shadow:0 0 2.4vw color-mix(in srgb,var(--g) 70%,transparent),inset 0 0 1.6vw color-mix(in srgb,var(--g) 18%,transparent);opacity:0;will-change:opacity;animation:glowo 2.4s ease-in-out infinite}
+.jc.red::after{animation-duration:1.6s}
+@keyframes glowo{50%{opacity:1}}
+#dbGrid.scrolling{will-change:transform}
+.db-speed{display:flex;align-items:center;gap:.3vw;padding:.25vw .4vw!important;cursor:default}
+.db-speed span{font-size:.8vw;color:#94A3B8;padding:0 .4vw;text-transform:uppercase;letter-spacing:.1vw}
+.db-speed button{background:transparent;border:0;color:#CBD5E1;font:inherit;font-size:.9vw;padding:.25vw .6vw;border-radius:.4vw;cursor:pointer}
+.db-speed button.on{background:#3B82F6;color:#fff}
+.db-exit{z-index:10}
 </style>
 </head>
 <body>
@@ -785,7 +797,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="csCancel">Cancel</button><button class="btn pri" id="csSave">Save</button></div></div>
 </div></div>
 <div id="display" class="hide">
-  <button class="db-exit" id="dbExit">✕ Exit (Esc)</button><button class="db-exit" id="dbLayout" style="right:7.5vw">▦ Squares</button>
+  <button class="db-exit" id="dbExit">✕ Exit (Esc)</button><button class="db-exit" id="dbLayout" style="right:7.5vw">▦ Squares</button><div class="db-exit db-speed" id="dbSpeed" style="right:15.5vw"><span>Scroll</span><button data-s="20">Slow</button><button data-s="40">Normal</button><button data-s="65">Fast</button><button data-s="95">Very fast</button></div>
   <div class="db-top">
     <div class="db-title">Line Tasking<small>LIVE JOBS</small></div>
     <div class="db-legend">
@@ -1465,7 +1477,7 @@ function card(j){
 function fillHtml(el,html){
   const box=$(el);
   if(box.dataset.h!==html){
-    box.dataset.h=html;box.scrollTop=0;
+    box.dataset.h=html;box.scrollTop=0;box._loop=0;
     box.innerHTML=`<div class="track">${html}</div>`;
     const tr=box.firstElementChild;
     const over=tr.offsetHeight>box.clientHeight+2;
@@ -1475,16 +1487,17 @@ function fillHtml(el,html){
   box.querySelectorAll(".since").forEach(x=>x.textContent=since(x.dataset.t));
 }
 const fill=(el,list,msg)=>fillHtml(el,list.map(card).join("")||`<div class="empty-lane">${msg}</div>`);
-const SPEED=45; // pixels per second
+let SPEED=40;try{SPEED=+localStorage.getItem("wa-speed")||40}catch(e){}
+const markSpeed=()=>document.querySelectorAll("#dbSpeed button").forEach(b=>b.classList.toggle("on",+b.dataset.s===SPEED));
+$("#dbSpeed").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;SPEED=+b.dataset.s;try{localStorage.setItem("wa-speed",SPEED)}catch(_){}markSpeed()});markSpeed();
 let lastT=0;
 function scrollLoop(t){
   const dt=lastT?Math.min(50,t-lastT):0;lastT=t;
   if(!$("#display").classList.contains("hide"))document.querySelectorAll("#display .cards").forEach(box=>{
     if(!box.classList.contains("scrolling")){if(box._y){box._y=0;for(const c of box.children)c.style.transform=""}return}
-    const tr=box.firstElementChild,loop=tr.offsetHeight+(parseFloat(getComputedStyle(box).rowGap)||0);
-    if(box.scrollTop)box.scrollTop=0;
-    box._y=((box._y||0)+SPEED*dt/1000)%loop;
-    const tf=`translate3d(0,${-box._y}px,0)`;for(const c of box.children)c.style.transform=tf;
+    if(!box._loop){box._loop=box.firstElementChild.offsetHeight;box.scrollTop=0}
+    box._y=((box._y||0)+SPEED*dt/1000)%box._loop;
+    const tf=`translate3d(0,${(-box._y).toFixed(2)}px,0)`;for(const c of box.children)c.style.transform=tf;
   });
   requestAnimationFrame(scrollLoop);
 }
