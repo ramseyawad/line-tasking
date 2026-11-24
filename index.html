@@ -478,6 +478,19 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .acbar .notesbtn .i{width:15px;height:15px}
 #notesCard{scroll-margin-top:calc(var(--hdrH,60px) + var(--acH,46px) + 12px)}
 #notesCard.flash{animation:jflash 1.6s ease-out}
+/* task rows: job | progress | engineers */
+.tlist{gap:0!important}
+.ti{grid-template-columns:minmax(0,1fr) 128px minmax(150px,30%)!important;gap:12px!important;align-items:center!important;padding:8px 4px!important;border-radius:0!important}
+.ti+.ti{border-top:1px solid #EDF1F6}
+.ti.info{grid-template-columns:auto 1fr!important}
+.tstat{display:inline-flex;align-items:center;gap:7px;border:0;background:none;padding:2px 6px 2px 2px;border-radius:999px;cursor:pointer;font:inherit;justify-self:start}
+.tstat:hover:not(:disabled){background:#F1F5F9}
+.tstat:hover:not(:disabled) .tst{border-color:var(--blue)}
+.tstat:disabled{cursor:default}
+.tstat .tst{flex:none;margin:0!important;pointer-events:none}
+.tstat .tl{margin:0!important}
+.ti .twho{margin:0;justify-content:flex-end}
+@media(max-width:640px){.ti{grid-template-columns:minmax(0,1fr) auto!important}.ti .twho{grid-column:1/-1;justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -1061,9 +1074,9 @@ function renderBoard(){
           if(it.info)return `<div class="ti info"><span class="ibadge">INFO</span><div class="tbody"><span class="tt">${esc(itxt(it))}</span></div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
-          return `<div class="ti s-${it.s}"><button class="tst" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}">${ITEM[it.s].i}</button>
-          <div class="tbody"><span class="tt">${esc(it.t)}</span><div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?"":`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>
-          <span class="tl">${ITEM[it.s].n}</span></div>`}).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
+          return `<div class="ti s-${it.s}"><span class="tt">${esc(it.t)}</span>
+          <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
+          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
