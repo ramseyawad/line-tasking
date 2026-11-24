@@ -1056,21 +1056,13 @@ $("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.dataset?.tagadd&
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
   const who=current(j).map(engName);
-  const state=j.status==="work"?"IN WORK":j.status==="planned"?"NEXT – not started":"UNMANNED";
-  const tasks=j.task.split("\n").map(t=>t.trim()).filter(Boolean);
-  return (head?"Tasking update "+stamp()+"\n\n":"")+
-    `${j.tail}${j.bay?" – Bay "+j.bay:""}${j.pri?" – P"+j.pri:""}${j.acst?" – "+j.acst:""}${j.area&&j.area!=="Line"?" – "+j.area:""}${j.tag?" – "+j.tag:""} (${state})\n`+
-    items(j).map(t=>(t.info?"ℹ️ ":t.s==="done"?"✅ ":t.s==="work"?"🔶 ":"⬜ ")+itxt(t)+(t.who.length?" – "+t.who.map(shortName).join(", "):"")).join("\n")+"\n"+
-    "👷 "+(who.length?who.join(", "):"Nobody assigned yet");
+  return (head?"Tasking "+stamp()+"\n\n":"")+`${j.tail==="Off Aircraft"?"Off Aircraft":j.tail}: ${who.length?who.join(", "):"nobody assigned"}`;
 }
 function boardText(){
-  const order={work:0,planned:1,open:2};
-  const jobs=D.jobs.filter(active).sort((a,b)=>order[a.status]-order[b.status]||TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail));
-  const {w}=jobMaps();
-  const free=D.engineers.filter(e=>e.onShift&&!w[e.id]&&!jobs.some(j=>current(j).includes(e.id))).map(e=>e.name);
-  return "Tasking update "+stamp()+"\n\n"+
-    (jobs.length?jobs.map(j=>jobText(j,false)).join("\n\n"):"No jobs open")+
-    (free.length?"\n\nNot tasked – stand by: "+free.join(", "):"");
+  const jobs=D.jobs.filter(active).filter(j=>current(j).length).sort((a,b)=>TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail));
+  const by={};jobs.forEach(j=>{(by[j.tail]=by[j.tail]||[]);current(j).forEach(e=>{if(!by[j.tail].includes(e))by[j.tail].push(e)})});
+  const lines=Object.keys(by).map(t=>`${t}: ${by[t].map(engName).join(", ")}`);
+  return "Tasking "+stamp()+"\n\n"+(lines.length?lines.join("\n"):"Nobody tasked yet");
 }
 async function share(text){
   if(navigator.share){try{await navigator.share({text});return}catch(e){if(e.name==="AbortError")return}}
