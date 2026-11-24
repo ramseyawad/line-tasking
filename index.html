@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F172A">
-<title>Work Allocation</title>
+<title>Line Tasking</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#F3F5F9;--card:#fff;--ink:#0B1220;--ink2:#334155;--mute:#64748B;--line:#E5E9F0;--line2:#D5DCE6;
 --navy:#0B1220;--navy2:#131D30;--blue:#2563EB;--blueBg:#EFF5FF;--green:#16A34A;--greenBg:#ECFDF3;--amber:#D97706;--amberBg:#FFF7E8;
@@ -178,6 +179,21 @@ tr:last-child td{border-bottom:0}
 .namein{padding:5px 8px;border-color:transparent;font-weight:600;max-width:320px}.namein:hover{border-color:var(--line2)}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
 .count{float:right}
+/* auth */
+.gate{position:fixed;inset:0;z-index:70;background:radial-gradient(900px 500px at 20% -10%,#1E3A5F,#0B1220 60%);display:flex;align-items:center;justify-content:center;padding:16px}
+.gcard{background:#fff;border-radius:16px;padding:26px;width:min(400px,100%);box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.gcard .brand h1{font-size:20px}.gcard .brand small{color:var(--mute)}
+.gtabs{display:flex;margin-bottom:16px}.gtabs button{flex:1;justify-content:center}
+.gmsg{padding:10px 12px;border-radius:9px;font-size:13px;font-weight:600;margin-bottom:12px;background:var(--redBg);color:var(--red)}
+.gmsg.ok{background:var(--greenBg);color:var(--green)}
+.syncdot{width:9px;height:9px;border-radius:50%;background:#22C55E;box-shadow:0 0 8px #22C55E}
+.syncdot.off{background:#F59E0B;box-shadow:0 0 8px #F59E0B}
+.av.sm{width:24px;height:24px;font-size:10px}
+.nbadge{font-style:normal;background:var(--red);color:#fff;border-radius:999px;font-size:10.5px;padding:0 6px;min-width:18px;text-align:center}
+.req{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.req:last-child{border-bottom:0}
+.req .who{flex:1;min-width:0}.req .who b{display:block}
+.rolesel{width:auto;padding:5px 8px;font-size:13px}
 /* new-job window */
 .modal{position:fixed;inset:0;z-index:40;background:rgba(11,18,32,.55);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto;animation:fade .15s}
 @keyframes fade{from{opacity:0}}
@@ -291,12 +307,15 @@ th.today,td.today{background:#FFFBEB}
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
     <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
     <button data-tab="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History</button>
+    <button data-tab="users" id="navUsers" class="hide"><svg class="i" viewBox="0 0 24 24"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users<i class="nbadge hide" id="reqBadge">0</i></button>
   </nav>
   <div class="hdr-right">
+    <span class="syncdot hide" id="syncDot" title="Live – synced"></span>
     <span class="shiftpill"><i></i><span id="shiftName">Early shift</span></span>
     <span class="clock" id="clock"></span>
     <button class="hbtn" id="shareAll" title="Send the whole board as a text"><svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg><span class="l">Send to group</span></button>
     <button class="hbtn solid" id="openDisplay" title="Full-screen board for the hangar screen"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="l">Wall board</span></button>
+    <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
   </div>
 </header>
 
@@ -411,7 +430,67 @@ th.today,td.today{background:#FFFBEB}
     </div>
   </div>
 </section>
+<!-- USERS (admin) -->
+<section id="tab-users" class="hide">
+  <div class="grid" style="grid-template-columns:minmax(0,1fr) 340px">
+    <div class="stack">
+      <div class="card">
+        <div class="card-h"><h2>Access requests</h2><span class="sub" style="margin-left:auto">People waiting to be let in</span></div>
+        <div id="reqList"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Users</h2><span class="sub" style="margin-left:auto">Admins can approve people and manage users</span></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Since</th><th></th></tr></thead><tbody id="userList"></tbody></table></div>
+      </div>
+    </div>
+    <div class="card pad">
+      <h2 style="padding-bottom:4px">Add a user</h2>
+      <p class="sub" style="margin-top:0">Creates their login straight away. Give them the username and temporary password – they can change it from their profile.</p>
+      <label class="f">Full name</label><input id="auName" placeholder="e.g. Cpl Kyle Johnson">
+      <label class="f" style="margin-top:10px">Username</label><input id="auUser" placeholder="e.g. kjohnson" autocapitalize="off">
+      <label class="f" style="margin-top:10px">Temporary password</label><input id="auPass" placeholder="at least 8 characters">
+      <label class="f" style="margin-top:10px">Role</label><select id="auRole"><option value="user">User – can run the board</option><option value="admin">Admin – can also manage users</option></select>
+      <button class="btn pri" id="auAdd" style="width:100%;margin-top:12px">Create user</button>
+    </div>
+  </div>
+</section>
 </main>
+
+<!-- SIGN IN / REQUEST ACCESS -->
+<div id="gate" class="gate hide">
+  <div class="gcard">
+    <div class="brand" style="justify-content:center;margin-bottom:18px"><div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div><div><h1 style="color:var(--ink)">Line Tasking</h1><small>Work allocation</small></div></div>
+    <div id="gMsg" class="gmsg hide"></div>
+    <div class="pills gtabs" id="gTabs"><button data-g="in" class="on">Sign in</button><button data-g="req">Request access</button></div>
+    <form id="fIn">
+      <label class="f">Username</label><input id="inUser" autocomplete="username" autocapitalize="off" required>
+      <label class="f" style="margin-top:10px">Password</label><input id="inPass" type="password" autocomplete="current-password" required>
+      <button class="btn pri big" style="width:100%;margin-top:14px">Sign in</button>
+    </form>
+    <form id="fReq" class="hide">
+      <label class="f">Full name (rank & name)</label><input id="rqName" placeholder="e.g. Cpl Kyle Johnson" required>
+      <label class="f" style="margin-top:10px">Choose a username</label><input id="rqUser" placeholder="e.g. kjohnson" autocapitalize="off" required>
+      <label class="f" style="margin-top:10px">Choose a password</label><input id="rqPass" type="password" autocomplete="new-password" placeholder="at least 8 characters" required>
+      <label class="f" style="margin-top:10px">Note for the admin (optional)</label><input id="rqNote" placeholder="e.g. Lates, B1">
+      <button class="btn pri big" style="width:100%;margin-top:14px">Send request</button>
+    </form>
+    <div id="gWait" class="hide" style="text-align:center">
+      <p style="font-size:15px;font-weight:700;margin:6px 0">Request sent</p>
+      <p class="sub" id="gWaitTxt">An admin needs to approve your account. Sign in again once you've been told it's approved.</p>
+      <button class="btn" id="gOut" style="margin-top:10px">Back to sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="prof" class="modal hide"><div class="mcard card" style="width:min(420px,100%)">
+  <div class="mhead"><h2>Your profile</h2><button class="btn icon" id="pfClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><div id="pfInfo" style="margin-bottom:12px"></div>
+    <label class="f">New password</label><input id="pfPass" type="password" autocomplete="new-password" placeholder="at least 8 characters">
+    <button class="btn" id="pfSave" style="margin-top:8px">Change password</button>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+    <button class="btn warn" id="pfOut" style="width:100%">Sign out</button></div>
+</div></div>
 
 
 <div id="nj" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="njTitle">
@@ -462,7 +541,7 @@ const dur=(a,b)=>{if(!a||!b)return"";const m=Math.round((new Date(b)-new Date(a)
 let D;
 try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!D||!Array.isArray(D.jobs))D={engineers:[],jobs:[]};
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render()};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
 const alertMsg=m=>console.warn(m);
 
 const eng=id=>D.engineers.find(e=>e.id===id);
@@ -489,7 +568,7 @@ function setOnShift(en,on){en.onShift=on;if(!on){const ts=now();D.jobs.filter(ac
 /* ---------- tabs & clock ---------- */
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{window.scrollTo(0,0);
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
-  ["board","shift","history"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));
+  ["board","shift","history","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));
   render();
 });
 const tick=()=>{const d=new Date(),h=d.getHours();$("#clock").textContent=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});$("#shiftName").textContent=(h>=6&&h<18?"Early shift · 06–18":"Late shift · 18–06")};
@@ -915,6 +994,107 @@ function render(){renderBoard();renderDisplay();
   if(!$("#tab-history").classList.contains("hide"))renderHistory();}
 window.addEventListener("storage",e=>{if(e.key===KEY){try{D=JSON.parse(e.newValue)}catch(_){}render()}});
 render();
+
+/* ---------- cloud: sign-in, users, live sync (Supabase) ---------- */
+// Fill these in to switch on logins and live sync. Leave empty to run on this device only.
+const SB_URL="https://zudleldegvipwvutjtzb.supabase.co";
+const SB_KEY="sb_publishable_eNQEAyqf_QBfBUPGG3eOGQ_1nd8iZT2";
+const UDOMAIN="users.line-tasking.app"; // usernames are turned into sign-in IDs like kjohnson@users.line-tasking.app
+if(SB_URL&&SB_KEY&&window.supabase){
+  const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:"wa-auth"}});
+  const uname=u=>String(u||"").trim().toLowerCase();
+  const okUser=u=>/^[a-z0-9._-]{3,30}$/.test(u);
+  const toEmail=u=>uname(u)+"@"+UDOMAIN;
+  let ME=null,VER=-1,pushing=false,again=false,chan=null,PROFILES=[];
+  const gate=(mode,msg,ok)=>{$("#gate").classList.toggle("hide",!mode);if(!mode)return;
+    ["fIn","fReq","gWait"].forEach(id=>$("#"+id).classList.add("hide"));$("#gTabs").classList.toggle("hide",mode==="wait");
+    $(mode==="in"?"#fIn":mode==="req"?"#fReq":"#gWait").classList.remove("hide");
+    document.querySelectorAll("#gTabs button").forEach(b=>b.classList.toggle("on",b.dataset.g===mode));
+    $("#gMsg").classList.toggle("hide",!msg);$("#gMsg").textContent=msg||"";$("#gMsg").classList.toggle("ok",!!ok)};
+  $("#gTabs").onclick=e=>{const b=e.target.closest("button");if(b)gate(b.dataset.g)};
+  $("#gOut").onclick=async()=>{await sb.auth.signOut();gate("in")};
+  $("#fIn").onsubmit=async e=>{e.preventDefault();
+    const {error}=await sb.auth.signInWithPassword({email:toEmail($("#inUser").value),password:$("#inPass").value});
+    if(error){gate("in","Username or password not recognised");return}
+    $("#inPass").value="";boot()};
+  $("#fReq").onsubmit=async e=>{e.preventDefault();
+    const u=uname($("#rqUser").value),pw=$("#rqPass").value;
+    if(!okUser(u)){gate("req","Username: 3–30 letters, numbers, dots or dashes");return}
+    if(pw.length<8){gate("req","Password must be at least 8 characters");return}
+    const {error}=await sb.auth.signUp({email:toEmail(u),password:pw,options:{data:{username:u,full_name:$("#rqName").value.trim(),note:$("#rqNote").value.trim()}}});
+    if(error){gate("req",/registered|exists/i.test(error.message)?"That username is taken":error.message);return}
+    ["#rqName","#rqUser","#rqPass","#rqNote"].forEach(i=>$(i).value="");boot()};
+
+  async function boot(){
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){gate("in");return}
+    const {data:prof}=await sb.from("wa_profiles").select("*").eq("id",session.user.id).maybeSingle();
+    if(!prof||prof.role==="pending"){gate("wait");$("#gWaitTxt").textContent=`Thanks${prof?.full_name?", "+prof.full_name:""}. An admin needs to approve your account – sign in again once you've been told it's approved.`;return}
+    if(prof.role==="rejected"){await sb.auth.signOut();gate("in","Your access request was declined. Speak to your shift admin.");return}
+    ME=prof;gate(null);
+    $("#userBtn").classList.remove("hide");$("#userName").textContent=prof.full_name||prof.username;
+    $("#userAv").textContent=(prof.full_name||prof.username).replace(/^(AS1\(T\)|AS1|SAC|Cpl|Sgt|FS|Flt\s*Lt|Mr|Mrs|Ms|CT)\.?\s+/i,"").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    $("#userAv").style.background="#2563EB";
+    $("#navUsers").classList.toggle("hide",prof.role!=="admin");
+    await pull(true);
+    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){VER=p.new.version;D=fix(p.new.data);cache();render()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
+    if(prof.role==="admin"){loadUsers();sb.channel("wa-p").on("postgres_changes",{event:"*",schema:"public",table:"wa_profiles"},loadUsers).subscribe()}
+  }
+  const fix=d=>{d=d||{};d.engineers=d.engineers||[];d.jobs=d.jobs||[];return d};
+  const cache=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}};
+  async function pull(first){
+    const {data,error}=await sb.from("wa_state").select("data,version").eq("id",1).single();
+    if(error){toast("Couldn't load the board – check connection");return}
+    const remote=fix(data.data),empty=!remote.engineers.length&&!remote.jobs.length;
+    VER=data.version;
+    if(first&&empty&&(D.engineers.length||D.jobs.length)&&ME.role==="admin"){toast("Uploading this device's board to the cloud…");push();return}
+    D=remote;cache();render();
+  }
+  async function push(){
+    if(!ME)return;if(pushing){again=true;return}pushing=true;
+    const {data,error}=await sb.rpc("wa_save",{new_data:D,expected:VER});
+    pushing=false;
+    if(error){toast("Not saved – "+error.message);$("#syncDot").classList.add("off");}
+    else if(data===-1){toast("Someone else changed the board – reloaded. Check your last change.");await pull();}
+    else VER=data;
+    if(again){again=false;push()}
+  }
+  window.__waCloud={push};
+  // ---- profile ----
+  $("#userBtn").onclick=()=>{$("#pfInfo").innerHTML=`<b>${esc(ME.full_name||"")}</b><div class="sub">Username: ${esc(ME.username)} · ${ME.role==="admin"?"Admin":"User"}</div>`;$("#prof").classList.remove("hide")};
+  $("#pfClose").onclick=()=>$("#prof").classList.add("hide");
+  $("#pfSave").onclick=async()=>{const pw=$("#pfPass").value;if(pw.length<8){toast("At least 8 characters");return}
+    const {error}=await sb.auth.updateUser({password:pw});toast(error?error.message:"Password changed");if(!error){$("#pfPass").value="";$("#prof").classList.add("hide")}};
+  $("#pfOut").onclick=async()=>{await sb.auth.signOut();try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+  // ---- users (admin) ----
+  async function loadUsers(){
+    const {data}=await sb.from("wa_profiles").select("*").order("created_at");PROFILES=data||[];
+    const pend=PROFILES.filter(p=>p.role==="pending");
+    $("#reqBadge").textContent=pend.length;$("#reqBadge").classList.toggle("hide",!pend.length);
+    $("#reqList").innerHTML=pend.map(p=>`<div class="req"><span class="av" style="background:#7C3AED">${esc((p.full_name||p.username).slice(0,2).toUpperCase())}</span><div class="who"><b>${esc(p.full_name||"–")}</b><span class="sub">@${esc(p.username)} · requested ${fmt(p.created_at)}${p.note?" · “"+esc(p.note)+"”":""}</span></div>
+      <button class="btn ok sm" data-role="user" data-u="${p.id}">Approve</button><button class="btn sm" data-role="admin" data-u="${p.id}">Approve as admin</button><button class="btn warn sm" data-role="rejected" data-u="${p.id}">Decline</button></div>`).join("")||`<div class="empty" style="padding:22px"><b>No requests</b>New requests from the sign-in page appear here.</div>`;
+    const mem=PROFILES.filter(p=>p.role!=="pending");
+    $("#userList").innerHTML=mem.map(p=>`<tr><td><b>${esc(p.full_name||"–")}</b>${p.id===ME.id?' <span class="sub">(you)</span>':""}</td><td>@${esc(p.username)}</td>
+      <td><select class="rolesel" data-u="${p.id}" ${p.id===ME.id?"disabled":""}>${[["user","User"],["admin","Admin"],["rejected","No access"]].map(([v,l])=>`<option value="${v}" ${p.role===v?"selected":""}>${l}</option>`).join("")}</select></td>
+      <td class="sub">${fmt(p.created_at)}</td><td></td></tr>`).join("");
+  }
+  const setRole=async(id,role)=>{const {error}=await sb.from("wa_profiles").update({role}).eq("id",id);toast(error?error.message:"Updated");loadUsers()};
+  $("#reqList").onclick=e=>{const b=e.target.closest("[data-u]");if(b)setRole(b.dataset.u,b.dataset.role)};
+  $("#userList").onchange=e=>{const t=e.target.closest(".rolesel");if(t)setRole(t.dataset.u,t.value)};
+  $("#auAdd").onclick=async()=>{
+    const u=uname($("#auUser").value),pw=$("#auPass").value,name=$("#auName").value.trim(),role=$("#auRole").value;
+    if(!name||!okUser(u)){toast("Enter a name and a username (3–30 letters/numbers)");return}
+    if(pw.length<8){toast("Temporary password must be at least 8 characters");return}
+    const tmp=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"wa-tmp"}});
+    const {data,error}=await tmp.auth.signUp({email:toEmail(u),password:pw,options:{data:{username:u,full_name:name}}});
+    if(error){toast(/registered|exists/i.test(error.message)?"That username is taken":error.message);return}
+    if(data.user)await setRole(data.user.id,role);
+    ["#auName","#auUser","#auPass"].forEach(i=>$(i).value="");toast(name+" can now sign in as "+u);
+  };
+  sb.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"){ME=null;gate("in")}});
+  boot();
+}
+
 })();
 </script>
 </body>
