@@ -473,6 +473,11 @@ body.team-open .drawer-bg{opacity:1;pointer-events:auto}
 .teambtn i{font-style:normal;font-size:11.5px;font-weight:800;background:var(--greenBg,#DCFCE7);color:var(--green,#15803D);border-radius:99px;padding:1px 7px;margin-left:2px}
 body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 #notesCard .notesbox{min-height:110px}
+.acbar .notesbtn{flex:1.8 1 0;display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--ink,#0F172A);color:#fff;border-color:var(--ink,#0F172A)}
+.acbar .notesbtn:hover{background:#1E293B;color:#fff!important}
+.acbar .notesbtn .i{width:15px;height:15px}
+#notesCard{scroll-margin-top:calc(var(--hdrH,60px) + var(--acH,46px) + 12px)}
+#notesCard.flash{animation:jflash 1.6s ease-out}
 </style>
 </head>
 <body>
@@ -1012,7 +1017,7 @@ function renderBoard(){
   // aircraft jump bar
   $("#acBar").innerHTML=TAILS.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
     const aog=js.some(j=>j.acst==="AOG");
-    return `<button data-jump="${t}" class="${c} ${aog?"aog":""}" ${js.length?"":"disabled"} title="${t}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}</button>`}).join("");
+    return `<button data-jump="${t}" class="${c} ${aog?"aog":""}" ${js.length?"":"disabled"} title="${t}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}</button>`}).join("")+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
   const ROLES=[["B1",[1],"Cert"],["B2",[2],"Cert"],["Mechs",[3,4,5,6],"A+ / A Cat"],["Other",[0],""]];
@@ -1102,7 +1107,10 @@ $("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.dataset?.tagadd&
 
 const sizeBars=()=>{const r=document.documentElement.style;r.setProperty("--hdrH",document.querySelector("header").offsetHeight+"px");r.setProperty("--acH",$("#acWrap").offsetHeight+"px")};
 addEventListener("resize",sizeBars);setTimeout(sizeBars,0);
-$("#acBar").addEventListener("click",e=>{const b=e.target.closest("button[data-jump]");if(!b)return;const t=b.dataset.jump;
+$("#acBar").addEventListener("click",e=>{
+  if(e.target.closest("button[data-notes]")){if($("#tab-board").classList.contains("hide"))document.querySelector('nav button[data-tab="board"]').click();
+    const c=$("#notesCard");c.scrollIntoView({behavior:"smooth",block:"start"});c.classList.remove("flash");void c.offsetWidth;c.classList.add("flash");setTimeout(()=>$("#shiftNotes").focus({preventScroll:true}),500);return}
+  const b=e.target.closest("button[data-jump]");if(!b)return;const t=b.dataset.jump;
   if($("#tab-board").classList.contains("hide"))document.querySelector('nav button[data-tab="board"]').click();
   const find=()=>document.querySelector(`#jobs .job[data-tail="${t}"]`);
   if(!find()){$("#q").value="";setFilter("active")}
