@@ -209,6 +209,16 @@ tr:last-child td{border-bottom:0}
 .msec{padding:12px 14px;border-top:1px solid var(--line);background:#FAFBFD}
 .msec .engbar{margin-bottom:8px}
 .jr .hint{font-size:12.5px;color:var(--mute);font-style:italic;padding:4px 0}
+/* per-task engineers */
+.ti{align-items:start!important}
+.ti .tst{margin-top:1px}
+.tbody{min-width:0}
+.twho{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center}
+.mini{display:inline-flex;align-items:center;gap:2px;font-size:11.5px;font-weight:700;background:#EEF2FF;color:#3730A3;border-radius:999px;padding:1px 3px 1px 8px}
+.mini button{border:0;background:none;color:#6366F1;cursor:pointer;font-size:13px;line-height:1;padding:0 3px}
+.mini button:hover{color:var(--red)}
+.addmini{appearance:none;width:auto;font-size:11.5px;font-weight:700;color:var(--blue);background:transparent;border:1px dashed #A7C1F5;border-radius:999px;padding:1px 8px;cursor:pointer;max-width:110px}
+.ti .tl{margin-top:5px}
 /* manning */
 .tcell{flex:1 1 220px!important;position:relative}
 .tcell.mn-ok{border-left-color:var(--green)!important;background:#F6FEF9}
@@ -321,6 +331,8 @@ th.today,td.today{background:#FFFBEB}
 .jc-tasks li.t-work:before{border-color:#F59E0B;background:#F59E0B;box-shadow:0 0 .5vw #F59E0B}
 .jc-tasks li.t-done{color:#64748B;text-decoration:line-through}
 .jc-tasks li.t-done:before{border-color:#22C55E;background:#22C55E}
+.jc-tasks li .tw{display:block;font-size:.85vw;color:#93C5FD;font-weight:700;text-decoration:none}
+.jc-tasks li.t-done .tw{color:#475569}
 .jc-tasks li em{font-style:normal;font-size:.75vw;color:#F59E0B;font-weight:800;letter-spacing:.05vw;text-transform:uppercase;margin-left:.3vw}
 .jc-who{display:flex;flex-wrap:wrap;gap:.45vw;border-top:1px solid rgba(255,255,255,.07);padding-top:.8vw}
 .jc-who span{background:rgba(255,255,255,.07);border-radius:99px;padding:.25vw .8vw;font-size:1.05vw;font-weight:700;color:#fff;white-space:nowrap}
@@ -652,6 +664,7 @@ function assign(jobId,engId){
 }
 function unassign(jobId,engId){
   const j=job(jobId);const t=now();
+  items(j).forEach(it=>it.who=it.who.filter(x=>x!==engId));
   j.assignments=j.assignments.filter(a=>!(a.eng===engId&&!a.to&&!a.from)); // never started: just drop
   j.assignments.forEach(a=>{if(a.eng===engId&&!a.to)a.to=t});
   settle(j);save();
@@ -690,9 +703,17 @@ function items(j){
   const lines=String(j.task||"").split("\n").map(t=>t.trim()).filter(Boolean),old=j.items||[];
   const used=new Set();
   j.items=lines.map((t,i)=>{let o=old.findIndex((x,k)=>!used.has(k)&&x.t===t);if(o<0&&old[i]&&!used.has(i)&&!lines.includes(old[i].t))o=i;
-    if(o>=0){used.add(o);return {t,s:old[o].s||"todo",at:old[o].at||null}}return {t,s:j.status==="done"?"done":"todo",at:null}});
+    if(o>=0){used.add(o);return {t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[]}}return {t,s:j.status==="done"?"done":"todo",at:null,who:[]}});
   return j.items;
 }
+const shortName=e=>{const x=eng(e)||(D.archived||[]).find(a=>a.id===e);if(!x)return "(removed)";return x.title?x.title+" "+x.name.trim().split(/\s+/).pop():x.name};
+function assignItem(jobId,idx,engId){
+  const j=job(jobId);const it=items(j)[idx];if(!it||!engId)return;
+  if(!it.who.includes(engId))it.who.push(engId);
+  if(!current(j).includes(engId)){j.assignments.push({eng:engId,from:j.status==="work"?now():null,to:null});settle(j)}
+  save();
+}
+function unassignItem(jobId,idx,engId){const j=job(jobId);const it=items(j)[idx];if(!it)return;it.who=it.who.filter(x=>x!==engId);save()}
 const ITEM={todo:{n:"Not started",i:"○",next:"work"},work:{n:"In progress",i:"▶",next:"done"},done:{n:"Done",i:"✓",next:"todo"}};
 function cycleItem(jobId,idx){
   const j=job(jobId);if(!j||j.status==="done")return;const it=items(j)[idx];if(!it)return;
@@ -818,7 +839,12 @@ function renderBoard(){
       </div>
       ${rows}
       <div class="jr"><div class="jl">Job${(()=>{const it=items(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
-        :`<div class="tlist">${items(j).map((it,i)=>`<div class="ti s-${it.s}"><button class="tst" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}">${ITEM[it.s].i}</button><span class="tt">${esc(it.t)}</span><span class="tl">${ITEM[it.s].n}</span></div>`).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
+        :`<div class="tlist">${items(j).map((it,i)=>{
+          const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
+          const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
+          return `<div class="ti s-${it.s}"><button class="tst" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}">${ITEM[it.s].i}</button>
+          <div class="tbody"><span class="tt">${esc(it.t)}</span><div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?"":`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>
+          <span class="tl">${ITEM[it.s].n}</span></div>`}).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
@@ -838,6 +864,7 @@ $("#jobs").addEventListener("click",e=>{
   else if(t.dataset.done)complete(t.dataset.done);
   else if(t.dataset.start)start(t.dataset.start);
   else if(t.dataset.item){const[j,i]=t.dataset.item.split("|");cycleItem(j,+i)}
+  else if(t.dataset.iun){const[j,i,en]=t.dataset.iun.split("|");unassignItem(j,+i,en)}
   else if(t.dataset.edit){EDIT.add(t.dataset.edit);render();const ta=document.querySelector(`.task-edit[data-id="${t.dataset.edit}"]`);if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}}
   else if(t.dataset.share)share(jobText(job(t.dataset.share),true));
   else if(t.dataset.stop)stop(t.dataset.stop);
@@ -850,6 +877,7 @@ $("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.cont
 $("#jobs").addEventListener("change",e=>{
   const t=e.target;
   if(t.dataset.add)assign(t.dataset.add,t.value);
+  else if(t.dataset.iadd){const[j,i]=t.dataset.iadd.split("|");assignItem(j,+i,t.value)}
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
 });
 
@@ -861,7 +889,7 @@ function jobText(j,head){
   const tasks=j.task.split("\n").map(t=>t.trim()).filter(Boolean);
   return (head?"Tasking update "+stamp()+"\n\n":"")+
     `${j.tail}${j.bay?" – Bay "+j.bay:""} (${state})\n`+
-    items(j).map(t=>(t.s==="done"?"✅ ":t.s==="work"?"🔶 ":"⬜ ")+t.t).join("\n")+"\n"+
+    items(j).map(t=>(t.s==="done"?"✅ ":t.s==="work"?"🔶 ":"⬜ ")+t.t+(t.who.length?" – "+t.who.map(shortName).join(", "):"")).join("\n")+"\n"+
     "👷 "+(who.length?who.join(", "):"Nobody assigned yet");
 }
 function boardText(){
@@ -1013,7 +1041,7 @@ function card(j){
   const its=items(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
   return `<div class="jc ${cls}"><div class="jc-top"><span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}<span class="jc-st">${st}</span></div>
-    <ul class="jc-tasks">${items(j).map(t=>`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}</li>`).join("")}</ul>
+    <ul class="jc-tasks">${items(j).map(t=>`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
 }
