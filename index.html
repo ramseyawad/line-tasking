@@ -71,7 +71,7 @@ textarea{resize:vertical;min-height:42px;line-height:1.45}
 .kpi span{font-size:12px;color:var(--mute);font-weight:600}
 @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
 /* layout */
-.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
 @media(max-width:1100px){.grid{grid-template-columns:1fr}}
 .stack{display:flex;flex-direction:column;gap:16px}
 /* new job */
@@ -433,20 +433,19 @@ th.today,td.today{background:#FFFBEB}
 .db-exit{position:absolute;bottom:.6vw;right:.6vw;opacity:0;background:#1E293B;color:#fff;border:0;border-radius:.5vw;padding:.4vw .8vw;cursor:pointer;font-size:.9vw;transition:opacity .2s}
 #display:hover .db-exit{opacity:1}
 /* manning strip on top, jobs full width underneath */
-.crewbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:#EEF2F7;border-top:1px solid #EEF2F7;border-bottom:1px solid #EEF2F7}
-.crewbox .jr{display:flex;flex-direction:column;gap:5px;background:#FBFCFE;padding:8px 12px;border-top:0!important}
+.crewbox{display:flex;flex-wrap:wrap;gap:1px;background:#EEF2F7;border-top:1px solid #EEF2F7;border-bottom:1px solid #EEF2F7}
+.crewbox .jr{flex:1 1 150px;display:flex;flex-direction:column;gap:5px;background:#FBFCFE;padding:8px 12px;border-top:0!important}
 .crewbox .jl{padding-top:0;display:flex;align-items:baseline;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 .crewbox .jl small{display:inline;font-size:10px;text-transform:none;letter-spacing:0}
 .crewbox .chips{gap:5px}
 .crewbox .chip{font-size:12.5px}
 .crewbox .jr .none{padding:2px 0;font-size:12px}
-#jobs:not(.tiles) .crewbox .jr:last-child:nth-child(odd){grid-column:1/-1}
 .jobrow{display:block!important;padding:10px 14px}
 .jobrow>.jl{display:flex;align-items:baseline;gap:8px;padding:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 .jobrow>.jl small{display:inline;text-transform:none;letter-spacing:0}
 @media(min-width:900px){
   #jobs.tiles .job{grid-template-columns:290px minmax(0,1fr);grid-template-areas:"h c" "m j" "f j";grid-template-rows:auto auto 1fr}
-  #jobs.tiles .crewbox{grid-area:c;border-left:1px solid var(--line);border-right:0;border-top:0;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  #jobs.tiles .crewbox{grid-area:c;border-left:1px solid var(--line);border-right:0;border-top:0}
   #jobs.tiles .jobrow{grid-area:j;border-left:1px solid var(--line)}
   #jobs.tiles .jh{border-bottom:0}
 }
@@ -466,6 +465,14 @@ th.today,td.today{background:#FFFBEB}
 .job{scroll-margin-top:calc(var(--hdrH,60px) + var(--acH,46px) + 12px)}
 .job.flash{animation:jflash 1.6s ease-out}
 @keyframes jflash{0%,40%{box-shadow:0 0 0 4px #3B82F6}100%{box-shadow:var(--sh)}}
+.drawer{position:fixed;top:var(--hdrH,60px);right:0;bottom:0;width:340px;max-width:92vw;z-index:30;border-radius:0;margin:0;overflow-y:auto;transform:translateX(105%);transition:transform .22s ease;box-shadow:-8px 0 30px rgba(15,23,42,.18)}
+body.team-open .drawer{transform:none}
+.drawer-bg{position:fixed;inset:0;top:var(--hdrH,60px);z-index:29;background:rgba(11,18,32,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+body.team-open .drawer-bg{opacity:1;pointer-events:auto}
+.drawer .card-h{position:sticky;top:0;background:#fff;z-index:1}
+.teambtn i{font-style:normal;font-size:11.5px;font-weight:800;background:var(--greenBg,#DCFCE7);color:var(--green,#15803D);border-radius:99px;padding:1px 7px;margin-left:2px}
+body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
+#notesCard .notesbox{min-height:110px}
 </style>
 </head>
 <body>
@@ -492,6 +499,15 @@ th.today,td.today{background:#FFFBEB}
 
 <main>
 <!-- BOARD -->
+    <aside class="card drawer" id="team" aria-hidden="true">
+      <div class="card-h"><h2>Team</h2><span class="sub" style="margin-left:auto" id="teamSub"></span><button class="btn icon" id="teamClose" title="Close">✕</button></div>
+      <div class="team-sec" style="--c:var(--green)"><h3><i></i>Available<em id="cFree">0</em></h3><div id="freeList"></div></div>
+      <div class="team-sec" style="--c:var(--blue)"><h3><i></i>Working<em id="cBusy">0</em></h3><div id="busyList"></div></div>
+      <div class="team-sec hide" id="dutySec" style="--c:#4F46E5"><h3><i></i>Line roles<em id="cDuty">0</em></h3><div id="dutyList"></div></div>
+      <details class="team-sec offs" style="--c:#CBD5E1"><summary><h3 style="margin:0"><i></i>Off shift<em id="cOff">0</em></h3></summary><div id="offList" style="margin-top:8px"></div></details>
+    </aside>
+<div class="drawer-bg" id="teamBg"></div>
+
 <section id="tab-board">
   <div class="kpis">
     <button class="kpi" data-k="work" style="--c:var(--blue)"><span class="dot"><svg class="i" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></span><div><b id="kpWork">0</b><span>In work</span></div></button>
@@ -517,22 +533,14 @@ th.today,td.today{background:#FFFBEB}
           </div>
           <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search tail, bay, task, name"></div>
           <div class="viewsw" id="viewSw" title="Change layout"><button data-v="grid" title="Squares"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button data-v="tiles" title="Stretched tiles"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg></button></div>
+          <button class="btn teambtn" id="teamOpen" title="Show the team (T)"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team <i id="teamBadge">0 free</i></button>
           <select id="sortBy"><option value="tail">Sort: tail</option><option value="status">Sort: status</option><option value="bay">Sort: bay</option><option value="new">Sort: newest</option></select>
         </div>
         <div id="jobs"></div>
       </div>
-    </div>
-    <div class="stack">
-    <div class="card">
+    <div class="card" id="notesCard">
       <div class="card-h"><h2>Shift notes</h2><span class="sub" style="margin-left:auto">Carries through every shift · saved in each diary</span></div>
       <textarea id="shiftNotes" class="notesbox" rows="5" placeholder="Anything that happened this shift – phone calls, decisions, who was told what…"></textarea>
-    </div>
-    <div class="card" id="team">
-      <div class="card-h"><h2>Team</h2><span class="sub" style="margin-left:auto" id="teamSub"></span></div>
-      <div class="team-sec" style="--c:var(--green)"><h3><i></i>Available<em id="cFree">0</em></h3><div id="freeList"></div></div>
-      <div class="team-sec" style="--c:var(--blue)"><h3><i></i>Working<em id="cBusy">0</em></h3><div id="busyList"></div></div>
-      <div class="team-sec hide" id="dutySec" style="--c:#4F46E5"><h3><i></i>Line roles<em id="cDuty">0</em></h3><div id="dutyList"></div></div>
-      <details class="team-sec offs" style="--c:#CBD5E1"><summary><h3 style="margin:0"><i></i>Off shift<em id="cOff">0</em></h3></summary><div id="offList" style="margin-top:8px"></div></details>
     </div>
     </div>
   </div>
@@ -842,7 +850,7 @@ applyView();
 $("#sortBy").onchange=render;$("#q").addEventListener("input",render);
 const setFilter=f=>{FILTER=f;document.querySelectorAll("#pills button").forEach(b=>b.classList.toggle("on",b.dataset.f===f));render()};
 $("#pills").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setFilter(b.dataset.f)});
-document.querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{if(k.dataset.k==="team"){$("#team").scrollIntoView({behavior:"smooth"});return}setFilter(FILTER===k.dataset.k?"active":k.dataset.k)});
+document.querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{if(k.dataset.k==="team"){toggleTeam(true);return}setFilter(FILTER===k.dataset.k?"active":k.dataset.k)});
 
 const job=id=>D.jobs.find(x=>x.id===id);
 function settle(j){ // status for a job not yet started
@@ -1055,7 +1063,7 @@ function renderBoard(){
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
-  $("#teamSub").textContent=onShift.length+" on shift";
+  $("#teamSub").textContent=onShift.length+" on shift";$("#teamBadge").textContent=freeE.length+" free";
   const fp=e=>`<div class="person" style="padding:5px 8px">${av(e.id)}<div><div class="nm">${esc(e.name)}</div>${p[e.id]?`<div class="ds">Next: <b>${p[e.id].map(label).join(", ")}</b></div>`:""}</div></div>`;
   $("#freeList").innerHTML=(freeE.some(e=>e.cat)?groupByTrade(freeE).map((g,i)=>g.length?`<div class="tgh">${TRADES[i]} · ${g.length}</div>`+g.map(fp).join(""):"").join(""):freeE.map(fp).join(""))||`<div class="team-empty">${onShift.length?"Everyone is working":"Nobody marked on shift"}</div>`;
   $("#busyList").innerHTML=[...busyE].sort(byTrade).map(e=>`<div class="person">${av(e.id)}<div><div class="nm">${esc(e.name)} ${tradeTag(e)}</div><div class="ds">${w[e.id].map(j=>`<b>${label(j)}</b> · ${esc(j.task.split("\n")[0].slice(0,30))}`).join("<br>")}${p[e.id]?`<br>Next: ${p[e.id].map(label).join(", ")}`:""}</div></div></div>`).join("")||`<div class="team-empty">Nobody on a started job</div>`;
@@ -1102,6 +1110,11 @@ $("#acBar").addEventListener("click",e=>{const b=e.target.closest("button[data-j
   el.scrollIntoView({behavior:"smooth",block:"start"});
   document.querySelectorAll(`#jobs .job[data-tail="${t}"]`).forEach(x=>{x.classList.remove("flash");void x.offsetWidth;x.classList.add("flash")});
 });
+
+function toggleTeam(on){on=on??!document.body.classList.contains("team-open");document.body.classList.toggle("team-open",on);$("#team").setAttribute("aria-hidden",!on)}
+$("#teamOpen").onclick=()=>toggleTeam();$("#teamClose").onclick=()=>toggleTeam(false);$("#teamBg").onclick=()=>toggleTeam(false);
+addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("team-open"))toggleTeam(false);
+  if((e.key==="t"||e.key==="T")&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))toggleTeam()});
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
