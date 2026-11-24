@@ -280,6 +280,8 @@ tr:last-child td{border-bottom:0}
 .hojobs .hr b{min-width:70px}
 .hojobs .hr .sub{flex:1}
 .hojobs select{width:auto;padding:4px 8px;font-size:12.5px}
+.jmeta .tagf[data-f=tag]{flex:1 1 180px;width:auto;min-width:150px}
+.jmeta .tagf[data-f=tag]:focus{color:var(--ink);background:#fff}
 /* per-task engineers */
 .ti{align-items:start!important}
 .ti .tst{margin-top:1px}
@@ -997,7 +999,7 @@ function renderBoard(){
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<input class="tagf" data-f="tag" data-id="${j.id}" value="${esc(j.tag||"")}" ${done?"disabled":""} placeholder="+ role / note (NS3…)"><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">${j.cf?`<span class="sub" title="Carried over from previous shifts">↻ carried ×${j.cf}</span>`:""}</div>
+      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<input class="tagf" data-f="tag" data-id="${j.id}" value="${esc(j.tag||"")}" ${done?"disabled":""} placeholder="+ status notes (WATER DUMPED, NO APU, NS3…)" title="Free text – separate items with commas"><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">${j.cf?`<span class="sub" title="Carried over from previous shifts">↻ carried ×${j.cf}</span>`:""}</div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
