@@ -1028,7 +1028,8 @@ if(SB_URL&&SB_KEY&&window.supabase){
   async function boot(){
     const {data:{session}}=await sb.auth.getSession();
     if(!session){gate("in");return}
-    const {data:prof}=await sb.from("wa_profiles").select("*").eq("id",session.user.id).maybeSingle();
+    const {data:prof,error:perr}=await sb.from("wa_profiles").select("*").eq("id",session.user.id).maybeSingle();
+    if(perr){gate("in","Couldn't load your profile ("+perr.message+"). Try again in a moment.");return}
     if(!prof||prof.role==="pending"){gate("wait");$("#gWaitTxt").textContent=`Thanks${prof?.full_name?", "+prof.full_name:""}. An admin needs to approve your account – sign in again once you've been told it's approved.`;return}
     if(prof.role==="rejected"){await sb.auth.signOut();gate("in","Your access request was declined. Speak to your shift admin.");return}
     ME=prof;gate(null);
