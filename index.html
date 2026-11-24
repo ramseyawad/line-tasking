@@ -280,8 +280,12 @@ tr:last-child td{border-bottom:0}
 .hojobs .hr b{min-width:70px}
 .hojobs .hr .sub{flex:1}
 .hojobs select{width:auto;padding:4px 8px;font-size:12.5px}
-.jmeta .tagf[data-f=tag]{flex:1 1 180px;width:auto;min-width:150px}
-.jmeta .tagf[data-f=tag]:focus{color:var(--ink);background:#fff}
+.tags{display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1 1 200px;min-width:150px}
+.tagc{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700;color:#B91C1C;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:2px 4px 2px 8px;white-space:nowrap}
+.tagc button{border:0;background:none;color:#B91C1C;font-size:14px;line-height:1;cursor:pointer;padding:0 3px;border-radius:4px}
+.tagc button:hover{background:#FECACA}
+.tagadd{flex:1 1 90px;min-width:90px;font-size:12.5px;padding:4px 8px;border:1px dashed var(--line,#CBD5E1);border-radius:6px;background:#F8FAFC}
+.tagadd:focus{background:#fff;border-style:solid}
 /* per-task engineers */
 .ti{align-items:start!important}
 .ti .tst{margin-top:1px}
@@ -661,7 +665,7 @@ th.today,td.today{background:#FFFBEB}
       <label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" id="nPri" placeholder="–"></label>
       <select id="nSt" class="acsel"><option value="">State…</option><option>Serviceable</option><option>AOG</option><option>Shed Maint</option></select>
       <select id="nArea" class="acsel"><option>Line</option><option>Line Support</option><option>Deployed</option></select>
-      <input id="nTag" class="tagf" placeholder="Role / note e.g. NS3">
+      <input id="nTag" class="tagf" placeholder="Status notes (comma separated)">
       <input id="nLsj" class="tagf" style="width:110px" placeholder="LSJ set">
     </div>
     <div id="nSummary"></div>
@@ -854,6 +858,7 @@ const EDIT=new Set();
 const ACSTATE=["Serviceable","AOG","Shed Maint"],ACAREA=["Line","Line Support","Deployed"];
 const stCls=v=>({Serviceable:"sv",AOG:"aog","Shed Maint":"shed"}[v]||"");
 const prio=j=>{const p=parseInt(j.pri);return p>0?p:999};
+const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
 const selHtml=(f,id,list,val,dis,blank)=>`<select class="acsel ${f==="acst"?stCls(val):""}" data-f="${f}" data-id="${id}" ${dis?"disabled":""}>${blank?`<option value="">${blank}</option>`:""}${list.map(v=>`<option ${v===val?"selected":""}>${v}</option>`).join("")}</select>`;
 const INFO_RE=/^INFO\b[\s:–-]*/i;
 const itxt=it=>it.info?it.t.replace(INFO_RE,""):it.t;
@@ -997,7 +1002,7 @@ function renderBoard(){
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<input class="tagf" data-f="tag" data-id="${j.id}" value="${esc(j.tag||"")}" ${done?"disabled":""} placeholder="+ status notes (WATER DUMPED, NO APU, NS3…)" title="Free text – separate items with commas"><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
+      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
@@ -1032,6 +1037,7 @@ $("#jobs").addEventListener("click",e=>{
   else if(t.dataset.stop)stop(t.dataset.stop);
   else if(t.dataset.reopen)reopen(t.dataset.reopen);
   else if(t.dataset.del)del(t.dataset.del);
+  else if(t.dataset.tagdel){const[id,i]=t.dataset.tagdel.split("|"),l=tagList(job(id));l.splice(+i,1);editField(id,"tag",l.join(", "))}
 });
 $("#jobs").addEventListener("input",e=>{const t=e.target;if(t.classList.contains("task-edit")){t.rows=Math.max(1,t.value.split("\n").length)}});
 $("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.classList.contains("task-edit")&&(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey)))){if(e.key==="Escape"&&t.value.trim()===job(t.dataset.id).task){EDIT.delete(t.dataset.id);render()}else t.blur()}});
@@ -1040,8 +1046,11 @@ $("#jobs").addEventListener("change",e=>{
   const t=e.target;
   if(t.dataset.add)assign(t.dataset.add,t.value);
   else if(t.dataset.iadd){const[j,i]=t.dataset.iadd.split("|");assignItem(j,+i,t.value)}
+  else if(t.dataset.tagadd)addTag(t);
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
 });
+function addTag(t){const v=t.value.trim();if(!v)return;const id=t.dataset.tagadd,l=tagList(job(id));v.split(",").map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!l.some(y=>y.toLowerCase()===x.toLowerCase()))l.push(x.toUpperCase())});t.value="";editField(id,"tag",l.join(", "));setTimeout(()=>document.querySelector(`.tagadd[data-tagadd="${id}"]`)?.focus(),0)}
+$("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.dataset?.tagadd&&e.key==="Enter"){e.preventDefault();addTag(t)}});
 
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -1343,7 +1352,7 @@ function card(j){
   const cls=done?"green":j.status==="work"?"amber":"red";
   const its=tasksOnly(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
-  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${j.tag?`<span class="jc-bay">${esc(j.tag)}</span>`:""}${j.area&&j.area!=="Line"?`<span class="jc-bay">${esc(j.area)}</span>`:""}<span class="jc-st">${st}</span></div>
+  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${j.area&&j.area!=="Line"?`<span class="jc-bay">${esc(j.area)}</span>`:""}<span class="jc-st">${st}</span></div>
     <ul class="jc-tasks">${items(j).map(t=>t.info?`<li class="t-info">${esc(itxt(t))}</li>`:`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
