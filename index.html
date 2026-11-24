@@ -518,6 +518,44 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .db-body::before,.db-body::after{content:"";position:absolute;left:0;right:0;z-index:2;pointer-events:none}
 .db-body::before{top:0;height:1.5vw;background:linear-gradient(#070B14,rgba(7,11,20,0))}
 .db-body::after{bottom:0;height:3vw;background:linear-gradient(rgba(7,11,20,0),#070B14)}
+/* stats */
+#tab-stats .card-h{flex-wrap:wrap;gap:10px}
+#tab-stats .card-h input[type=date]{width:auto;padding:5px 8px;font-size:13px}
+.sx-range{display:flex;background:#F1F4F8;border-radius:8px;padding:3px;gap:2px}
+.sx-range button{border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:var(--mute);padding:5px 10px;border-radius:6px;cursor:pointer}
+.sx-range button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+.sx-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:14px 16px 4px}
+.sx-kpi{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column}
+.sx-kpi b{font-size:24px;font-weight:800;color:var(--ink);line-height:1.15}
+.sx-kpi span{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.sx-kpi small{font-size:11px;color:var(--mute)}
+.sx-note{font-size:11.5px;color:var(--mute);margin:6px 16px 14px}
+.sx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px;margin-top:16px}
+.sx-grid .card{margin:0}
+.sx-wide{grid-column:1/-1}
+.sx-body{padding:12px 16px 16px}
+.sx-bars{display:flex;flex-direction:column;gap:4px}
+.sx-row{display:grid;grid-template-columns:minmax(110px,38%) 1fr 64px auto;gap:10px;align-items:center;font-size:13px;padding:3px 4px;border-radius:6px}
+.sx-row:hover{background:#F8FAFC}
+.sx-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--ink)}
+.sx-track{height:10px;background:#F1F4F8;border-radius:4px;overflow:hidden}
+.sx-track i{display:block;height:100%;background:#2563EB;border-radius:0 4px 4px 0;min-width:2px}
+.sx-v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.sx-x{font-size:11.5px;color:var(--mute);white-space:nowrap}
+.sx-aog{color:#B91C1C}
+.sx-cols{display:flex;align-items:flex-end;gap:2px;height:150px;padding-top:16px}
+.sx-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;position:relative}
+.sx-col i{display:block;width:100%;max-width:28px;background:#2563EB;border-radius:4px 4px 0 0;min-height:0}
+.sx-col:hover i{background:#1D4ED8}
+.sx-cv{font-size:10.5px;font-weight:700;color:var(--ink2);margin-bottom:2px}
+.sx-cl{font-size:10.5px;color:var(--mute);height:14px;margin-top:3px}
+.sx-axis{font-size:11px;color:var(--mute);text-align:center;margin-top:4px}
+.sx-empty{font-size:13px;color:var(--mute);font-style:italic;padding:10px 0}
+.sx-crews{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.sx-crews div{font-size:12.5px;background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--ink2)}
+.sx-mn{display:inline-block;font-size:11px;font-weight:700;background:#F1F5F9;border-radius:4px;padding:1px 6px;margin:0 3px 2px 0;color:var(--ink2)}
+.sx-mn.low{background:#FEE2E2;color:#B91C1C}
+@media(max-width:600px){.sx-row{grid-template-columns:minmax(90px,40%) 1fr 56px}.sx-x{display:none}}
 </style>
 </head>
 <body>
@@ -527,6 +565,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
     <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
     <button data-tab="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History</button>
+    <button data-tab="stats"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-8"/></svg>Stats</button>
     <button data-tab="info"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Useful info</button>
     <button data-tab="diary"><svg class="i" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M8 7h8M8 11h6"/></svg>Diary</button>
     <button data-tab="users" id="navUsers" class="hide"><svg class="i" viewBox="0 0 24 24"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users<i class="nbadge hide" id="reqBadge">0</i></button>
@@ -663,6 +702,28 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
   </div>
 </section>
 <!-- USEFUL INFO -->
+<section id="tab-stats" class="hide">
+  <div class="card">
+    <div class="card-h"><h2>Stats</h2>
+      <div class="sx-range" id="sxRange"><button data-r="shift">This shift</button><button data-r="today">Today</button><button data-r="7" class="on">7 days</button><button data-r="30">30 days</button><button data-r="all">All time</button></div>
+      <input type="date" id="sxFrom" title="From"><input type="date" id="sxTo" title="To">
+      <button class="btn" id="sxCsv" style="margin-left:auto">Export CSV</button>
+    </div>
+    <div class="sx-kpis" id="sxKpis"></div>
+    <p class="sx-note">Times come from Start and Complete presses – a job completed without pressing Start has no working time. AOG time is recorded from 24 Nov 2026 onwards.</p>
+  </div>
+  <div class="sx-grid">
+    <div class="card"><div class="card-h"><h2>Engineers</h2><span class="sub" style="margin-left:auto">Hours on started jobs</span></div><div id="sxEng" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Aircraft</h2><span class="sub" style="margin-left:auto">Work hours per tail</span></div><div id="sxAc" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>By trade</h2><span class="sub" style="margin-left:auto">Share of hours worked</span></div><div id="sxTrade" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Jobs completed per day</h2></div><div id="sxDay" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Busiest hours</h2><span class="sub" style="margin-left:auto">Jobs started and completed by hour</span></div><div id="sxHour" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Most common tasks</h2></div><div id="sxTask" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Carried over most</h2><span class="sub" style="margin-left:auto">Jobs handed to another shift</span></div><div id="sxCf" class="sx-body"></div></div>
+    <div class="card sx-wide"><div class="card-h"><h2>Shifts</h2><span class="sub" style="margin-left:auto" id="sxShiftSub"></span></div><div id="sxShift" class="sx-body"></div></div>
+  </div>
+</section>
+
 <section id="tab-info" class="hide">
   <div class="card">
     <div class="card-h"><h2>Useful information</h2><span class="sub" id="infoMeta" style="margin-left:auto">Stays shift to shift · included in every diary export</span></div>
@@ -867,7 +928,7 @@ function setOnShift(en,on){en.onShift=on;if(!on){const ts=now();D.jobs.filter(ac
 /* ---------- tabs & clock ---------- */
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{window.scrollTo(0,0);
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
-  ["board","shift","history","info","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="diary")loadDiary();
+  ["board","shift","history","stats","info","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="diary")loadDiary();
   render();loadDiary();
 });
 const tick=()=>{const d=new Date();$("#clock").textContent=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});if(D.shift)$("#shiftName").textContent=(D.shift.crew?D.shift.crew+" Shift · ":"")+SHIFT_NAME[D.shift.type]+" · "+new Date(D.shift.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});const dt=document.querySelector(".db-title small");if(dt&&D.shift)dt.textContent=(D.shift.crew?D.shift.crew+" SHIFT · ":"")+SHIFT_NAME[D.shift.type].toUpperCase()};
@@ -881,7 +942,7 @@ $("#addJob").onclick=()=>{
   const task=$("#nTask").value.trim();
   if(!task){$("#nTask").focus();return}
   const engs=[...PICK].filter(id=>isOn(eng(id)));
-  D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),pri:$("#nPri").value.trim(),acst:$("#nSt").value,area:$("#nArea").value,task,status:engs.length?"planned":"open",
+  D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),pri:$("#nPri").value.trim(),acst:$("#nSt").value,acstLog:$("#nSt").value?[{v:$("#nSt").value,at:now()}]:[],area:$("#nArea").value,task,status:engs.length?"planned":"open",
     created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null}))});
   $("#nTask").value="";$("#nBay").value="";$("#nTag").value="";$("#nLsj").value="";$("#nPri").value="";$("#nSt").value="";$("#nArea").value="Line";
   PICK.clear();closeNew();
@@ -947,7 +1008,7 @@ function del(jobId){
   const i=D.jobs.findIndex(x=>x.id===jobId);const [gone]=D.jobs.splice(i,1);save();
   toast("Job deleted",()=>{D.jobs.splice(i,0,gone);save()});
 }
-function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&!val){render();return}if(j[field]!==val){j[field]=val;j.edited=now()}if(field==="task"){items(j);EDIT.delete(jobId)}save()}
+function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&!val){render();return}if(field==="acst"&&(j.acst||"")!==val)(j.acstLog=j.acstLog||[]).push({v:val,at:now()});if(j[field]!==val){j[field]=val;j.edited=now()}if(field==="task"){items(j);EDIT.delete(jobId)}save()}
 // Each line of a job's task box is its own task with a status: todo → work → done
 const EDIT=new Set();
 const ACSTATE=["Serviceable","AOG","Shed Maint"],ACAREA=["Line","Line Support","Deployed"];
@@ -1328,6 +1389,103 @@ $("#exportCsv").onclick=()=>{
 
 
 
+
+/* ---------- stats ---------- */
+let SXR="7";
+const hrs=ms=>{const m=Math.round(ms/60000);return m<60?m+"m":Math.floor(m/60)+"h "+String(m%60).padStart(2,"0")+"m"};
+const hnum=ms=>(ms/3600000);
+function sxBounds(){
+  const n=new Date();let a,b=n;
+  if(SXR==="shift")a=shiftStart();
+  else if(SXR==="today"){a=new Date(n);a.setHours(0,0,0,0)}
+  else if(SXR==="all")a=new Date(0);
+  else if(SXR==="custom"){a=$("#sxFrom").value?new Date($("#sxFrom").value+"T00:00"):new Date(0);b=$("#sxTo").value?new Date($("#sxTo").value+"T23:59:59"):n;if(b>n)b=n}
+  else{a=new Date(n);a.setDate(a.getDate()-(+SXR-1));a.setHours(0,0,0,0)}
+  return[a,b];
+}
+const clip=(f,t,a,b)=>Math.max(0,Math.min(+t,+b)-Math.max(+f,+a));
+const bars=(rows,opt={})=>{const mx=Math.max(1,...rows.map(r=>r.v));return rows.length?`<div class="sx-bars">${rows.map(r=>`<div class="sx-row" title="${esc(r.tip||r.l+": "+r.d)}"><span class="sx-l">${r.lh||esc(r.l)}</span><span class="sx-track"><i style="width:${(r.v/mx*100).toFixed(1)}%"></i></span><span class="sx-v">${esc(r.d)}</span>${r.x?`<span class="sx-x">${r.x}</span>`:""}</div>`).join("")}</div>`:`<div class="sx-empty">${opt.empty||"Nothing in this period"}</div>`};
+const cols=(rows,lbl)=>{const mx=Math.max(1,...rows.map(r=>r.v));return `<div class="sx-cols">${rows.map(r=>`<div class="sx-col" title="${esc(r.tip)}"><span class="sx-cv">${r.v||""}</span><i style="height:${(r.v/mx*100).toFixed(1)}%"></i><span class="sx-cl">${esc(r.l)}</span></div>`).join("")}</div>${lbl?`<div class="sx-axis">${lbl}</div>`:""}`};
+function statsData(){
+  const[a,b]=sxBounds(),inR=d=>d&&new Date(d)>=a&&new Date(d)<=b,nowD=new Date();
+  const done=D.jobs.filter(j=>j.status==="done"&&inR(j.completed)),raised=D.jobs.filter(j=>inR(j.created));
+  // engineer time on jobs, clipped to range
+  const E={},T={};
+  D.jobs.forEach(j=>j.assignments.forEach(x=>{if(!x.from)return;const to=x.to||j.completed||(j.status==="work"?nowD.toISOString():x.from);const ms=clip(new Date(x.from),new Date(to),a,b);if(!ms)return;
+    (E[x.eng]=E[x.eng]||{ms:0,jobs:new Set()}).ms+=ms;(T[j.tail]=T[j.tail]||{ms:0}).ms+=ms}));
+  done.forEach(j=>j.assignments.forEach(x=>{if(x.from)(E[x.eng]=E[x.eng]||{ms:0,jobs:new Set()}).jobs.add(j.id)}));
+  const waits=D.jobs.filter(j=>j.started&&inR(j.started)).map(j=>new Date(j.started)-new Date(j.created)).filter(x=>x>=0);
+  const works=done.filter(j=>j.started).map(j=>new Date(j.completed)-new Date(j.started)).filter(x=>x>=0);
+  const med=l=>{if(!l.length)return null;const s=[...l].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+  // AOG time per tail (merged across jobs on the same tail)
+  const aog={};D.jobs.forEach(j=>{const L=j.acstLog||[];L.forEach((e,i)=>{if(e.v!=="AOG")return;const end=L[i+1]?.at||j.completed||nowD.toISOString();(aog[j.tail]=aog[j.tail]||[]).push([+new Date(e.at),+new Date(end)])})});
+  const aogMs={};Object.entries(aog).forEach(([t,iv])=>{iv.sort((x,y)=>x[0]-y[0]);let tot=0,cs=null,ce=null;iv.forEach(([s0,e0])=>{s0=Math.max(s0,+a);e0=Math.min(e0,+b);if(e0<=s0)return;if(cs===null||s0>ce){if(cs!==null)tot+=ce-cs;cs=s0;ce=e0}else ce=Math.max(ce,e0)});if(cs!==null)tot+=ce-cs;if(tot)aogMs[t]=tot});
+  // aircraft
+  const AC={};const ac=t=>AC[t]=AC[t]||{done:0,raised:0,ms:0,cf:0,aog:0};
+  done.forEach(j=>ac(j.tail).done++);raised.forEach(j=>ac(j.tail).raised++);
+  Object.entries(T).forEach(([t,v])=>ac(t).ms=v.ms);Object.entries(aogMs).forEach(([t,v])=>ac(t).aog=v);
+  D.jobs.filter(j=>inR(j.created)||inR(j.completed)).forEach(j=>{if(j.cf)ac(j.tail).cf+=j.cf});
+  // tasks
+  const TK={};done.forEach(j=>items(j).filter(x=>!x.info).forEach(x=>{const k=x.t.toLowerCase().replace(/[^a-z0-9+/ ]/g," ").replace(/\s+/g," ").trim();if(!k)return;(TK[k]=TK[k]||{n:0,l:x.t}).n++}));
+  // hours of day
+  const HS=Array(24).fill(0),HC=Array(24).fill(0);D.jobs.forEach(j=>{if(inR(j.started))HS[new Date(j.started).getHours()]++;if(j.status==="done"&&inR(j.completed))HC[new Date(j.completed).getHours()]++});
+  // per day
+  const days=[];if(SXR!=="all"||done.length){const d0=new Date(SXR==="all"&&done.length?Math.min(...done.map(j=>+new Date(j.completed))):a);d0.setHours(0,0,0,0);for(let d=new Date(d0);d<=b&&days.length<62;d.setDate(d.getDate()+1))days.push(iso(d))}
+  const perDay=days.map(d=>({d,n:done.filter(j=>iso(new Date(j.completed))===d).length}));
+  // shifts from the diary
+  const sh=(DIARY||[]).filter(r=>!r.draft&&inR(r.endedAt||r.startedAt)).sort((x,y)=>(y.endedAt||"").localeCompare(x.endedAt||""));
+  return{a,b,done,raised,E,AC,TK,HS,HC,perDay,sh,waitMed:med(waits),workMed:med(works),totMs:Object.values(E).reduce((t,v)=>t+v.ms,0),aogTot:Object.values(aogMs).reduce((t,v)=>t+v,0)};
+}
+const belowMin=r=>(r.manning||[]).some(m=>m.min!=null&&m.min!==""&&m.count<+m.min);
+function renderStats(){
+  $("#sxRange").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.r===SXR));
+  const S=statsData(),fmtD=d=>d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+  if(SXR!=="custom"){$("#sxFrom").value=SXR==="all"?"":iso(S.a);$("#sxTo").value=iso(S.b)}
+  const k=(v,l,sub)=>`<div class="sx-kpi"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:""}</div>`;
+  const shBelow=S.sh.filter(belowMin).length;
+  $("#sxKpis").innerHTML=k(S.done.length,"Jobs completed",`${S.raised.length} raised`)+k(hrs(S.totMs),"Engineer time on jobs",`${Object.keys(S.E).length} engineers`)
+    +k(S.waitMed==null?"–":hrs(S.waitMed),"Typical wait to start","median, raised → started")+k(S.workMed==null?"–":hrs(S.workMed),"Typical working time","median, started → complete")
+    +k(S.sh.length?`${shBelow}/${S.sh.length}`:"–","Shifts below minimum","from handed-over diaries")+k(S.aogTot?hrs(S.aogTot):"–","AOG time","all tails");
+  // engineers
+  const er=Object.entries(S.E).map(([id,v])=>{const e=allNames().find(x=>x.id===id);return{id,e,ms:v.ms,n:v.jobs.size}}).sort((x,y)=>y.ms-x.ms);
+  $("#sxEng").innerHTML=bars(er.map(r=>({l:r.e?.name||"(unknown)",lh:`${esc(r.e?.name||"(unknown)")} ${r.e?tradeTag(r.e):""}`,v:r.ms,d:hrs(r.ms),x:`${r.n} job${r.n===1?"":"s"}`,tip:`${r.e?.name}: ${hrs(r.ms)} on jobs, ${r.n} completed`})),{empty:"No started jobs in this period"});
+  // aircraft
+  const ar=Object.entries(S.AC).sort((x,y)=>y[1].ms-x[1].ms||y[1].done-x[1].done);
+  $("#sxAc").innerHTML=bars(ar.map(([t,v])=>({l:t,v:v.ms,d:hrs(v.ms),x:`${v.done} done · ${v.raised} raised${v.cf?` · ${v.cf} c/o`:""}${v.aog?` · <b class="sx-aog">AOG ${hrs(v.aog)}</b>`:""}`,tip:`${t}: ${hrs(v.ms)} worked, ${v.done} done, ${v.raised} raised`})));
+  // trades
+  const TG=[["Management",[0]],["B1 Cert",[1]],["B2 Cert",[2]],["A Certs",[3,4,5,6]]];
+  const tr=TG.map(([n,ix])=>({l:n,ms:er.filter(r=>r.e&&ix.includes(tradeIx(r.e))).reduce((t,r)=>t+r.ms,0)}));
+  $("#sxTrade").innerHTML=S.totMs?bars(tr.map(r=>({l:r.l,v:r.ms,d:Math.round(r.ms/S.totMs*100)+"%",x:hrs(r.ms),tip:`${r.l}: ${hrs(r.ms)}`}))):`<div class="sx-empty">No started jobs in this period</div>`;
+  // per day
+  $("#sxDay").innerHTML=S.perDay.length>1?cols(S.perDay.map(r=>({v:r.n,l:new Date(r.d+"T12:00").toLocaleDateString("en-GB",{day:"numeric"}),tip:`${dlong(r.d)}: ${r.n} completed`})),`${fmtD(new Date(S.perDay[0].d+"T12:00"))} – ${fmtD(new Date(S.perDay.at(-1).d+"T12:00"))}`):`<div class="sx-empty">Pick a longer range to see days</div>`;
+  // hours
+  const hv=S.HS.map((v,i)=>v+S.HC[i]);
+  $("#sxHour").innerHTML=hv.some(Boolean)?cols(hv.map((v,i)=>({v,l:i%3?"":String(i).padStart(2,"0"),tip:`${String(i).padStart(2,"0")}:00 – ${S.HS[i]} started, ${S.HC[i]} completed`})),"Hour of day (00–23)"):`<div class="sx-empty">Nothing in this period</div>`;
+  // tasks
+  const tk=Object.values(S.TK).sort((x,y)=>y.n-x.n).slice(0,10);
+  $("#sxTask").innerHTML=bars(tk.map(r=>({l:r.l,v:r.n,d:r.n+"×"})));
+  // carried over
+  const cf=D.jobs.filter(j=>(j.cf||0)>0&&(inRange(j,S))).sort((x,y)=>y.cf-x.cf).slice(0,8);
+  $("#sxCf").innerHTML=bars(cf.map(j=>({l:j.tail+" – "+(j.task.split("\n")[0]||""),v:j.cf,d:j.cf+(j.cf===1?" shift":" shifts"),x:j.status==="done"?"done":"open"})),{empty:"No carried-over jobs in this period"});
+  // shifts
+  $("#sxShiftSub").textContent=S.sh.length?`${S.sh.length} handed over · ${shBelow} below minimum`:"";
+  const byCrew={};S.sh.forEach(r=>{const c=r.crew||"?";const o=byCrew[c]=byCrew[c]||{n:0,d:0,o:0};o.n++;o.d+=(r.done||[]).length;o.o+=(r.open||[]).length});
+  $("#sxShift").innerHTML=S.sh.length?`${Object.keys(byCrew).length>1?`<div class="sx-crews">${Object.entries(byCrew).sort().map(([c,o])=>`<div><b>${esc(c)} Shift</b> ${o.n} shift${o.n>1?"s":""} · ${o.d} done · ${(o.d/o.n).toFixed(1)} per shift · ${o.o} carried</div>`).join("")}</div>`:""}
+    <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Crew</th><th>Completed</th><th>Carried over</th><th>Manning</th><th>Handed over</th></tr></thead><tbody>${S.sh.map(r=>`<tr><td>${dlong(r.date)}</td><td>${SHIFT[r.type]||""}</td><td>${esc(r.crew||"")}</td><td>${(r.done||[]).length}</td><td>${(r.open||[]).length}</td><td>${(r.manning||[]).map(m=>`<span class="sx-mn ${m.min!=null&&m.min!==""&&m.count<+m.min?"low":""}" title="${esc(m.n)}: ${m.count}${m.min!=null&&m.min!==""?" (min "+m.min+")":""}">${esc(({Management:"Mgmt","B1 Cert":"B1","B2 Cert":"B2","A Certs":"A"})[m.n]||m.n)} ${m.count}</span>`).join("")}</td><td class="sub">${r.endedAt?fmt(r.endedAt):""}</td></tr>`).join("")}</tbody></table></div>`
+    :`<div class="sx-empty">No handed-over shifts in this period yet – shift stats build up from each handover.</div>`;
+}
+const inRange=(j,S)=>[j.created,j.completed,j.started].some(d=>d&&new Date(d)>=S.a&&new Date(d)<=S.b);
+$("#sxRange").onclick=e=>{const x=e.target.closest("button");if(!x)return;SXR=x.dataset.r;renderStats()};
+["#sxFrom","#sxTo"].forEach(id=>$(id).onchange=()=>{SXR="custom";renderStats()});
+$("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/"/g,'""')}"`,L=[];
+  L.push(q(`Line Tasking stats ${iso(S.a)} to ${iso(S.b)}`),"");
+  L.push(["Engineer","Trade","Hours on jobs","Jobs completed"].map(q).join(","));
+  Object.entries(S.E).sort((x,y)=>y[1].ms-x[1].ms).forEach(([id,v])=>{const e=allNames().find(x=>x.id===id);L.push([e?.name,e?catShort(e):"",hnum(v.ms).toFixed(2),v.jobs.size].map(q).join(","))});
+  L.push("",["Tail","Hours worked","Jobs done","Jobs raised","Carry-overs","AOG hours"].map(q).join(","));
+  Object.entries(S.AC).sort().forEach(([t,v])=>L.push([t,hnum(v.ms).toFixed(2),v.done,v.raised,v.cf,hnum(v.aog).toFixed(2)].map(q).join(",")));
+  L.push("",["Shift date","Shift","Crew","Completed","Carried over","Below minimum"].map(q).join(","));
+  S.sh.forEach(r=>L.push([r.date,SHIFT[r.type],r.crew,(r.done||[]).length,(r.open||[]).length,belowMin(r)?"Yes":"No"].map(q).join(",")));
+  download(`line-stats-${iso(S.a)}-to-${iso(S.b)}.csv`,L.join("\n"),"text/csv")};
 /* ---------- shifts, handover & diary ---------- */
 const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
 const SHIFT_CODES={E:["E"],L:["L","LCL","LWL"],N:["N"]};
@@ -1336,7 +1494,7 @@ function curShift(){if(!D.shift){const g=guessShift();D.shift={id:uid(),date:g.d
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
-async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary()}
+async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary();if(!$("#tab-stats").classList.contains("hide"))renderStats()}
 const tm=iso=>iso?new Date(iso).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"";
 const dlong=ds=>new Date(ds+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
 function renderShiftBar(){
@@ -1548,7 +1706,8 @@ if(location.hash==="#display"){$("#display").classList.remove("hide")}
 function render(){curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();
   if(!$("#tab-diary").classList.contains("hide"))renderDiary();
   if(!$("#tab-shift").classList.contains("hide"))renderShift();
-  if(!$("#tab-history").classList.contains("hide"))renderHistory();}
+  if(!$("#tab-history").classList.contains("hide"))renderHistory();
+  if(!$("#tab-stats").classList.contains("hide"))renderStats();}
 window.addEventListener("storage",e=>{if(e.key===KEY){try{D=JSON.parse(e.newValue)}catch(_){}render()}});
 render();
 
