@@ -462,7 +462,7 @@ th.today,td.today{background:#FFFBEB}
     </div>
     <div class="stack">
     <div class="card">
-      <div class="card-h"><h2>Shift notes</h2><span class="sub" style="margin-left:auto">Goes into this shift's diary</span></div>
+      <div class="card-h"><h2>Shift notes</h2><span class="sub" style="margin-left:auto">Carries through every shift · saved in each diary</span></div>
       <textarea id="shiftNotes" class="notesbox" rows="5" placeholder="Anything that happened this shift – phone calls, decisions, who was told what…"></textarea>
     </div>
     <div class="card" id="team">
@@ -1193,7 +1193,9 @@ $("#shiftBar").addEventListener("click",e=>{const b=e.target.closest("button");i
 const closeCs=()=>$("#csModal").classList.add("hide");$("#csClose").onclick=closeCs;$("#csCancel").onclick=closeCs;
 $("#csSave").onclick=()=>{const sh=curShift();sh.date=$("#csDate").value||sh.date;sh.type=$("#csType").value;closeCs();save()};
 // notes & useful info
-$("#shiftNotes").addEventListener("change",e=>{curShift().notes=e.target.value;save()});
+let notesT;const saveNotes=()=>{clearTimeout(notesT);if(curShift().notes===$("#shiftNotes").value)return;curShift().notes=$("#shiftNotes").value;save()};
+$("#shiftNotes").addEventListener("input",()=>{clearTimeout(notesT);notesT=setTimeout(saveNotes,1500)});
+$("#shiftNotes").addEventListener("change",saveNotes);
 let infoT;
 const saveInfo=()=>{clearTimeout(infoT);if(D.info===$("#usefulInfo").value)return;D.info=$("#usefulInfo").value;D.infoAt=now();D.infoBy=window.__waCloud?.me?.()?.full_name||"";save();$("#infoSaved").textContent="Saved "+tm(D.infoAt)};
 $("#usefulInfo").addEventListener("input",()=>{$("#infoSaved").textContent="Saving…";clearTimeout(infoT);infoT=setTimeout(saveInfo,1500)});
@@ -1215,7 +1217,7 @@ function openHandover(){
   const sh=curShift(),nx=nextShift(sh),ss=shiftStart();
   const doneJ=D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss),open=D.jobs.filter(active);
   $("#hoSub").textContent=`${SHIFT[sh.type]} · ${dlong(sh.date)}`;
-  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> outstanding will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens.</span>`;
+  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> outstanding will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over to the next shift.</span>`;
   SIG.sigOff.clear();SIG.sigOn.clear();["hoOffNA","hoOnNA"].forEach(i=>{$("#"+i).checked=false;$("#"+i).onchange({target:$("#"+i)})});
   $("#hoOffName").value=window.__waCloud?.me?.()?.full_name||"";$("#hoOnName").value="";$("#hoOffWhy").value="";$("#hoOnWhy").value="";
   $("#hoDate").value=nx.date;$("#hoType").value=nx.type;$("#hoErr").classList.add("hide");
@@ -1236,7 +1238,7 @@ $("#hoGo").onclick=async()=>{
   // carry over unfinished work
   D.jobs.filter(active).forEach(j=>{j.cf=(j.cf||0)+1;items(j).forEach(it=>{if(!it.info&&it.s!=="done")it.cf=true})});
   const nx={date:$("#hoDate").value,type:$("#hoType").value};
-  D.shift={id:uid(),date:nx.date,type:nx.type,startedAt:now(),notes:""};
+  D.shift={id:uid(),date:nx.date,type:nx.type,startedAt:now(),notes:curShift().notes||""}; // notes carry through every shift
   let msg=`Handed over – ${SHIFT[nx.type]} started`;
   if($("#hoRoster").checked&&rosterDays().includes(nx.date)){const n=applyRoster(nx.date,SHIFT_CODES[nx.type]);msg+=` · ${n} on shift from roster`}else save();
   closeHo();toast(msg);loadDiary();exportRecord(rec,false,win);
