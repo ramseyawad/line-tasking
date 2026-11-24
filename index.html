@@ -501,6 +501,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .line-add{width:100%;margin-top:6px;font:inherit;font-size:13px;padding:6px 8px;border:1px dashed #CBD5E1;border-radius:6px;background:transparent;color:var(--ink)}
 .line-add:focus{border-style:solid;border-color:var(--blue);background:#fff}
 .line-add::placeholder{color:var(--blue);font-weight:600}
+#display .cards.scrolling>.track{will-change:transform;backface-visibility:hidden}
 </style>
 </head>
 <body>
@@ -1474,14 +1475,16 @@ function fillHtml(el,html){
   box.querySelectorAll(".since").forEach(x=>x.textContent=since(x.dataset.t));
 }
 const fill=(el,list,msg)=>fillHtml(el,list.map(card).join("")||`<div class="empty-lane">${msg}</div>`);
-const SPEED=28; // pixels per second
+const SPEED=45; // pixels per second
 let lastT=0;
 function scrollLoop(t){
-  const dt=lastT?Math.min(100,t-lastT):0;lastT=t;
-  if(!$("#display").classList.contains("hide"))document.querySelectorAll("#display .cards.scrolling").forEach(box=>{
-    const loop=box.firstElementChild.offsetHeight;
+  const dt=lastT?Math.min(50,t-lastT):0;lastT=t;
+  if(!$("#display").classList.contains("hide"))document.querySelectorAll("#display .cards").forEach(box=>{
+    if(!box.classList.contains("scrolling")){if(box._y){box._y=0;for(const c of box.children)c.style.transform=""}return}
+    const tr=box.firstElementChild,loop=tr.offsetHeight+(parseFloat(getComputedStyle(box).rowGap)||0);
+    if(box.scrollTop)box.scrollTop=0;
     box._y=((box._y||0)+SPEED*dt/1000)%loop;
-    box.scrollTop=box._y;
+    const tf=`translate3d(0,${-box._y}px,0)`;for(const c of box.children)c.style.transform=tf;
   });
   requestAnimationFrame(scrollLoop);
 }
