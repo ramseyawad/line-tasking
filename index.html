@@ -209,6 +209,19 @@ tr:last-child td{border-bottom:0}
 .msec{padding:12px 14px;border-top:1px solid var(--line);background:#FAFBFD}
 .msec .engbar{margin-bottom:8px}
 .jr .hint{font-size:12.5px;color:var(--mute);font-style:italic;padding:4px 0}
+/* manning */
+.tcell{flex:1 1 220px!important;position:relative}
+.tcell.mn-ok{border-left-color:var(--green)!important;background:#F6FEF9}
+.tcell.mn-low{border-left-color:var(--amber)!important;background:#FFFBF0}
+.tcell.mn-crit{border-left-color:var(--red)!important;background:#FEF5F5;box-shadow:0 0 0 2px rgba(220,38,38,.15)}
+.mnst{font-size:11px;font-weight:800;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.mn-ok .mnst{background:var(--greenBg);color:var(--green)}
+.mn-low .mnst{background:var(--amberBg);color:var(--amber)}
+.mn-crit .mnst{background:var(--red);color:#fff}
+.mn-crit b{color:var(--red)!important}
+.tlabel{display:flex;align-items:center;gap:10px}
+.mntbl td,.mntbl th{padding:6px 8px;border:0}
+.mntbl input{width:90px}
 /* task items */
 .tlist{display:flex;flex-direction:column;gap:4px}
 .ti{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:3px 6px 3px 3px;border-radius:8px}
@@ -530,6 +543,12 @@ th.today,td.today{background:#FFFBEB}
   </div>
 </div>
 
+<div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
+  <div class="mhead"><h2>Manning targets</h2><span class="sub">per shift</span><button class="btn icon" id="mnClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><table class="mntbl"><thead><tr><th></th><th>Target</th><th>Minimum</th></tr></thead><tbody id="mnRows"></tbody></table>
+  <p class="sub" style="margin:10px 0 0">Green = at or above target · Amber = below target · Red = below minimum manning. Leave blank to just show the count.</p>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="mnCancel">Cancel</button><button class="btn pri" id="mnSave">Save</button></div></div>
+</div></div>
 <div id="display" class="hide">
   <button class="db-exit" id="dbExit">✕ Exit (Esc)</button>
   <div class="db-top">
@@ -611,7 +630,7 @@ $("#nEng").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)
 $("#nSummary").addEventListener("click",e=>{const b=e.target.closest("[data-unpick]");if(b){PICK.delete(b.dataset.unpick);renderPicker()}});
 $("#nTrade").onchange=()=>{try{localStorage.setItem("wa-pick-trade2",$("#nTrade").value)}catch(e){}renderPicker()};
 $("#nBusy").onchange=renderPicker;
-$("#tradeStrip").addEventListener("click",e=>{const c=e.target.closest(".tcell");if(!c)return;openNew();$("#nTrade").value=c.dataset.t;$("#nTrade").dispatchEvent(new Event("change"));render()});
+$("#tradeStrip").addEventListener("click",e=>{if(e.target.id==="setManning"){openManning();return}const c=e.target.closest(".tcell");if(!c)return;if(e.target.id==="setManning")return;openNew();$("#nTrade").value=c.dataset.t;$("#nTrade").dispatchEvent(new Event("change"));render()});
 let FILTER="active";
 $("#sortBy").onchange=render;$("#q").addEventListener("input",render);
 const setFilter=f=>{FILTER=f;document.querySelectorAll("#pills button").forEach(b=>b.classList.toggle("on",b.dataset.f===f));render()};
@@ -685,6 +704,12 @@ function av(id){const n=engName(id);let h=0;for(const c of id)h=(h*31+c.charCode
 const IC={play:`<svg class="i" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>`,check:`<svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>`,pause:`<svg class="i" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`,send:`<svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`,trash:`<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>`,undo:`<svg class="i" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>`,x:`<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>`,clock:`<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`};
 const ago=iso=>{const m=Math.max(0,Math.round((Date.now()-new Date(iso))/60000));return m<60?m+" min":Math.floor(m/60)+"h "+String(m%60).padStart(2,"0")+"m"};
 const PICK=new Set();
+const MGROUPS=[["mgmt","Management"],["b1","B1 Cert"],["b2","B2 Cert"],["a","A Certs (all A+ / A Cat)"]];
+function openManning(){const M=D.manning||{};$("#mnRows").innerHTML=MGROUPS.map(([k,n])=>`<tr><td><b>${n}</b></td><td><input type="number" min="0" data-mk="${k}" data-mf="t" value="${M[k]?.t??""}"></td><td><input type="number" min="0" data-mk="${k}" data-mf="m" value="${M[k]?.m??""}"></td></tr>`).join("");$("#mnModal").classList.remove("hide")}
+const closeManning=()=>$("#mnModal").classList.add("hide");
+$("#mnClose").onclick=closeManning;$("#mnCancel").onclick=closeManning;
+$("#mnModal").addEventListener("mousedown",e=>{if(e.target.id==="mnModal")closeManning()});
+$("#mnSave").onclick=()=>{const M={};document.querySelectorAll("#mnRows input").forEach(i=>{const v=i.value===""?null:Math.max(0,parseInt(i.value)||0);(M[i.dataset.mk]=M[i.dataset.mk]||{})[i.dataset.mf]=v});D.manning=M;closeManning();save();toast("Manning targets saved")};
 function openNew(){$("#nj").classList.remove("hide");renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
 function closeNew(){$("#nj").classList.add("hide")}
 $("#openNew").onclick=openNew;$("#njClose").onclick=closeNew;$("#njCancel").onclick=closeNew;
@@ -736,7 +761,13 @@ function renderBoard(){
   const freeE=onShift.filter(e=>!w[e.id]),busyE=onShift.filter(e=>w[e.id]),offE=D.engineers.filter(e=>!e.onShift).sort(byTrade);
   $("#kpWork").textContent=n.work;$("#kpPlan").textContent=n.planned;$("#kpOpen").textContent=n.open;$("#kpDone").textContent=n.done;$("#kpTeam").textContent=freeE.length+"/"+onShift.length;
   const tg=groupByTrade(onShift),selT=$("#nTrade").value;
-  $("#tradeStrip").innerHTML=onShift.some(e=>e.cat)?`<div class="tlabel">On shift today by trade</div>`+tg.map((l,i)=>`<button class="tcell t${i} ${selT===String(i)?"on":""}" data-t="${i}" title="Show ${TRADES[i]} in the engineer picker"><b>${l.length}</b><div><div class="tn">${TRADES[i].replace(" / other","")}</div><div class="tf"><i>${l.filter(e=>!w[e.id]).length}</i> free</div></div></button>`).join(""):"";
+  const MG=[{k:"mgmt",n:"Management",t:[0],c:"t0"},{k:"b1",n:"B1 Cert",t:[1],c:"t1"},{k:"b2",n:"B2 Cert",t:[2],c:"t2"},{k:"a",n:"A Certs",t:[3,4,5,6],c:"t5",sub:"A+ & A Cat, Mech & Av"}];
+  const MN=D.manning||{};
+  $("#tradeStrip").innerHTML=onShift.some(e=>e.cat)?`<div class="tlabel">Manning on shift <button class="linkbtn" id="setManning">Set targets</button></div>`+MG.map(g=>{
+    const l=onShift.filter(e=>g.t.includes(tradeIx(e))),n=l.length,fr=l.filter(e=>!w[e.id]).length,m=MN[g.k]||{},tg=+m.t||0,mn=+m.m||0;
+    const st=!tg&&!mn?"":mn&&n<mn?"crit":tg&&n<tg?"low":"ok";
+    const lbl={crit:`${mn-n} below minimum`,low:`${tg-n} below target`,ok:"On target","":""}[st];
+    return `<button class="tcell ${g.c} mn-${st||"none"}" data-g="${g.k}" data-t="${g.t.length===1?g.t[0]:""}" title="Pick from ${g.n}"><b>${n}</b><div style="flex:1;min-width:0"><div class="tn">${g.n}</div><div class="tf"><i>${fr}</i> free${tg||mn?` · target ${tg||"–"} · min ${mn||"–"}`:""}</div></div>${st?`<span class="mnst">${lbl}</span>`:""}</button>`}).join(""):"";
   $("#pcActive").textContent=act.length;$("#pcWork").textContent=n.work;$("#pcPlan").textContent=n.planned;$("#pcOpen").textContent=n.open;$("#pcDone").textContent=n.done;
   document.querySelectorAll(".kpi").forEach(k=>k.classList.toggle("on",k.dataset.k===FILTER));
   // jobs list
