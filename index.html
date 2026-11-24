@@ -385,6 +385,7 @@ th.today,td.today{background:#FFFBEB}
       <div class="card-h"><h2>Team</h2><span class="sub" style="margin-left:auto" id="teamSub"></span></div>
       <div class="team-sec" style="--c:var(--green)"><h3><i></i>Available<em id="cFree">0</em></h3><div id="freeList"></div></div>
       <div class="team-sec" style="--c:var(--blue)"><h3><i></i>Working<em id="cBusy">0</em></h3><div id="busyList"></div></div>
+      <div class="team-sec hide" id="dutySec" style="--c:#4F46E5"><h3><i></i>Line roles<em id="cDuty">0</em></h3><div id="dutyList"></div></div>
       <details class="team-sec offs" style="--c:#CBD5E1"><summary><h3 style="margin:0"><i></i>Off shift<em id="cOff">0</em></h3></summary><div id="offList" style="margin-top:8px"></div></details>
     </div>
   </div>
@@ -599,6 +600,9 @@ const tradeTag=e=>e?.cat?`<span class="trade t${tradeIx(e)}">${esc(catShort(e))}
 const surname=n=>n.trim().split(/\s+/).pop().toLowerCase();
 const byTrade=(a,b)=>tradeIx(a)-tradeIx(b)||surname(a.name).localeCompare(surname(b.name));
 function groupByTrade(list){const g=TRADES.map(()=>[]);[...list].sort(byTrade).forEach(e=>g[tradeIx(e)].push(e));return g}
+// Roster codes that put someone on shift in a role, not available for tasking as their trade
+const DUTY={LWL:"Line walker"};
+const duty=e=>DUTY[(e?.roster||{})[D.rosterDay||iso(new Date())]]||"";
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const dayLbl=ds=>new Date(ds+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
 function setOnShift(en,on){en.onShift=on;if(!on){const ts=now();D.jobs.filter(active).forEach(j=>{j.assignments=j.assignments.filter(a=>!(a.eng===en.id&&!a.to&&!a.from));j.assignments.forEach(a=>{if(a.eng===en.id&&!a.to)a.to=ts});if(j.status!=="work"&&j.status!=="done")j.status=current(j).length?"planned":"open"})}}
@@ -720,7 +724,7 @@ document.addEventListener("keydown",e=>{
 });
 function renderPicker(){
   const {w,p}=jobMaps();
-  const onShift=D.engineers.filter(e=>e.onShift).sort(byTrade);
+  const onShift=D.engineers.filter(e=>e.onShift&&!duty(e)).sort(byTrade);
   [...PICK].forEach(id=>{if(!eng(id)?.onShift)PICK.delete(id)});
   const busyOK=$("#nBusy").checked;
   let saved="";try{saved=localStorage.getItem("wa-pick-trade2")||""}catch(e){}
@@ -749,7 +753,7 @@ function renderPicker(){
 }
 function renderBoard(){
   const {w,p}=jobMaps();
-  const onShift=D.engineers.filter(e=>e.onShift).sort(byTrade);
+  const onShift=D.engineers.filter(e=>e.onShift&&!duty(e)).sort(byTrade);
   const where=id=>[...(w[id]||[]).map(j=>"on "+label(j)),...(p[id]||[]).map(j=>"next "+label(j))].join(", ");
   // picker
   renderPicker();
@@ -823,6 +827,9 @@ function renderBoard(){
   const fp=e=>`<div class="person" style="padding:5px 8px">${av(e.id)}<div><div class="nm">${esc(e.name)}</div>${p[e.id]?`<div class="ds">Next: <b>${p[e.id].map(label).join(", ")}</b></div>`:""}</div></div>`;
   $("#freeList").innerHTML=(freeE.some(e=>e.cat)?groupByTrade(freeE).map((g,i)=>g.length?`<div class="tgh">${TRADES[i]} · ${g.length}</div>`+g.map(fp).join(""):"").join(""):freeE.map(fp).join(""))||`<div class="team-empty">${onShift.length?"Everyone is working":"Nobody marked on shift"}</div>`;
   $("#busyList").innerHTML=[...busyE].sort(byTrade).map(e=>`<div class="person">${av(e.id)}<div><div class="nm">${esc(e.name)} ${tradeTag(e)}</div><div class="ds">${w[e.id].map(j=>`<b>${label(j)}</b> · ${esc(j.task.split("\n")[0].slice(0,30))}`).join("<br>")}${p[e.id]?`<br>Next: ${p[e.id].map(label).join(", ")}`:""}</div></div></div>`).join("")||`<div class="team-empty">Nobody on a started job</div>`;
+  const dutyE=D.engineers.filter(e=>e.onShift&&duty(e)).sort(byTrade);
+  $("#dutySec").classList.toggle("hide",!dutyE.length);$("#cDuty").textContent=dutyE.length;
+  $("#dutyList").innerHTML=dutyE.map(e=>`<div class="person">${av(e.id)}<div><div class="nm">${esc(e.name)} ${tradeTag(e)}</div><div class="ds"><b>${esc(duty(e))}</b> – not available for tasking</div></div></div>`).join("");
   $("#offList").innerHTML=offE.map(e=>`<div class="person off">${av(e.id)}<div class="nm">${esc(e.name)}</div></div>`).join("")||`<div class="team-empty">–</div>`;
 }
 $("#jobs").addEventListener("click",e=>{
@@ -888,6 +895,7 @@ $("#allOn").onclick=()=>{D.engineers.forEach(e=>e.onShift=true);save()};
 $("#allOff").onclick=()=>{if(confirm("Mark everyone off shift? Anyone still on a job is taken off it.")){D.engineers.forEach(e=>setOnShift(e,false));save()}};
 const rosterDays=()=>[...new Set(D.engineers.flatMap(e=>Object.keys(e.roster||{})))].sort().slice(-7);
 function applyRoster(day,codes){
+  D.rosterDay=day;
   let n=0;D.engineers.forEach(e=>{const c=(e.roster||{})[day];const on=!!c&&codes.includes(c);if(e.onShift!==on)setOnShift(e,on);if(on)n++});
   save();return n;
 }
