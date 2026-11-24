@@ -389,7 +389,6 @@ th.today,td.today{background:#FFFBEB}
 .bz .n em{font-style:normal;font-size:.75vw;color:#94A3B8;margin-left:.3vw}
 .bz .w{font-size:.95vw;font-weight:800;color:#FCD34D}
 #dbGrid{min-height:0;overflow:hidden;position:relative;padding:1vw .6vw 0}
-#dbGrid.scrolling{-webkit-mask-image:linear-gradient(transparent 0,#000 1.5vw,#000 calc(100% - 3vw),transparent 100%);mask-image:linear-gradient(transparent 0,#000 1.5vw,#000 calc(100% - 3vw),transparent 100%)}
 #dbGrid .track{display:grid;grid-template-columns:repeat(auto-fill,minmax(19vw,1fr));gap:1.6vw;padding-bottom:1.6vw;align-items:start}
 .jc{--g:#EF4444;background:linear-gradient(180deg,#101828,#0C1322);border:.12vw solid color-mix(in srgb,var(--g) 70%,transparent);border-radius:1vw;padding:1.1vw 1.3vw 1.2vw;box-shadow:0 0 1.4vw color-mix(in srgb,var(--g) 45%,transparent),inset 0 0 1.2vw color-mix(in srgb,var(--g) 10%,transparent)}
 .jc.amber{--g:#F59E0B;animation:glow 2.4s ease-in-out infinite}
@@ -501,14 +500,13 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .line-add{width:100%;margin-top:6px;font:inherit;font-size:13px;padding:6px 8px;border:1px dashed #CBD5E1;border-radius:6px;background:transparent;color:var(--ink)}
 .line-add:focus{border-style:solid;border-color:var(--blue);background:#fff}
 .line-add::placeholder{color:var(--blue);font-weight:600}
-#display .cards.scrolling>.track{will-change:transform;backface-visibility:hidden}
+.reel{will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 /* compositor-only glow so scrolling stays smooth */
 .jc{position:relative}
 .jc.amber,.jc.red{animation:none}
 .jc.amber::after,.jc.red::after{content:"";position:absolute;inset:-.12vw;border-radius:inherit;pointer-events:none;box-shadow:0 0 2.4vw color-mix(in srgb,var(--g) 70%,transparent),inset 0 0 1.6vw color-mix(in srgb,var(--g) 18%,transparent);opacity:0;will-change:opacity;animation:glowo 2.4s ease-in-out infinite}
 .jc.red::after{animation-duration:1.6s}
 @keyframes glowo{50%{opacity:1}}
-#dbGrid.scrolling{will-change:transform}
 .db-speed{display:flex;align-items:center;gap:.3vw;padding:.25vw .4vw!important;cursor:default}
 .db-speed span{font-size:.8vw;color:#94A3B8;padding:0 .4vw;text-transform:uppercase;letter-spacing:.1vw}
 .db-speed button{background:transparent;border:0;color:#CBD5E1;font:inherit;font-size:.9vw;padding:.25vw .6vw;border-radius:.4vw;cursor:pointer}
@@ -516,6 +514,10 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .db-exit{z-index:10}
 .ovltag{display:inline-block;font-size:9.5px;font-weight:900;background:#1E1B4B;color:#C7D2FE;border-radius:4px;padding:0 4px;margin-left:3px;vertical-align:1px;font-style:normal}
 .ovlbar{font-size:12px;font-weight:700;color:#4338CA;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:99px;padding:3px 10px}
+.db-body{position:relative}
+.db-body::before,.db-body::after{content:"";position:absolute;left:0;right:0;z-index:2;pointer-events:none}
+.db-body::before{top:0;height:1.5vw;background:linear-gradient(#070B14,rgba(7,11,20,0))}
+.db-body::after{bottom:0;height:3vw;background:linear-gradient(rgba(7,11,20,0),#070B14)}
 </style>
 </head>
 <body>
@@ -1488,11 +1490,11 @@ function fillHtml(el,html){
   const box=$(el);
   if(box.dataset.h!==html){
     box.dataset.h=html;box.scrollTop=0;box._loop=0;
-    box.innerHTML=`<div class="track">${html}</div>`;
-    const tr=box.firstElementChild;
+    box.innerHTML=`<div class="reel"><div class="track">${html}</div></div>`;
+    const reel=box.firstElementChild,tr=reel.firstElementChild;
     const over=tr.offsetHeight>box.clientHeight+2;
     box.classList.toggle("scrolling",over);
-    if(over){const c=tr.cloneNode(true);c.setAttribute("aria-hidden","true");box.append(c)}
+    if(over){const c=tr.cloneNode(true);c.setAttribute("aria-hidden","true");reel.append(c)}
   }
   box.querySelectorAll(".since").forEach(x=>x.textContent=since(x.dataset.t));
 }
@@ -1503,12 +1505,13 @@ $("#dbSpeed").addEventListener("click",e=>{const b=e.target.closest("button");if
 let lastT=0;
 function scrollLoop(t){
   const dt=lastT?Math.min(50,t-lastT):0;lastT=t;
-  if(!$("#display").classList.contains("hide"))document.querySelectorAll("#display .cards").forEach(box=>{
-    if(!box.classList.contains("scrolling")){if(box._y){box._y=0;for(const c of box.children)c.style.transform=""}return}
-    if(!box._loop){box._loop=box.firstElementChild.offsetHeight;box.scrollTop=0}
-    box._y=((box._y||0)+SPEED*dt/1000)%box._loop;
-    const tf=`translate3d(0,${(-box._y).toFixed(2)}px,0)`;for(const c of box.children)c.style.transform=tf;
-  });
+  if(!$("#display").classList.contains("hide")){const dpr=window.devicePixelRatio||1;
+    document.querySelectorAll("#display .cards").forEach(box=>{const reel=box.firstElementChild;if(!reel)return;
+      if(!box.classList.contains("scrolling")){if(box._y){box._y=0;reel.style.transform=""}return}
+      if(!box._loop){box._loop=reel.firstElementChild.offsetHeight;box.scrollTop=0}
+      box._y=((box._y||0)+SPEED*dt/1000)%box._loop;
+      reel.style.transform=`translate3d(0,${-Math.round(box._y*dpr)/dpr}px,0)`;
+    })}
   requestAnimationFrame(scrollLoop);
 }
 requestAnimationFrame(scrollLoop);
