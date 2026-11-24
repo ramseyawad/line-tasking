@@ -495,6 +495,12 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .acwrap .shiftbar{max-width:1600px;margin:0 auto;border:0;border-bottom:1px solid var(--line,#E2E8F0);border-radius:0;box-shadow:none;background:transparent;padding:6px 20px}
 .acwrap .acbar{padding-top:6px}
 @media(max-width:760px){.acwrap .shiftbar{padding:6px 12px}}
+.tt.tedit{cursor:text;border-radius:4px;padding:1px 3px;margin:-1px -3px}
+.tt.tedit:hover{background:#F1F5F9;box-shadow:inset 0 -1px 0 #94A3B8}
+.line-edit{width:100%;font:inherit;font-weight:600;font-size:14px;padding:4px 8px;border:1.5px solid var(--blue);border-radius:6px;background:#fff}
+.line-add{width:100%;margin-top:6px;font:inherit;font-size:13px;padding:6px 8px;border:1px dashed #CBD5E1;border-radius:6px;background:transparent;color:var(--ink)}
+.line-add:focus{border-style:solid;border-color:var(--blue);background:#fff}
+.line-add::placeholder{color:var(--blue);font-weight:600}
 </style>
 </head>
 <body>
@@ -1074,12 +1080,14 @@ function renderBoard(){
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
-          if(it.info)return `<div class="ti info"><span class="ibadge">INFO</span><div class="tbody"><span class="tt">${esc(itxt(it))}</span></div></div>`;
+          const key=j.id+"|"+i,ed=!done&&LEDIT===key;
+          const tbox=txt=>ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`;
+          if(it.info)return `<div class="ti info"><span class="ibadge">INFO</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
-          return `<div class="ti s-${it.s}"><span class="tt">${esc(it.t)}</span>
+          return `<div class="ti s-${it.s}">${tbox(it.t)}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
-          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
+          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
@@ -1139,6 +1147,22 @@ function toggleTeam(on){on=on??!document.body.classList.contains("team-open");do
 $("#teamOpen").onclick=()=>toggleTeam();$("#teamClose").onclick=()=>toggleTeam(false);$("#teamBg").onclick=()=>toggleTeam(false);
 addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("team-open"))toggleTeam(false);
   if((e.key==="t"||e.key==="T")&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))toggleTeam()});
+
+let LEDIT=null,LDRAFT=null;
+function lineSave(inp,keep){const j=job(inp.dataset.lj);if(!j){LEDIT=null;LDRAFT=null;return}const i=+inp.dataset.li,v=inp.value.trim();
+  const lines=items(j).map(x=>x.t);LEDIT=null;LDRAFT=null;
+  if(v===lines[i]){render();return}
+  if(!v){if(lines.length<=1){toast("A job needs at least one task – delete the job instead");render();return}lines.splice(i,1)}else lines[i]=v;
+  editField(j.id,"task",lines.join("\n"))}
+$("#jobs").addEventListener("click",e=>{const t=e.target.closest("[data-tedit]");if(!t)return;
+  const a=document.querySelector(".line-edit");if(a)lineSave(a);
+  LEDIT=t.dataset.tedit;LDRAFT=null;render();const inp=document.querySelector(".line-edit");if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}});
+$("#jobs").addEventListener("input",e=>{if(e.target.classList.contains("line-edit"))LDRAFT=e.target.value});
+$("#jobs").addEventListener("keydown",e=>{const t=e.target;
+  if(t.classList.contains("line-edit")){if(e.key==="Enter"){e.preventDefault();t.dataset.done=1;lineSave(t)}else if(e.key==="Escape"){t.dataset.done=1;LEDIT=null;LDRAFT=null;render()}}
+  else if(t.classList.contains("line-add")&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const j=job(t.dataset.ladd);const id=j.id;
+    editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
+$("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("line-edit")&&!t.dataset.done)setTimeout(()=>{if(document.body.contains(t)&&!t.dataset.done){t.dataset.done=1;lineSave(t)}},0)});
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
