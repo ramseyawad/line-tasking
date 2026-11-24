@@ -491,6 +491,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .tstat .tl{margin:0!important}
 .ti .twho{margin:0;justify-content:flex-end}
 @media(max-width:640px){.ti{grid-template-columns:minmax(0,1fr) auto!important}.ti .twho{grid-column:1/-1;justify-content:flex-start}}
+.db-body{grid-template-columns:1fr!important}.db-busy{display:none!important}
 </style>
 </head>
 <body>
@@ -787,7 +788,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
   </div>
   <div class="db-body">
     <div class="cards" id="dbGrid"></div>
-    <div class="db-busy"><h3><i></i>Busy<em id="nBusyW">0</em></h3><div class="cards" id="dbBusy"></div></div>
+    <div class="db-busy" hidden><h3><i></i>Busy<em id="nBusyW">0</em></h3><div class="cards" id="dbBusy"></div></div>
   </div>
 </div>
 <script>
