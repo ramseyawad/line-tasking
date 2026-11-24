@@ -684,7 +684,6 @@ th.today,td.today{background:#FFFBEB}
   <div class="mhead"><h2>Hand over shift</h2><span class="sub" id="hoSub"></span><button class="btn icon" id="hoClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="card-b">
     <div id="hoSummary" class="hosum"></div>
-    <div id="hoJobs" class="hojobs hide"></div>
     <div class="hogrid">
       <div class="hoside" data-side="off"><h3>Going off shift</h3>
         <label class="f">Name</label><input id="hoOffName" placeholder="Rank & name">
@@ -992,14 +991,13 @@ function renderBoard(){
     const acts=done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
       :j.status==="work"?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button><button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
-    const cfBtn=done?"":`<button class="btn sm cfbtn ${j.cfMark?"on":""}" data-cf="${j.id}" title="${j.cfMark?"Marked to carry forward to the next shift – click to unmark":"Mark to carry forward to the next shift"}">CF${j.cfMark?" ✓":""}</button>`;
-    return `<div class="job st-${j.status}${j.cfMark?" cfmarked":""}">
+    return `<div class="job st-${j.status}">
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<input class="tagf" data-f="tag" data-id="${j.id}" value="${esc(j.tag||"")}" ${done?"disabled":""} placeholder="+ status notes (WATER DUMPED, NO APU, NS3…)" title="Free text – separate items with commas"><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">${j.cf?`<span class="sub" title="Carried over from previous shifts">↻ carried ×${j.cf}</span>`:""}</div>
+      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<input class="tagf" data-f="tag" data-id="${j.id}" value="${esc(j.tag||"")}" ${done?"disabled":""} placeholder="+ status notes (WATER DUMPED, NO APU, NS3…)" title="Free text – separate items with commas"><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
@@ -1007,9 +1005,9 @@ function renderBoard(){
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}"><button class="tst" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}">${ITEM[it.s].i}</button>
-          <div class="tbody"><span class="tt">${esc(it.t)}${it.s!=="done"&&!done?`<button class="cft ${it.cf?"on":""}" data-icf="${j.id}|${i}" title="Carry this task forward">CF</button>`:""}</span><div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?"":`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>
+          <div class="tbody"><span class="tt">${esc(it.t)}</span><div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?"":`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>
           <span class="tl">${ITEM[it.s].n}</span></div>`}).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
-      <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${cfBtn}${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
+      <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
@@ -1028,8 +1026,6 @@ $("#jobs").addEventListener("click",e=>{
   else if(t.dataset.done)complete(t.dataset.done);
   else if(t.dataset.start)start(t.dataset.start);
   else if(t.dataset.item){const[j,i]=t.dataset.item.split("|");cycleItem(j,+i)}
-  else if(t.dataset.cf){const j=job(t.dataset.cf);j.cfMark=!j.cfMark;items(j).forEach(it=>{if(!it.info&&it.s!=="done")it.cf=j.cfMark});save();toast(j.cfMark?j.tail+" marked CF – carries to next shift":j.tail+" CF removed")}
-  else if(t.dataset.icf){const[jid,i]=t.dataset.icf.split("|");const j=job(jid);const it=items(j)[+i];it.cf=!it.cf;if(it.cf)j.cfMark=true;save()}
   else if(t.dataset.iun){const[j,i,en]=t.dataset.iun.split("|");unassignItem(j,+i,en)}
   else if(t.dataset.edit){EDIT.add(t.dataset.edit);render();const ta=document.querySelector(`.task-edit[data-id="${t.dataset.edit}"]`);if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}}
   else if(t.dataset.share)share(jobText(job(t.dataset.share),true));
@@ -1245,10 +1241,7 @@ function openHandover(){
   const sh=curShift(),nx=nextShift(sh),ss=shiftStart();
   const doneJ=D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss),open=D.jobs.filter(active);
   $("#hoSub").textContent=`${SHIFT[sh.type]} · ${dlong(sh.date)}`;
-  const cfJ=open.filter(j=>j.cfMark),unm=open.filter(j=>!j.cfMark);
-  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> completed this shift · <b>${cfJ.length}</b> marked CF${cfJ.length?" ("+cfJ.map(j=>esc(j.tail)).join(", ")+")":""}${unm.length?` · <b style="color:var(--amber)">${unm.length} open job${unm.length===1?"":"s"} not marked CF</b> – choose below`:""}.<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
-  $("#hoJobs").classList.toggle("hide",!unm.length);
-  $("#hoJobs").innerHTML=unm.map(j=>`<div class="hr"><b>${esc(j.tail)}</b><span class="sub">${esc(tasksOnly(j).filter(x=>x.s!=="done").map(itxt).slice(0,2).join(" · ")||j.task.split("\n")[0])}</span><select data-hodec="${j.id}"><option value="cf">Carry forward</option><option value="close">Close – not carried</option></select></div>`).join("");
+  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
   $("#hoCrew").value="";
   SIG.sigOff.clear();SIG.sigOn.clear();["hoOffNA","hoOnNA"].forEach(i=>{$("#"+i).checked=false;$("#"+i).onchange({target:$("#"+i)})});
   $("#hoOffName").value=window.__waCloud?.me?.()?.full_name||"";$("#hoOnName").value="";$("#hoOffWhy").value="";$("#hoOnWhy").value="";
@@ -1264,16 +1257,12 @@ $("#hoGo").onclick=async()=>{
   if(err.length){$("#hoErr").textContent=err.join(" · ");$("#hoErr").classList.remove("hide");return}
   $("#hoGo").disabled=true;
   const win=window.open("","_blank");if(win)win.document.write("<p style='font-family:Arial;padding:24px'>Saving the shift diary…</p>");
-  const closeIds=[...document.querySelectorAll("#hoJobs [data-hodec]")].filter(x=>x.value==="close").map(x=>x.dataset.hodec);
-  const rec=buildRecord({off,on,by:window.__waCloud?.me?.()?.full_name||off.name,nextCrew:$("#hoCrew").value},closeIds);
+  const rec=buildRecord({off,on,by:window.__waCloud?.me?.()?.full_name||off.name,nextCrew:$("#hoCrew").value});
   const ok=await saveRecord(rec);
   $("#hoGo").disabled=false;
   if(!ok){win?.close();$("#hoErr").textContent="Couldn't save the diary record – check connection and try again.";$("#hoErr").classList.remove("hide");return}
   // carry over unfinished work
-  const tsNow=now(),byNm=window.__waCloud?.me?.()?.full_name||off.name;
-  D.jobs.filter(active).forEach(j=>{
-    if(closeIds.includes(j.id)){j.status="closed";j.closedAt=tsNow;j.closedBy=byNm;j.assignments.forEach(a=>{if(!a.to){if(a.from)a.to=tsNow;else a.to=tsNow}});return}
-    j.cf=(j.cf||0)+1;j.cfMark=false;items(j).forEach(it=>{if(!it.info&&it.s!=="done")it.cf=true})});
+  D.jobs.filter(active).forEach(j=>{j.cf=(j.cf||0)+1});
   const nx={date:$("#hoDate").value,type:$("#hoType").value};
   D.shift={id:uid(),date:nx.date,type:nx.type,crew:$("#hoCrew").value,startedAt:now(),notes:curShift().notes||""}; // notes carry through every shift
   let msg=`Handed over – ${SHIFT[nx.type]} started`;
@@ -1287,7 +1276,7 @@ async function saveRecord(rec){
 function snapJob(j){
   const nm=id=>engName(id);
   const crew=j.status==="done"?[...new Set(j.assignments.filter(a=>a.from).map(a=>a.eng))]:current(j);
-  return{tail:j.tail,bay:j.bay||"",pri:j.pri||"",acst:j.acst||"",area:j.area||"Line",tag:j.tag||"",lsj:j.lsj||"",status:j.status,cfMark:!!j.cfMark,created:j.created,started:j.started,completed:j.completed,cf:j.cf||0,
+  return{tail:j.tail,bay:j.bay||"",pri:j.pri||"",acst:j.acst||"",area:j.area||"Line",tag:j.tag||"",lsj:j.lsj||"",status:j.status,created:j.created,started:j.started,completed:j.completed,cf:j.cf||0,
     crew:crew.map(id=>{const e=eng(id)||(D.archived||[]).find(x=>x.id===id);return{n:nm(id),t:e?.cat?catShort(e):""}}),
     items:items(j).map(it=>({t:itxt(it),s:it.s,info:it.info,cf:it.cf,at:it.at,who:it.who.map(nm)}))};
 }
@@ -1300,15 +1289,14 @@ function buildRecord(handover,closeIds=[]){
     manning:grp.map(([n,t],i)=>({n,count:onS.filter(e=>!duty(e)&&t.includes(tradeIx(e))).length,target:M[keys[i]]?.t??null,min:M[keys[i]]?.m??null})),
     onShift:onS.sort(byTrade).map(e=>({n:e.name,t:catShort(e),duty:duty(e)})),
     done:D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
-    open:D.jobs.filter(j=>active(j)&&!closeIds.includes(j.id)).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
-    closed:D.jobs.filter(j=>closeIds.includes(j.id)).map(snapJob),
+    open:D.jobs.filter(active).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
     handover:handover||null};
 }
 function exportRecord(r,draft,win){
   const st={todo:"☐",work:"▶",done:"☑"},stn={todo:"Not started",work:"In progress",done:"Done"};
-  const block=j=>`<table class="ac"><tr class="h"><th>${j.pri?"P"+esc(j.pri)+" · ":""}${esc(j.tail)}${j.cfMark?' <span class="cf">CF</span>':""}</th><th>${[j.acst,j.area,j.tag].filter(Boolean).map(esc).join(" · ")}</th><th>${j.bay?"Bay "+esc(j.bay):""}</th><th>${esc(j.lsj||"")}</th></tr>
-    ${j.items.map(it=>`<tr><td class="k">${it.info?"INFO":st[it.s]}</td><td colspan="2">${esc(it.t)}${it.cf&&it.s!=="done"&&!it.info?' <span class="cf">CF</span>':""}${it.who.length?`<div class="w">${it.who.map(esc).join(", ")}</div>`:""}</td><td class="s">${it.info?"":stn[it.s]+(it.at&&it.s!=="todo"?" "+tm(it.at):"")}</td></tr>`).join("")}
-    <tr class="f"><td colspan="4">Crew: ${j.crew.map(c=>esc(c.n)+(c.t?` (${esc(c.t)})`:"")).join(", ")||"–"} · Raised ${fmt(j.created)}${j.started?" · Started "+fmt(j.started):""}${j.completed?" · Completed "+fmt(j.completed):""}${j.cf?` · Carried forward ×${j.cf}`:""}</td></tr></table>`;
+  const block=j=>`<table class="ac"><tr class="h"><th>${j.pri?"P"+esc(j.pri)+" · ":""}${esc(j.tail)}</th><th>${[j.acst,j.area,j.tag].filter(Boolean).map(esc).join(" · ")}</th><th>${j.bay?"Bay "+esc(j.bay):""}</th><th>${esc(j.lsj||"")}</th></tr>
+    ${j.items.map(it=>`<tr><td class="k">${it.info?"INFO":st[it.s]}</td><td colspan="2">${esc(it.t)}${it.who.length?`<div class="w">${it.who.map(esc).join(", ")}</div>`:""}</td><td class="s">${it.info?"":stn[it.s]+(it.at&&it.s!=="todo"?" "+tm(it.at):"")}</td></tr>`).join("")}
+    <tr class="f"><td colspan="4">Crew: ${j.crew.map(c=>esc(c.n)+(c.t?` (${esc(c.t)})`:"")).join(", ")||"–"} · Raised ${fmt(j.created)}${j.started?" · Started "+fmt(j.started):""}${j.completed?" · Completed "+fmt(j.completed):""}</td></tr></table>`;
   const sig=(l,x)=>`<div class="sg"><div class="sl">${l}</div>${x?`<div class="sn">${esc(x.name)}</div>${x.sig?`<img src="${x.sig}">`:`<div class="ov">Not available to sign – ${esc(x.reason)}</div>`}<div class="st">${fmt(x.at)}</div>`:`<div class="ov">Not yet signed</div>`}</div>`;
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Shift diary – ${SHIFT[r.type]} ${r.date}</title><style>
   body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;font-size:12px}h1{font-size:20px;margin:0}h2{font-size:14px;border-bottom:2px solid #111;padding-bottom:3px;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.5px}
@@ -1328,18 +1316,18 @@ function exportRecord(r,draft,win){
   <h2>Manning</h2><table class="mn"><tr><th>Group</th><th>On shift</th><th>Target</th><th>Minimum</th></tr>${r.manning.map(m=>`<tr><td>${m.n}</td><td class="${m.min&&m.count<m.min?"crit":m.target&&m.count<m.target?"low":""}">${m.count}</td><td>${m.target??"–"}</td><td>${m.min??"–"}</td></tr>`).join("")}</table>
   <p style="font-size:11px">${r.onShift.map(e=>esc(e.n)+(e.t?` (${esc(e.t)})`:"")+(e.duty?` – ${esc(e.duty)}`:"")).join(" · ")||"–"}</p>
   <h2>Completed this shift (${r.done.length})</h2>${r.done.map(block).join("")||"<p>None</p>"}
-  <h2>Outstanding / due – carried forward (${r.open.length})</h2>${r.open.map(block).join("")||"<p>None</p>"}
+  <h2>Outstanding / due – carried to next shift (${r.open.length})</h2>${r.open.map(block).join("")||"<p>None</p>"}
   ${r.closed?.length?`<h2>Closed at handover – not carried forward (${r.closed.length})</h2>${r.closed.map(block).join("")}`:""}
   <h2>Shift notes</h2><div class="pre">${esc(r.notes)||"–"}</div>
   <h2>Useful information</h2><div class="pre">${esc(r.info)||"–"}</div>
   <h2>Handover</h2><div class="sgs">${sig("Going off shift",r.handover?.off)}${sig("Coming on shift",r.handover?.on)}</div>
-  <div class="foot">${r.handover?.nextCrew?"Handed over to "+r.handover.nextCrew+" Shift · ":""}Record ${r.id} · Generated ${fmt(new Date().toISOString())}${r.handover?.by?" · Handed over by "+esc(r.handover.by):""} · Key: ☐ not started ▶ in progress ☑ done · CF carried forward</div>
+  <div class="foot">${r.handover?.nextCrew?"Handed over to "+r.handover.nextCrew+" Shift · ":""}Record ${r.id} · Generated ${fmt(new Date().toISOString())}${r.handover?.by?" · Handed over by "+esc(r.handover.by):""} · Key: ☐ not started ▶ in progress ☑ done</div>
   <script>setTimeout(()=>print(),400)<\/script></body></html>`;
   const w=win||window.open("","_blank");if(!w){toast("Allow pop-ups to export the diary");return}
   w.document.open();w.document.write(html);w.document.close();
 }
 function renderDiary(){
-  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${r.done.length} completed · ${r.open.length} carried forward · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
+  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${r.done.length} completed · ${r.open.length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
 }
 $("#diaryList").addEventListener("click",e=>{const b=e.target.closest("[data-rec]");if(b){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}});
 
@@ -1355,7 +1343,7 @@ function card(j){
   const cls=done?"green":j.status==="work"?"amber":"red";
   const its=tasksOnly(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
-  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.cfMark?`<span class="jc-bay" style="background:#7C3AED;color:#fff">CF</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${j.tag?`<span class="jc-bay">${esc(j.tag)}</span>`:""}${j.area&&j.area!=="Line"?`<span class="jc-bay">${esc(j.area)}</span>`:""}<span class="jc-st">${st}</span></div>
+  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${j.tag?`<span class="jc-bay">${esc(j.tag)}</span>`:""}${j.area&&j.area!=="Line"?`<span class="jc-bay">${esc(j.area)}</span>`:""}<span class="jc-st">${st}</span></div>
     <ul class="jc-tasks">${items(j).map(t=>t.info?`<li class="t-info">${esc(itxt(t))}</li>`:`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
