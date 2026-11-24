@@ -450,6 +450,19 @@ th.today,td.today{background:#FFFBEB}
   #jobs.tiles .jobrow{grid-area:j;border-left:1px solid var(--line)}
   #jobs.tiles .jh{border-bottom:0}
 }
+.acbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.acbar button{position:relative;flex:1 1 0;min-width:44px;font:inherit;font-size:13px;font-weight:800;padding:7px 4px;border-radius:8px;border:1px solid var(--line,#E2E8F0);background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.acbar button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.acbar button:disabled{background:#F1F4F8;color:#B6C0CD;box-shadow:none;cursor:default}
+.acbar button.w{border-color:#FDBA74;background:#FFF7ED;color:#C2410C}
+.acbar button.p{border-color:#C4B5FD;background:#F5F3FF;color:#6D28D9}
+.acbar button.o{border-color:#FCD34D;background:#FFFBEB;color:#B45309}
+.acbar button.aog{box-shadow:0 0 0 2px #DC2626}
+.acbar button i{position:absolute;top:-6px;right:-5px;font-style:normal;font-size:10px;background:var(--ink,#0F172A);color:#fff;border-radius:99px;padding:0 5px;line-height:15px}
+.acbar button[data-jump="Off Aircraft"]{flex:1.6 1 0}
+.job{scroll-margin-top:80px}
+.job.flash{animation:jflash 1.6s ease-out}
+@keyframes jflash{0%,40%{box-shadow:0 0 0 4px #3B82F6}100%{box-shadow:var(--sh)}}
 </style>
 </head>
 <body>
@@ -485,6 +498,7 @@ th.today,td.today{background:#FFFBEB}
   </div>
   <div class="shiftbar" id="shiftBar"></div>
   <div class="tradestrip" id="tradeStrip"></div>
+  <div class="acbar" id="acBar"></div>
   <div class="grid">
     <div class="stack">
       <div class="card">
@@ -984,6 +998,10 @@ function renderBoard(){
   if(q)jobs=jobs.filter(j=>(j.tail+" "+j.bay+" "+j.task+" "+j.assignments.map(a=>engName(a.eng)).join(" ")).toLowerCase().includes(q));
   const s=$("#sortBy").value, rank={work:0,planned:1,open:2,done:3};
   jobs=[...jobs].sort((a,b)=>prio(a)-prio(b)||(s==="new"?b.created.localeCompare(a.created):s==="bay"?String(a.bay).localeCompare(String(b.bay),undefined,{numeric:true}):s==="status"?rank[a.status]-rank[b.status]||TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail):TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail)));
+  // aircraft jump bar
+  $("#acBar").innerHTML=TAILS.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
+    const aog=js.some(j=>j.acst==="AOG");
+    return `<button data-jump="${t}" class="${c} ${aog?"aog":""}" ${js.length?"":"disabled"} title="${t}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}</button>`}).join("");
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
   const ROLES=[["B1",[1],"Cert"],["B2",[2],"Cert"],["Mechs",[3,4,5,6],"A+ / A Cat"],["Other",[0],""]];
@@ -1014,7 +1032,7 @@ function renderBoard(){
     const acts=done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
       :j.status==="work"?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button><button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
-    return `<div class="job st-${j.status}">
+    return `<div class="job st-${j.status}" data-tail="${esc(j.tail)}">
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
@@ -1070,6 +1088,14 @@ $("#jobs").addEventListener("change",e=>{
 function addTag(t){const v=t.value.trim();if(!v)return;const id=t.dataset.tagadd,l=tagList(job(id));v.split(",").map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!l.some(y=>y.toLowerCase()===x.toLowerCase()))l.push(x.toUpperCase())});t.value="";editField(id,"tag",l.join(", "));setTimeout(()=>document.querySelector(`.tagadd[data-tagadd="${id}"]`)?.focus(),0)}
 $("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.dataset?.tagadd&&e.key==="Enter"){e.preventDefault();addTag(t)}});
 
+
+$("#acBar").addEventListener("click",e=>{const b=e.target.closest("button[data-jump]");if(!b)return;const t=b.dataset.jump;
+  const find=()=>document.querySelector(`#jobs .job[data-tail="${t}"]`);
+  if(!find()){$("#q").value="";setFilter("active")}
+  const el=find();if(!el)return;
+  el.scrollIntoView({behavior:"smooth",block:"start"});
+  document.querySelectorAll(`#jobs .job[data-tail="${t}"]`).forEach(x=>{x.classList.remove("flash");void x.offsetWidth;x.classList.add("flash")});
+});
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
