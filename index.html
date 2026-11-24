@@ -492,6 +492,9 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .ti .twho{margin:0;justify-content:flex-end}
 @media(max-width:640px){.ti{grid-template-columns:minmax(0,1fr) auto!important}.ti .twho{grid-column:1/-1;justify-content:flex-start}}
 .db-body{grid-template-columns:1fr!important}.db-busy{display:none!important}
+.acwrap .shiftbar{max-width:1600px;margin:0 auto;border:0;border-bottom:1px solid var(--line,#E2E8F0);border-radius:0;box-shadow:none;background:transparent;padding:6px 20px}
+.acwrap .acbar{padding-top:6px}
+@media(max-width:760px){.acwrap .shiftbar{padding:6px 12px}}
 </style>
 </head>
 <body>
@@ -514,7 +517,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
     <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
   </div>
 </header>
-<div class="acwrap" id="acWrap"><div class="acbar" id="acBar"></div></div>
+<div class="acwrap" id="acWrap"><div class="shiftbar" id="shiftBar"></div><div class="acbar" id="acBar"></div></div>
 
 <main>
 <!-- BOARD -->
@@ -535,7 +538,6 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
     <button class="kpi" data-k="done" style="--c:var(--green)"><span class="dot"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><div><b id="kpDone">0</b><span>Done this shift</span></div></button>
     <button class="kpi" data-k="team" style="--c:#0EA5E9"><span class="dot"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div><b id="kpTeam">0/0</b><span>Free / on shift</span></div></button>
   </div>
-  <div class="shiftbar" id="shiftBar"></div>
   <div class="tradestrip" id="tradeStrip"></div>
   <div class="grid">
     <div class="stack">
@@ -1120,7 +1122,7 @@ $("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.dataset?.tagadd&
 
 
 const sizeBars=()=>{const r=document.documentElement.style;r.setProperty("--hdrH",document.querySelector("header").offsetHeight+"px");r.setProperty("--acH",$("#acWrap").offsetHeight+"px")};
-addEventListener("resize",sizeBars);setTimeout(sizeBars,0);
+addEventListener("resize",sizeBars);setTimeout(sizeBars,0);if(window.ResizeObserver)new ResizeObserver(sizeBars).observe($("#acWrap"));
 $("#acBar").addEventListener("click",e=>{
   if(e.target.closest("button[data-notes]")){if($("#tab-board").classList.contains("hide"))document.querySelector('nav button[data-tab="board"]').click();
     const c=$("#notesCard");c.scrollIntoView({behavior:"smooth",block:"start"});c.classList.remove("flash");void c.offsetWidth;c.classList.add("flash");setTimeout(()=>$("#shiftNotes").focus({preventScroll:true}),500);return}
