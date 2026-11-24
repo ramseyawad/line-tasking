@@ -209,6 +209,20 @@ tr:last-child td{border-bottom:0}
 .msec{padding:12px 14px;border-top:1px solid var(--line);background:#FAFBFD}
 .msec .engbar{margin-bottom:8px}
 .jr .hint{font-size:12.5px;color:var(--mute);font-style:italic;padding:4px 0}
+/* task items */
+.tlist{display:flex;flex-direction:column;gap:4px}
+.ti{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:3px 6px 3px 3px;border-radius:8px}
+.ti:hover{background:#F8FAFC}
+.tst{width:26px;height:26px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;color:#94A3B8;font-size:12px;font-weight:900;cursor:pointer;display:grid;place-items:center;padding:0;line-height:1}
+.tst:hover:not(:disabled){border-color:var(--blue)}
+.tst:disabled{cursor:default}
+.ti .tt{font-weight:600;line-height:1.35}
+.ti .tl{font-size:11px;font-weight:700;color:var(--mute);white-space:nowrap}
+.ti.s-work .tst{border-color:var(--amber);background:var(--amberBg);color:var(--amber)}
+.ti.s-work .tl{color:var(--amber)}
+.ti.s-done .tst{border-color:var(--green);background:var(--green);color:#fff}
+.ti.s-done .tt{color:var(--mute);text-decoration:line-through}
+.ti.s-done .tl{color:var(--green)}
 /* trades & roster */
 .tradestrip{display:flex;gap:10px;margin:-4px 0 16px;flex-wrap:wrap}
 .tradestrip:empty{display:none}
@@ -289,7 +303,12 @@ th.today,td.today{background:#FFFBEB}
 .jc-st{white-space:nowrap;width:100%;margin-top:.2vw;font-size:.85vw;font-weight:800;letter-spacing:.12vw;text-transform:uppercase;color:var(--g)}
 .jc-tasks{margin:.8vw 0;padding:0;list-style:none;font-size:1.25vw;color:#E2E8F0;line-height:1.35;font-weight:600}
 .jc-tasks li{padding-left:1.1vw;position:relative}
-.jc-tasks li:before{content:"";position:absolute;left:0;top:.6vw;width:.45vw;height:.45vw;border-radius:50%;background:var(--g)}
+.jc-tasks li:before{content:"";position:absolute;left:0;top:.45vw;width:.7vw;height:.7vw;border-radius:50%;border:.14vw solid #64748B;box-sizing:border-box}
+.jc-tasks li{padding-left:1.4vw}
+.jc-tasks li.t-work:before{border-color:#F59E0B;background:#F59E0B;box-shadow:0 0 .5vw #F59E0B}
+.jc-tasks li.t-done{color:#64748B;text-decoration:line-through}
+.jc-tasks li.t-done:before{border-color:#22C55E;background:#22C55E}
+.jc-tasks li em{font-style:normal;font-size:.75vw;color:#F59E0B;font-weight:800;letter-spacing:.05vw;text-transform:uppercase;margin-left:.3vw}
 .jc-who{display:flex;flex-wrap:wrap;gap:.45vw;border-top:1px solid rgba(255,255,255,.07);padding-top:.8vw}
 .jc-who span{background:rgba(255,255,255,.07);border-radius:99px;padding:.25vw .8vw;font-size:1.05vw;font-weight:700;color:#fff;white-space:nowrap}
 .jc-who span em{font-style:normal;font-size:.75vw;color:#94A3B8;margin-left:.3vw}
@@ -629,6 +648,7 @@ function complete(jobId){
   const j=job(jobId);const t=now();
   j.started=j.started||t;
   j.assignments.forEach(a=>{if(!a.to){a.from=a.from||j.started;a.to=t}});
+  items(j).forEach(x=>{if(x.s!=="done"){x.s="done";x.at=t}});
   j.status="done";j.completed=t;save();toast(j.tail+" complete",()=>{reopen(jobId)});
 }
 function reopen(jobId){
@@ -640,7 +660,24 @@ function del(jobId){
   const i=D.jobs.findIndex(x=>x.id===jobId);const [gone]=D.jobs.splice(i,1);save();
   toast("Job deleted",()=>{D.jobs.splice(i,0,gone);save()});
 }
-function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&!val){render();return}if(j[field]!==val){j[field]=val;j.edited=now()}save()}
+function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&!val){render();return}if(j[field]!==val){j[field]=val;j.edited=now()}if(field==="task"){items(j);EDIT.delete(jobId)}save()}
+// Each line of a job's task box is its own task with a status: todo → work → done
+const EDIT=new Set();
+function items(j){
+  const lines=String(j.task||"").split("\n").map(t=>t.trim()).filter(Boolean),old=j.items||[];
+  const used=new Set();
+  j.items=lines.map((t,i)=>{let o=old.findIndex((x,k)=>!used.has(k)&&x.t===t);if(o<0&&old[i]&&!used.has(i)&&!lines.includes(old[i].t))o=i;
+    if(o>=0){used.add(o);return {t,s:old[o].s||"todo",at:old[o].at||null}}return {t,s:j.status==="done"?"done":"todo",at:null}});
+  return j.items;
+}
+const ITEM={todo:{n:"Not started",i:"○",next:"work"},work:{n:"In progress",i:"▶",next:"done"},done:{n:"Done",i:"✓",next:"todo"}};
+function cycleItem(jobId,idx){
+  const j=job(jobId);if(!j||j.status==="done")return;const it=items(j)[idx];if(!it)return;
+  it.s=ITEM[it.s].next;it.at=now();
+  if(it.s!=="todo"&&j.status!=="work"&&current(j).length){j.status="work";j.started=j.started||it.at;j.assignments.forEach(a=>{if(!a.to&&!a.from)a.from=it.at})}
+  if(j.items.every(x=>x.s==="done")){complete(jobId);toast(`All tasks done – ${j.tail} complete`,()=>{reopen(jobId);const k=job(jobId);items(k);k.items[idx].s="work";start(jobId)});return}
+  save();
+}
 
 const AVC=["#2563EB","#7C3AED","#DB2777","#EA580C","#0891B2","#16A34A","#CA8A04","#4F46E5","#0D9488","#9333EA"];
 function initials(n){const w=n.replace(/^(AS1\(T\)|AS2|AS1|SAC\(T\)|SAC|LAC|Cpl|Sgt|FS|Flt\s*Lt|Fg\s*Off|Sqn\s*Ldr|CT|Chf\s*Tech|Mr|Mrs|Ms|Miss)\.?\s+/i,"").trim().split(/\s+/);return((w[0]||"?")[0]+(w[1]?w[1][0]:(w[0]||"")[1]||"")).toUpperCase()}
@@ -745,7 +782,8 @@ function renderBoard(){
         <div class="jst">${st}</div>
       </div>
       ${rows}
-      <div class="jr"><div class="jl">Job</div><div class="jtask">${done?`<div class="task-text">${esc(j.task)}</div>`:`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(1,j.task.split("\n").length)}" title="Click to amend">${esc(j.task)}</textarea>`}</div></div>
+      <div class="jr"><div class="jl">Job${(()=>{const it=items(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
+        :`<div class="tlist">${items(j).map((it,i)=>`<div class="ti s-${it.s}"><button class="tst" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}">${ITEM[it.s].i}</button><span class="tt">${esc(it.t)}</span><span class="tl">${ITEM[it.s].n}</span></div>`).join("")}</div>${done?"":`<button class="linkbtn" data-edit="${j.id}" style="padding:4px 0 0">Edit tasks</button>`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
@@ -761,13 +799,16 @@ $("#jobs").addEventListener("click",e=>{
   if(t.dataset.un){const[j,en]=t.dataset.un.split("|");unassign(j,en)}
   else if(t.dataset.done)complete(t.dataset.done);
   else if(t.dataset.start)start(t.dataset.start);
+  else if(t.dataset.item){const[j,i]=t.dataset.item.split("|");cycleItem(j,+i)}
+  else if(t.dataset.edit){EDIT.add(t.dataset.edit);render();const ta=document.querySelector(`.task-edit[data-id="${t.dataset.edit}"]`);if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}}
   else if(t.dataset.share)share(jobText(job(t.dataset.share),true));
   else if(t.dataset.stop)stop(t.dataset.stop);
   else if(t.dataset.reopen)reopen(t.dataset.reopen);
   else if(t.dataset.del)del(t.dataset.del);
 });
 $("#jobs").addEventListener("input",e=>{const t=e.target;if(t.classList.contains("task-edit")){t.rows=Math.max(1,t.value.split("\n").length)}});
-$("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.classList.contains("task-edit")&&(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey))))t.blur()});
+$("#jobs").addEventListener("keydown",e=>{const t=e.target;if(t.classList.contains("task-edit")&&(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey)))){if(e.key==="Escape"&&t.value.trim()===job(t.dataset.id).task){EDIT.delete(t.dataset.id);render()}else t.blur()}});
+$("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("task-edit")&&t.value.trim()===job(t.dataset.id)?.task){setTimeout(()=>{EDIT.delete(t.dataset.id);render()},0)}});
 $("#jobs").addEventListener("change",e=>{
   const t=e.target;
   if(t.dataset.add)assign(t.dataset.add,t.value);
@@ -782,7 +823,7 @@ function jobText(j,head){
   const tasks=j.task.split("\n").map(t=>t.trim()).filter(Boolean);
   return (head?"Tasking update "+stamp()+"\n\n":"")+
     `${j.tail}${j.bay?" – Bay "+j.bay:""} (${state})\n`+
-    tasks.map(t=>"• "+t).join("\n")+"\n"+
+    items(j).map(t=>(t.s==="done"?"✅ ":t.s==="work"?"🔶 ":"⬜ ")+t.t).join("\n")+"\n"+
     "👷 "+(who.length?who.join(", "):"Nobody assigned yet");
 }
 function boardText(){
@@ -930,9 +971,10 @@ function card(j){
   const tasks=j.task.split("\n").map(t=>t.trim()).filter(Boolean);
   const off=j.tail==="Off Aircraft";
   const cls=done?"green":j.status==="work"?"amber":"red";
-  const st=done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned";
+  const its=items(j),nd=its.filter(x=>x.s==="done").length;
+  const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
   return `<div class="jc ${cls}"><div class="jc-top"><span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}<span class="jc-st">${st}</span></div>
-    <ul class="jc-tasks">${tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+    <ul class="jc-tasks">${items(j).map(t=>`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
 }
