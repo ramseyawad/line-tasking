@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125184745">
+<meta name="build" content="20261125193321">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -892,6 +892,11 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .meb.tko{color:#B45309;background:#FFFBEB;border-color:#FCD34D;margin-left:4px}
 .crsbtn:disabled{background:#F1F5F9!important;color:#94A3B8!important;border-color:#E2E8F0!important;cursor:not-allowed}.crsbtn small{font-weight:600;font-size:10px;margin-left:3px}
 .bktbl{width:100%;border-collapse:collapse;font-size:13px}.bktbl th{text-align:left;font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid #E2E8F0}.bktbl td{padding:6px 8px;border-bottom:1px solid #F1F5F9}
+.docbox{flex:1 1 100%;display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:8px;padding:3px 6px 3px 0;background:#fff;min-width:0;margin-top:4px}
+.docbox .doch{font-size:10px;font-weight:900;letter-spacing:.06em;color:#fff;background:#B91C1C;border-radius:7px 0 0 7px;align-self:stretch;display:grid;place-items:center;padding:0 7px;margin:-3px 0}
+.docbox:not(.set) .doch{background:#94A3B8}
+.doclink{flex:1;min-width:0;text-align:left;text-decoration:none;display:block;background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:#1D4ED8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.docnone{flex:1}.docup{cursor:pointer;flex:none}
 .etsbox{flex:1 1 100%;display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:8px;padding:3px 6px 3px 0;background:#fff;min-width:0}
 .etsbox .etsh{font-size:10px;font-weight:900;letter-spacing:.06em;color:#fff;background:#64748B;border-radius:7px 0 0 7px;align-self:stretch;display:grid;place-items:center;padding:0 7px;margin:-3px 0}
 .etsbox input{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:#0F172A;min-width:0;flex:1;padding:2px 0}
@@ -1888,7 +1893,7 @@ function renderBoard(){
       state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",lk,"State…")}`,
       owner:`${ownSel(j.tail,lk)}`,
       dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canAc(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
-      role:`${j.tail!=="Off Aircraft"?roleBoxes(j.tail,done):""}`,
+      role:`${j.tail!=="Off Aircraft"?roleBoxes(j.tail,done)+docBox(j.tail,done):""}`,
       ets:`${j.tail!=="Off Aircraft"?etsBox(j.tail,done):""}`,
       sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done):""}`,
       notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${lk?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${lk?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
@@ -2249,7 +2254,7 @@ function openAc(t){
      <label class="mv-f"><span>Sentence</span>${sentSel(t,false)}</label></div>
    <div class="acp-grid" style="margin-top:10px">
      <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canAc(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
-     <div class="mv-f"><span>Role config</span>${roleBoxes(t,false)}</div><div class="mv-f"><span>Estimated time to serviceability</span>${etsBox(t,false)}</div></div>
+     <div class="mv-f"><span>Role config</span>${roleBoxes(t,false)}${docBox(t,false)}</div><div class="mv-f"><span>Estimated time to serviceability</span>${etsBox(t,false)}</div></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canCRS(t)?(techReady(t)?`<button class="btn sm" data-crs="${t}">Undo</button>`:openTasks(t)?`<button class="btn sm" disabled>CRS – ${openTasks(t)} task${openTasks(t)>1?"s":""} still open</button>`:`<button class="btn sm ok" data-crs="${t}">CRS – Tech ready</button>`):""}</div>
    <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${sentList(t).map(x=>` · ${esc(x.c)} for ${ago(x.at)}`).join("")}</p>
@@ -2341,7 +2346,7 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   </div>`}
 function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t)),ea=canAc(ownerOf(t));
   return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${ns3Btn(t)}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
-    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ea?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select>${roleBoxes(t,false)}${etsBox(t,false)}${ownSel(t,false)}${sentSel(t,false)}${flightsHtml(t,false)}`}</div>
+    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ea?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select>${roleBoxes(t,false)}${docBox(t,false)}${etsBox(t,false)}${ownSel(t,false)}${sentSel(t,false)}${flightsHtml(t,false)}`}</div>
     <div class="jr jobrow"><div class="jl">Job</div><div class="jtask"><div class="sx-empty" style="padding:4px 0">No open tasks.</div>${ed?`<input class="line-add" data-newtile="${esc(t)}" placeholder="+ Add a task – or NOTE …, take off 18:00, landing 22:00">`:""}</div></div></div>`}
 
 /* ---------- tile layout editor ---------- */
@@ -2428,6 +2433,15 @@ function layFixRows(){if(LAYDRAFT.some(b=>b.nr!=null))return;["L","R",null].forE
 $("#layOpen").onclick=openLayout;
 document.addEventListener("click",e=>{const b=e.target.closest("[data-etsclr]");if(!b)return;e.preventDefault();e.stopPropagation();const t=b.dataset.etsclr;if(!canAc(ownerOf(t)))return;delete acRec(t).ets;save();if(!$("#acModal").classList.contains("hide"))openAc(t)},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ns3]");if(!b)return;e.preventDefault();e.stopPropagation();toggleNS3(b.dataset.ns3)},true);
+/* ---------- role PDF ---------- */
+document.addEventListener("click",async e=>{const v=e.target.closest("[data-docview]"),x=e.target.closest("[data-docdel]");if(!v&&!x)return;e.preventDefault();e.stopPropagation();
+  if(v){const d=docOf(v.dataset.docview);if(!d||!window.__waCloud)return;const w=window.open("","_blank");const u=await window.__waCloud.docUrl(d.path);if(!u){w?.close();toast("Couldn't open the PDF – check connection");return}if(w)w.location=u;else location.href=u;return}
+  const t=x.dataset.docdel,d=docOf(t);if(!d||!canDoc())return;if(!confirm("Remove the role PDF for "+t+"?"))return;await window.__waCloud.docDel(d.path);delete acRec(t).pdf;save();if(!$("#acModal").classList.contains("hide"))openAc(t)},true);
+document.addEventListener("change",async e=>{const i=e.target.closest("[data-docup]");if(!i)return;e.stopPropagation();const t=i.dataset.docup,f=i.files&&i.files[0];i.value="";
+  if(!f||!canDoc()||!window.__waCloud)return;if(f.type!=="application/pdf"&&!/\.pdf$/i.test(f.name)){toast("That isn't a PDF");return}if(f.size>20*1048576){toast("PDF too big – 20 MB max");return}
+  toast("Uploading "+f.name+"…");const old=docOf(t),path=t.replace(/[^A-Za-z0-9]/g,"_")+"/"+Date.now()+".pdf";
+  const err=await window.__waCloud.docUp(path,f);if(err){toast("Upload failed – "+err);return}
+  if(old)window.__waCloud.docDel(old.path);acRec(t).pdf={path,name:f.name.slice(0,120),at:now(),by:window.__waCloud.me?.()?.full_name||""};save();toast("Role PDF uploaded");if(!$("#acModal").classList.contains("hide"))openAc(t)},true);
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
@@ -2784,6 +2798,10 @@ const etsRel=v=>{if(!v)return "";const m=Math.round((new Date(v)-Date.now())/6e4
 const etsBox=(t,dis)=>{const v=etsOf(t),ed=!dis&&canAc(ownerOf(t)),od=v&&new Date(v)<new Date();
   return `<div class="etsbox ${v?"set":""} ${od?"od":""}"><span class="etsh" title="Estimated time to serviceability">ETS</span><input type="datetime-local" data-ets="${esc(t)}" value="${esc(v)}" ${ed?"":"disabled"} title="Estimated time to serviceability">${v?`<span class="etsrel">${etsRel(v)}</span>`:""}${v&&ed?`<button type="button" class="etsx" data-etsclr="${esc(t)}" title="Clear ETS">×</button>`:""}</div>`};
 const roleReq=t=>(acGet(t).flight||{}).role||"";
+const docOf=t=>{const x=acGet(t).pdf;return x&&typeof x.path==="string"&&typeof x.name==="string"?x:null};
+const canDoc=()=>!engMode()&&(isAIOC()||realFlight());
+const docBox=(t,dis)=>{const d=docOf(t),ed=!dis&&canDoc()&&!!window.__waCloud;if(!d&&!ed)return "";
+  return `<div class="docbox ${d?"set":""}"><span class="doch" title="Role document (PDF)">PDF</span>${d?`<a href="#" class="doclink" data-docview="${esc(t)}" title="Open ${esc(d.name)}${d.by?" – uploaded by "+esc(d.by):""}">📄 ${esc(d.name)}</a>`:`<span class="sub docnone">No role PDF</span>`}${ed?`<label class="btn sm docup" title="${d?"Replace":"Upload"} role PDF">${d?"Replace":"Upload"}<input type="file" accept="application/pdf" data-docup="${esc(t)}" hidden></label>${d?`<button type="button" class="etsx" data-docdel="${esc(t)}" title="Remove PDF">×</button>`:""}`:""}</div>`};
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
 const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&(canEdit(ownerOf(t))||(engMode()&&D.jobs.some(j=>active(j)&&j.tail===t&&tileMine(j))));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
 const FL_ICO={to:`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/></svg>`,
@@ -3190,6 +3208,9 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const {error}=await sb.rpc("wa_restore",{hist_id:+b.dataset.bkrestore});if(error){toast("Restore failed – "+error.message);return}
     toast("Board restored to "+b.dataset.bkwhen);await pull(true);loadBackups()});
   window.__waCloud={push,me:()=>ME,
+    async docUp(path,file){const {error}=await sb.storage.from("wa-docs").upload(path,file,{contentType:"application/pdf",upsert:true});return error?error.message:null},
+    async docUrl(path){const {data,error}=await sb.storage.from("wa-docs").createSignedUrl(path,600);return error?null:data.signedUrl},
+    async docDel(path){await sb.storage.from("wa-docs").remove([path])},
     async addDiary(rec){const {error}=await sb.from("wa_diary").insert({shift_date:rec.date,shift_type:rec.type,data:rec});if(error){toast("Diary not saved – "+error.message);return false}return true},
     async listDiary(){const {data,error}=await sb.from("wa_diary").select("id,data,created_at").order("created_at",{ascending:false}).limit(200);if(error)return [];return data.map(r=>({...r.data,id:r.id}))}};
   // ---- profile ----
