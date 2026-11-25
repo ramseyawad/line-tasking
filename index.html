@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125021223">
+<meta name="build" content="20261125021450">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -860,8 +860,8 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
     <div class="card"><div class="card-h"><h2>Engineers</h2><span class="sub" style="margin-left:auto">Hours on started jobs</span></div><div id="sxEng" class="sx-body"></div></div>
     <div class="card"><div class="card-h"><h2>Aircraft</h2><span class="sub" style="margin-left:auto">Work hours per tail</span></div><div id="sxAc" class="sx-body"></div></div>
     <div class="card"><div class="card-h"><h2>By trade</h2><span class="sub" style="margin-left:auto">Share of hours worked</span></div><div id="sxTrade" class="sx-body"></div></div>
-    <div class="card"><div class="card-h"><h2>Jobs completed per day</h2></div><div id="sxDay" class="sx-body"></div></div>
-    <div class="card"><div class="card-h"><h2>Busiest hours</h2><span class="sub" style="margin-left:auto">Jobs started and completed by hour</span></div><div id="sxHour" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Tasks completed per day</h2></div><div id="sxDay" class="sx-body"></div></div>
+    <div class="card"><div class="card-h"><h2>Busiest hours</h2><span class="sub" style="margin-left:auto">Jobs started and tasks completed by hour</span></div><div id="sxHour" class="sx-body"></div></div>
     <div class="card"><div class="card-h"><h2>Most common tasks</h2></div><div id="sxTask" class="sx-body"></div></div>
     <div class="card"><div class="card-h"><h2>Carried over most</h2><span class="sub" style="margin-left:auto">Jobs handed to another shift</span></div><div id="sxCf" class="sx-body"></div></div>
     <div class="card sx-wide"><div class="card-h"><h2>Aircraft sentencing</h2><span class="sub" style="margin-left:auto">Hours each tail spent in each sentence · set or change any tail here</span></div><div id="sxSent" class="sx-body"></div></div>
@@ -1976,14 +1976,22 @@ function sxBounds(){
 const clip=(f,t,a,b)=>Math.max(0,Math.min(+t,+b)-Math.max(+f,+a));
 const bars=(rows,opt={})=>{const mx=Math.max(1,...rows.map(r=>r.v));return rows.length?`<div class="sx-bars">${rows.map(r=>`<div class="sx-row" title="${esc(r.tip||r.l+": "+r.d)}"><span class="sx-l">${r.lh||esc(r.l)}</span><span class="sx-track"><i style="width:${(r.v/mx*100).toFixed(1)}%"></i></span><span class="sx-v">${esc(r.d)}</span>${r.x?`<span class="sx-x">${r.x}</span>`:""}</div>`).join("")}</div>`:`<div class="sx-empty">${opt.empty||"Nothing in this period"}</div>`};
 const cols=(rows,lbl)=>{const mx=Math.max(1,...rows.map(r=>r.v));return `<div class="sx-cols">${rows.map(r=>`<div class="sx-col" title="${esc(r.tip)}"><span class="sx-cv">${r.v||""}</span><i style="height:${(r.v/mx*100).toFixed(1)}%"></i><span class="sx-cl">${esc(r.l)}</span></div>`).join("")}</div>${lbl?`<div class="sx-axis">${lbl}</div>`:""}`};
+// every finished task line in [a,b]: handed-over diaries plus what's been ticked since (deduped)
+function tasksDoneIn(a,b){const seen=new Set(),out=[],inR=d=>d&&new Date(d)>=a&&new Date(d)<=b;
+  const add=(tail,t,who,at)=>{if(!inR(at))return;const k=tail+"|"+t+"|"+at;if(seen.has(k))return;seen.add(k);out.push({tail,t,who,at})};
+  (DIARY||[]).filter(r=>!r.draft).forEach(r=>recTasksDone(r).forEach(x=>add(x.tail,x.t,x.who,x.at)));
+  D.jobs.forEach(j=>items(j).forEach(it=>{if(it.info||it.s!=="done")return;const at=it.at||j.completed;
+    const who=it.who.length?it.who:[...new Set(j.assignments.filter(a=>a.from&&a.from<=at&&(!a.to||a.to>=at)).map(a=>a.eng))];add(j.tail,it.t,who.map(engName),at)}));
+  return out}
 function statsData(){
   const[a,b]=sxBounds(),inR=d=>d&&new Date(d)>=a&&new Date(d)<=b,nowD=new Date();
-  const done=D.jobs.filter(j=>j.status==="done"&&inR(j.completed)),raised=D.jobs.filter(j=>inR(j.created));
+  const done=D.jobs.filter(j=>j.status==="done"&&inR(j.completed)),raised=D.jobs.filter(j=>inR(j.created)),TD=tasksDoneIn(a,b);
   // engineer time on jobs, clipped to range
   const E={},T={};
   D.jobs.forEach(j=>j.assignments.forEach(x=>{if(!x.from)return;const to=x.to||j.completed||(j.status==="work"?nowD.toISOString():x.from);const ms=clip(new Date(x.from),new Date(to),a,b);if(!ms)return;
     (E[x.eng]=E[x.eng]||{ms:0,jobs:new Set()}).ms+=ms;(T[j.tail]=T[j.tail]||{ms:0}).ms+=ms}));
-  done.forEach(j=>j.assignments.forEach(x=>{if(x.from)(E[x.eng]=E[x.eng]||{ms:0,jobs:new Set()}).jobs.add(j.id)}));
+  const nm2id={};allNames().forEach(e=>{nm2id[e.name]=e.id;nm2id[engName(e.id)]=e.id});
+  TD.forEach((x,i)=>x.who.forEach(n=>{const id=nm2id[n];if(id)(E[id]=E[id]||{ms:0,jobs:new Set()}).jobs.add(i)}));
   const waits=D.jobs.filter(j=>j.started&&inR(j.started)).map(j=>new Date(j.started)-new Date(j.created)).filter(x=>x>=0);
   const works=done.filter(j=>j.started).map(j=>new Date(j.completed)-new Date(j.started)).filter(x=>x>=0);
   const med=l=>{if(!l.length)return null;const s=[...l].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
@@ -1992,19 +2000,19 @@ function statsData(){
   const aogMs={};Object.entries(aog).forEach(([t,iv])=>{iv.sort((x,y)=>x[0]-y[0]);let tot=0,cs=null,ce=null;iv.forEach(([s0,e0])=>{s0=Math.max(s0,+a);e0=Math.min(e0,+b);if(e0<=s0)return;if(cs===null||s0>ce){if(cs!==null)tot+=ce-cs;cs=s0;ce=e0}else ce=Math.max(ce,e0)});if(cs!==null)tot+=ce-cs;if(tot)aogMs[t]=tot});
   // aircraft
   const AC={};const ac=t=>AC[t]=AC[t]||{done:0,raised:0,ms:0,cf:0,aog:0};
-  done.forEach(j=>ac(j.tail).done++);raised.forEach(j=>ac(j.tail).raised++);
+  TD.forEach(x=>ac(x.tail).done++);raised.forEach(j=>ac(j.tail).raised++);
   Object.entries(T).forEach(([t,v])=>ac(t).ms=v.ms);Object.entries(aogMs).forEach(([t,v])=>ac(t).aog=v);
   D.jobs.filter(j=>inR(j.created)||inR(j.completed)).forEach(j=>{if(j.cf)ac(j.tail).cf+=j.cf});
   // tasks
-  const TK={};done.forEach(j=>items(j).filter(x=>!x.info).forEach(x=>{const k=x.t.toLowerCase().replace(/[^a-z0-9+/ ]/g," ").replace(/\s+/g," ").trim();if(!k)return;(TK[k]=TK[k]||{n:0,l:x.t}).n++}));
+  const TK={};TD.forEach(x=>{{const k=x.t.toLowerCase().replace(/[^a-z0-9+/ ]/g," ").replace(/\s+/g," ").trim();if(!k)return;(TK[k]=TK[k]||{n:0,l:x.t}).n++}});
   // hours of day
-  const HS=Array(24).fill(0),HC=Array(24).fill(0);D.jobs.forEach(j=>{if(inR(j.started))HS[new Date(j.started).getHours()]++;if(j.status==="done"&&inR(j.completed))HC[new Date(j.completed).getHours()]++});
+  const HS=Array(24).fill(0),HC=Array(24).fill(0);D.jobs.forEach(j=>{if(inR(j.started))HS[new Date(j.started).getHours()]++;});TD.forEach(x=>HC[new Date(x.at).getHours()]++);
   // per day
-  const days=[];if(SXR!=="all"||done.length){const d0=new Date(SXR==="all"&&done.length?Math.min(...done.map(j=>+new Date(j.completed))):a);d0.setHours(0,0,0,0);for(let d=new Date(d0);d<=b&&days.length<62;d.setDate(d.getDate()+1))days.push(iso(d))}
-  const perDay=days.map(d=>({d,n:done.filter(j=>iso(new Date(j.completed))===d).length}));
+  const days=[];if(SXR!=="all"||TD.length){const d0=new Date(SXR==="all"&&TD.length?Math.min(...TD.map(x=>+new Date(x.at))):a);d0.setHours(0,0,0,0);for(let d=new Date(d0);d<=b&&days.length<62;d.setDate(d.getDate()+1))days.push(iso(d))}
+  const perDay=days.map(d=>({d,n:TD.filter(x=>iso(new Date(x.at))===d).length}));
   // shifts from the diary
   const sh=(DIARY||[]).filter(r=>!r.draft&&inR(r.endedAt||r.startedAt)).sort((x,y)=>(y.endedAt||"").localeCompare(x.endedAt||""));
-  return{a,b,done,raised,E,AC,TK,HS,HC,perDay,sh,waitMed:med(waits),workMed:med(works),totMs:Object.values(E).reduce((t,v)=>t+v.ms,0),aogTot:Object.values(aogMs).reduce((t,v)=>t+v,0)};
+  return{a,b,done,TD,raised,E,AC,TK,HS,HC,perDay,sh,waitMed:med(waits),workMed:med(works),totMs:Object.values(E).reduce((t,v)=>t+v.ms,0),aogTot:Object.values(aogMs).reduce((t,v)=>t+v,0)};
 }
 
 /* sentencing hours */
@@ -2035,12 +2043,12 @@ function renderStats(){
   if(SXR!=="custom"){$("#sxFrom").value=SXR==="all"?"":iso(S.a);$("#sxTo").value=iso(S.b)}
   const k=(v,l,sub)=>`<div class="sx-kpi"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:""}</div>`;
   const shBelow=S.sh.filter(belowMin).length;
-  $("#sxKpis").innerHTML=k(S.done.length,"Jobs completed",`${S.raised.length} raised`)+k(hrs(S.totMs),"Engineer time on jobs",`${Object.keys(S.E).length} engineers`)
+  $("#sxKpis").innerHTML=k(S.TD.length,"Tasks completed",`${S.raised.length} jobs raised`)+k(hrs(S.totMs),"Engineer time on jobs",`${Object.keys(S.E).length} engineers`)
     +k(S.waitMed==null?"–":hrs(S.waitMed),"Typical wait to start","median, raised → started")+k(S.workMed==null?"–":hrs(S.workMed),"Typical working time","median, started → complete")
     +k(S.sh.length?`${shBelow}/${S.sh.length}`:"–","Shifts below minimum","from handed-over diaries")+k(S.aogTot?hrs(S.aogTot):"–","AOG time","all tails");
   // engineers
   const er=Object.entries(S.E).map(([id,v])=>{const e=allNames().find(x=>x.id===id);return{id,e,ms:v.ms,n:v.jobs.size}}).sort((x,y)=>y.ms-x.ms);
-  $("#sxEng").innerHTML=bars(er.map(r=>({l:r.e?.name||"(unknown)",lh:`${esc(r.e?.name||"(unknown)")} ${r.e?tradeTag(r.e):""}`,v:r.ms,d:hrs(r.ms),x:`${r.n} job${r.n===1?"":"s"}`,tip:`${r.e?.name}: ${hrs(r.ms)} on jobs, ${r.n} completed`})),{empty:"No started jobs in this period"});
+  $("#sxEng").innerHTML=bars(er.map(r=>({l:r.e?.name||"(unknown)",lh:`${esc(r.e?.name||"(unknown)")} ${r.e?tradeTag(r.e):""}`,v:r.ms,d:hrs(r.ms),x:`${r.n} task${r.n===1?"":"s"}`,tip:`${r.e?.name}: ${hrs(r.ms)} on jobs, ${r.n} tasks done`})),{empty:"No started jobs in this period"});
   // aircraft
   const ar=Object.entries(S.AC).sort((x,y)=>y[1].ms-x[1].ms||y[1].done-x[1].done);
   $("#sxAc").innerHTML=bars(ar.map(([t,v])=>({l:t,v:v.ms,d:hrs(v.ms),x:`${v.done} done · ${v.raised} raised${v.cf?` · ${v.cf} c/o`:""}${v.aog?` · <b class="sx-aog">AOG ${hrs(v.aog)}</b>`:""}`,tip:`${t}: ${hrs(v.ms)} worked, ${v.done} done, ${v.raised} raised`})));
@@ -2049,10 +2057,10 @@ function renderStats(){
   const tr=TG.map(([n,ix])=>({l:n,ms:er.filter(r=>r.e&&ix.includes(tradeIx(r.e))).reduce((t,r)=>t+r.ms,0)}));
   $("#sxTrade").innerHTML=S.totMs?bars(tr.map(r=>({l:r.l,v:r.ms,d:Math.round(r.ms/S.totMs*100)+"%",x:hrs(r.ms),tip:`${r.l}: ${hrs(r.ms)}`}))):`<div class="sx-empty">No started jobs in this period</div>`;
   // per day
-  $("#sxDay").innerHTML=S.perDay.length>1?cols(S.perDay.map(r=>({v:r.n,l:new Date(r.d+"T12:00").toLocaleDateString("en-GB",{day:"numeric"}),tip:`${dlong(r.d)}: ${r.n} completed`})),`${fmtD(new Date(S.perDay[0].d+"T12:00"))} – ${fmtD(new Date(S.perDay.at(-1).d+"T12:00"))}`):`<div class="sx-empty">Pick a longer range to see days</div>`;
+  $("#sxDay").innerHTML=S.perDay.length>1?cols(S.perDay.map(r=>({v:r.n,l:new Date(r.d+"T12:00").toLocaleDateString("en-GB",{day:"numeric"}),tip:`${dlong(r.d)}: ${r.n} tasks completed`})),`${fmtD(new Date(S.perDay[0].d+"T12:00"))} – ${fmtD(new Date(S.perDay.at(-1).d+"T12:00"))}`):`<div class="sx-empty">Pick a longer range to see days</div>`;
   // hours
   const hv=S.HS.map((v,i)=>v+S.HC[i]);
-  $("#sxHour").innerHTML=hv.some(Boolean)?cols(hv.map((v,i)=>({v,l:i%3?"":String(i).padStart(2,"0"),tip:`${String(i).padStart(2,"0")}:00 – ${S.HS[i]} started, ${S.HC[i]} completed`})),"Hour of day (00–23)"):`<div class="sx-empty">Nothing in this period</div>`;
+  $("#sxHour").innerHTML=hv.some(Boolean)?cols(hv.map((v,i)=>({v,l:i%3?"":String(i).padStart(2,"0"),tip:`${String(i).padStart(2,"0")}:00 – ${S.HS[i]} jobs started, ${S.HC[i]} tasks completed`})),"Hour of day (00–23)"):`<div class="sx-empty">Nothing in this period</div>`;
   // tasks
   const tk=Object.values(S.TK).sort((x,y)=>y.n-x.n).slice(0,10);
   $("#sxTask").innerHTML=bars(tk.map(r=>({l:r.l,v:r.n,d:r.n+"×"})));
@@ -2064,7 +2072,7 @@ function renderStats(){
   $("#sxShiftSub").textContent=S.sh.length?`${S.sh.length} handed over · ${shBelow} below minimum`:"";
   const byCrew={};S.sh.forEach(r=>{const c=r.crew||"?";const o=byCrew[c]=byCrew[c]||{n:0,d:0,o:0};o.n++;o.d+=recTasksDone(r).length;o.o+=(r.open||[]).length});
   $("#sxShift").innerHTML=S.sh.length?`${Object.keys(byCrew).length>1?`<div class="sx-crews">${Object.entries(byCrew).sort().map(([c,o])=>`<div><b>${esc(c)} Shift</b> ${o.n} shift${o.n>1?"s":""} · ${o.d} tasks done · ${(o.d/o.n).toFixed(1)} per shift · ${o.o} carried</div>`).join("")}</div>`:""}
-    <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Crew</th><th>Tasks done</th><th>Jobs completed</th><th>Carried over</th><th>Manning</th><th>Handed over</th></tr></thead><tbody>${S.sh.map(r=>`<tr><td>${dlong(r.date)}</td><td>${SHIFT[r.type]||""}${r.owner&&r.owner!=="Line"?` <span class="ownbadge sm">${esc(r.owner)}</span>`:""}</td><td>${esc(r.crew||"")}</td><td>${recTasksDone(r).length}</td><td>${(r.done||[]).length}</td><td>${(r.open||[]).length}</td><td>${(r.manning||[]).map(m=>`<span class="sx-mn ${m.min!=null&&m.min!==""&&m.count<+m.min?"low":""}" title="${esc(m.n)}: ${m.count}${m.min!=null&&m.min!==""?" (min "+m.min+")":""}">${esc(({Management:"Mgmt","B1 Cert":"B1","B2 Cert":"B2","A Certs":"A"})[m.n]||m.n)} ${m.count}</span>`).join("")}</td><td class="sub">${r.endedAt?fmt(r.endedAt):""}</td></tr>`).join("")}</tbody></table></div>`
+    <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Crew</th><th>Tasks done</th><th>Carried over</th><th>Manning</th><th>Handed over</th></tr></thead><tbody>${S.sh.map(r=>`<tr><td>${dlong(r.date)}</td><td>${SHIFT[r.type]||""}${r.owner&&r.owner!=="Line"?` <span class="ownbadge sm">${esc(r.owner)}</span>`:""}</td><td>${esc(r.crew||"")}</td><td>${recTasksDone(r).length}</td><td>${(r.open||[]).length}</td><td>${(r.manning||[]).map(m=>`<span class="sx-mn ${m.min!=null&&m.min!==""&&m.count<+m.min?"low":""}" title="${esc(m.n)}: ${m.count}${m.min!=null&&m.min!==""?" (min "+m.min+")":""}">${esc(({Management:"Mgmt","B1 Cert":"B1","B2 Cert":"B2","A Certs":"A"})[m.n]||m.n)} ${m.count}</span>`).join("")}</td><td class="sub">${r.endedAt?fmt(r.endedAt):""}</td></tr>`).join("")}</tbody></table></div>`
     :`<div class="sx-empty">No handed-over shifts in this period yet – shift stats build up from each handover.</div>`;
 }
 const inRange=(j,S)=>[j.created,j.completed,j.started].some(d=>d&&new Date(d)>=S.a&&new Date(d)<=S.b);
@@ -2072,14 +2080,14 @@ $("#sxRange").onclick=e=>{const x=e.target.closest("button");if(!x)return;SXR=x.
 ["#sxFrom","#sxTo"].forEach(id=>$(id).onchange=()=>{SXR="custom";renderStats()});
 $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/"/g,'""')}"`,L=[];
   L.push(q(`Line Tasking stats ${iso(S.a)} to ${iso(S.b)}`),"");
-  L.push(["Engineer","Trade","Hours on jobs","Jobs completed"].map(q).join(","));
+  L.push(["Engineer","Trade","Hours on jobs","Tasks done"].map(q).join(","));
   Object.entries(S.E).sort((x,y)=>y[1].ms-x[1].ms).forEach(([id,v])=>{const e=allNames().find(x=>x.id===id);L.push([e?.name,e?catShort(e):"",hnum(v.ms).toFixed(2),v.jobs.size].map(q).join(","))});
-  L.push("",["Tail","Hours worked","Jobs done","Jobs raised","Carry-overs","AOG hours"].map(q).join(","));
+  L.push("",["Tail","Hours worked","Tasks done","Jobs raised","Carry-overs","AOG hours"].map(q).join(","));
   Object.entries(S.AC).sort().forEach(([t,v])=>L.push([t,hnum(v.ms).toFixed(2),v.done,v.raised,v.cf,hnum(v.aog).toFixed(2)].map(q).join(",")));
   const SH=sentHours(S.a,S.b),SC=Object.keys(SENT);L.push("",["Tail",...SC.map(c=>c+" hours"),"Total hours"].map(q).join(","));
   TAILS.filter(t=>t!=="Off Aircraft").forEach(t=>{const m=SH[t]||{};L.push([t,...SC.map(c=>hnum(m[c]||0).toFixed(2)),hnum(Object.values(m).reduce((x,y)=>x+y,0)).toFixed(2)].map(q).join(","))});
-  L.push("",["Shift date","Shift","Crew","Tasks done","Jobs completed","Carried over","Below minimum"].map(q).join(","));
-  S.sh.forEach(r=>L.push([r.date,SHIFT[r.type],r.crew,recTasksDone(r).length,(r.done||[]).length,(r.open||[]).length,belowMin(r)?"Yes":"No"].map(q).join(",")));
+  L.push("",["Shift date","Shift","Crew","Tasks done","Carried over","Below minimum"].map(q).join(","));
+  S.sh.forEach(r=>L.push([r.date,SHIFT[r.type],r.crew,recTasksDone(r).length,(r.open||[]).length,belowMin(r)?"Yes":"No"].map(q).join(",")));
   download(`line-stats-${iso(S.a)}-to-${iso(S.b)}.csv`,L.join("\n"),"text/csv")};
 /* ---------- shifts, handover & diary ---------- */
 const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
@@ -2141,7 +2149,7 @@ function openHandover(){
   $("#hoSub").textContent=`${o!=="Line"?o+" · ":""}${SHIFT[sh.type]} · ${dlong(sh.date)}`;
   $("#hoRoster").closest("label").classList.toggle("hide",o!=="Line");
   const tDone=open.concat(doneJ).flatMap(j=>items(j).filter(it=>!it.info&&it.s==="done"&&(!it.at||new Date(it.at)>=ss))).length;
-  $("#hoSummary").innerHTML=`<b>${tDone}</b> task${tDone===1?"":"s"} completed · <b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} fully completed this shift · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br>${o!=="Line"?"":(n=>n===SIXS.length?`<span class="six-ok">✓ 6S reset complete</span>`:`<span class="six-warn">⚠ 6S reset ${n}/${SIXS.length} – outstanding: ${SIXS.filter(([k])=>!sixState()[k]).map(x=>x[1]).join(", ")}</span>`)(sixDone())}<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
+  $("#hoSummary").innerHTML=`<b>${tDone}</b> task${tDone===1?"":"s"} completed · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br>${o!=="Line"?"":(n=>n===SIXS.length?`<span class="six-ok">✓ 6S reset complete</span>`:`<span class="six-warn">⚠ 6S reset ${n}/${SIXS.length} – outstanding: ${SIXS.filter(([k])=>!sixState()[k]).map(x=>x[1]).join(", ")}</span>`)(sixDone())}<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
   $("#hoCrew").value="";
   SIG.sigOff.clear();SIG.sigOn.clear();["hoOffNA","hoOnNA"].forEach(i=>{$("#"+i).checked=false;$("#"+i).onchange({target:$("#"+i)})});
   $("#hoOffName").value=window.__waCloud?.me?.()?.full_name||"";$("#hoOnName").value="";$("#hoOffWhy").value="";$("#hoOnWhy").value="";
@@ -2208,7 +2216,7 @@ function buildRecord(handover,o="Line"){
 }
 // every task line finished during a shift (from fully completed jobs and from jobs still carrying over)
 const recTasksDone=r=>{const st=r.startedAt?new Date(r.startedAt):null,ok=it=>!it.info&&it.s==="done"&&(!it.at||!st||new Date(it.at)>=st);
-  return [...(r.done||[]),...(r.open||[])].flatMap(j=>(j.items||[]).filter(ok).map(it=>({tail:j.tail,t:it.t,who:it.who||[],at:it.at})))};
+  return [...(r.done||[]),...(r.open||[])].flatMap(j=>(j.items||[]).filter(ok).map(it=>({tail:j.tail,t:it.t,who:(it.who&&it.who.length)?it.who:(j.crew||[]).map(c=>c.n),at:it.at||j.completed||r.endedAt})))};
 function exportRecord(r,draft,win){
   const st={todo:"☐",work:"▶",done:"☑"},stn={todo:"Not started",work:"In progress",done:"Done"};
   const block=j=>`<table class="ac"><tr class="h"><th>${j.pri?"P"+esc(j.pri)+" · ":""}${esc(j.tail)}</th><th>${[j.acst,j.area,j.tag].filter(Boolean).map(esc).join(" · ")}</th><th>${j.bay?"Bay "+esc(j.bay):""}</th><th>${esc(j.lsj||"")}</th></tr>
@@ -2232,9 +2240,8 @@ function exportRecord(r,draft,win){
   ${draft||r.draft?`<div class="draft">DRAFT – shift not yet handed over</div>`:""}
   ${r.manning&&r.manning.length?"":"<!--"}<h2>Manning</h2><table class="mn"><tr><th>Group</th><th>On shift</th><th>Target</th><th>Minimum</th></tr>${r.manning.map(m=>`<tr><td>${m.n}</td><td class="${m.min&&m.count<m.min?"crit":m.target&&m.count<m.target?"low":""}">${m.count}</td><td>${m.target??"–"}</td><td>${m.min??"–"}</td></tr>`).join("")}</table>
   ${r.manning&&r.manning.length?"":"-->"}<h2 style="${r.manning&&r.manning.length?"display:none":""}">Personnel</h2><p style="font-size:11px">${r.onShift.map(e=>esc(e.n)+(e.t?` (${esc(e.t)})`:"")+(e.duty?` – ${esc(e.duty)}`:"")).join(" · ")||"–"}</p>
-  ${(td=>`<div class="sum"><b>${td.length}</b> task${td.length===1?"":"s"} completed · <b>${r.done.length}</b> job${r.done.length===1?"":"s"} fully completed · <b>${r.open.length}</b> carried to next shift</div>
+  ${(td=>`<div class="sum"><b>${td.length}</b> task${td.length===1?"":"s"} completed · <b>${r.open.length}</b> job${r.open.length===1?"":"s"} carried to next shift</div>
   <h2>Tasks completed this shift (${td.length})</h2>${td.length?`<table class="tdone"><tr><th>Tail</th><th>Task</th><th>By</th><th>Time</th></tr>${td.map(x=>`<tr><td><b>${esc(x.tail)}</b></td><td>${esc(x.t)}</td><td>${x.who.map(esc).join(", ")||"–"}</td><td>${x.at?tm(x.at):""}</td></tr>`).join("")}</table>`:"<p>None</p>"}`)(recTasksDone(r))}
-  <h2>Jobs fully completed this shift (${r.done.length})</h2>${r.done.map(block).join("")||"<p>None</p>"}
   <h2>Outstanding / due – carried to next shift (${r.open.length})</h2>${r.open.map(block).join("")||"<p>None</p>"}
   ${r.closed?.length?`<h2>Closed at handover – not carried forward (${r.closed.length})</h2>${r.closed.map(block).join("")}`:""}
   <h2>Shift notes</h2><div class="pre">${esc(r.notes)||"–"}</div>
@@ -2247,7 +2254,7 @@ function exportRecord(r,draft,win){
   w.document.open();w.document.write(html);w.document.close();
 }
 function renderDiary(){
-  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.owner&&r.owner!=="Line"?`<span class="ownbadge sm">${esc(r.owner)}</span> `:""}${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${recTasksDone(r).length} tasks done · ${r.done.length} jobs completed · ${r.open.length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
+  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.owner&&r.owner!=="Line"?`<span class="ownbadge sm">${esc(r.owner)}</span> `:""}${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${recTasksDone(r).length} tasks done · ${r.open.length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
 }
 $("#diaryList").addEventListener("click",e=>{const b=e.target.closest("[data-rec]");if(b){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}});
 
