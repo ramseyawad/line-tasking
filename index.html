@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125021010">
+<meta name="build" content="20261125021223">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2062,9 +2062,9 @@ function renderStats(){
   // shifts
   renderSent(S.a,S.b);
   $("#sxShiftSub").textContent=S.sh.length?`${S.sh.length} handed over · ${shBelow} below minimum`:"";
-  const byCrew={};S.sh.forEach(r=>{const c=r.crew||"?";const o=byCrew[c]=byCrew[c]||{n:0,d:0,o:0};o.n++;o.d+=(r.done||[]).length;o.o+=(r.open||[]).length});
-  $("#sxShift").innerHTML=S.sh.length?`${Object.keys(byCrew).length>1?`<div class="sx-crews">${Object.entries(byCrew).sort().map(([c,o])=>`<div><b>${esc(c)} Shift</b> ${o.n} shift${o.n>1?"s":""} · ${o.d} done · ${(o.d/o.n).toFixed(1)} per shift · ${o.o} carried</div>`).join("")}</div>`:""}
-    <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Crew</th><th>Completed</th><th>Carried over</th><th>Manning</th><th>Handed over</th></tr></thead><tbody>${S.sh.map(r=>`<tr><td>${dlong(r.date)}</td><td>${SHIFT[r.type]||""}${r.owner&&r.owner!=="Line"?` <span class="ownbadge sm">${esc(r.owner)}</span>`:""}</td><td>${esc(r.crew||"")}</td><td>${(r.done||[]).length}</td><td>${(r.open||[]).length}</td><td>${(r.manning||[]).map(m=>`<span class="sx-mn ${m.min!=null&&m.min!==""&&m.count<+m.min?"low":""}" title="${esc(m.n)}: ${m.count}${m.min!=null&&m.min!==""?" (min "+m.min+")":""}">${esc(({Management:"Mgmt","B1 Cert":"B1","B2 Cert":"B2","A Certs":"A"})[m.n]||m.n)} ${m.count}</span>`).join("")}</td><td class="sub">${r.endedAt?fmt(r.endedAt):""}</td></tr>`).join("")}</tbody></table></div>`
+  const byCrew={};S.sh.forEach(r=>{const c=r.crew||"?";const o=byCrew[c]=byCrew[c]||{n:0,d:0,o:0};o.n++;o.d+=recTasksDone(r).length;o.o+=(r.open||[]).length});
+  $("#sxShift").innerHTML=S.sh.length?`${Object.keys(byCrew).length>1?`<div class="sx-crews">${Object.entries(byCrew).sort().map(([c,o])=>`<div><b>${esc(c)} Shift</b> ${o.n} shift${o.n>1?"s":""} · ${o.d} tasks done · ${(o.d/o.n).toFixed(1)} per shift · ${o.o} carried</div>`).join("")}</div>`:""}
+    <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Crew</th><th>Tasks done</th><th>Jobs completed</th><th>Carried over</th><th>Manning</th><th>Handed over</th></tr></thead><tbody>${S.sh.map(r=>`<tr><td>${dlong(r.date)}</td><td>${SHIFT[r.type]||""}${r.owner&&r.owner!=="Line"?` <span class="ownbadge sm">${esc(r.owner)}</span>`:""}</td><td>${esc(r.crew||"")}</td><td>${recTasksDone(r).length}</td><td>${(r.done||[]).length}</td><td>${(r.open||[]).length}</td><td>${(r.manning||[]).map(m=>`<span class="sx-mn ${m.min!=null&&m.min!==""&&m.count<+m.min?"low":""}" title="${esc(m.n)}: ${m.count}${m.min!=null&&m.min!==""?" (min "+m.min+")":""}">${esc(({Management:"Mgmt","B1 Cert":"B1","B2 Cert":"B2","A Certs":"A"})[m.n]||m.n)} ${m.count}</span>`).join("")}</td><td class="sub">${r.endedAt?fmt(r.endedAt):""}</td></tr>`).join("")}</tbody></table></div>`
     :`<div class="sx-empty">No handed-over shifts in this period yet – shift stats build up from each handover.</div>`;
 }
 const inRange=(j,S)=>[j.created,j.completed,j.started].some(d=>d&&new Date(d)>=S.a&&new Date(d)<=S.b);
@@ -2078,8 +2078,8 @@ $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/"/g
   Object.entries(S.AC).sort().forEach(([t,v])=>L.push([t,hnum(v.ms).toFixed(2),v.done,v.raised,v.cf,hnum(v.aog).toFixed(2)].map(q).join(",")));
   const SH=sentHours(S.a,S.b),SC=Object.keys(SENT);L.push("",["Tail",...SC.map(c=>c+" hours"),"Total hours"].map(q).join(","));
   TAILS.filter(t=>t!=="Off Aircraft").forEach(t=>{const m=SH[t]||{};L.push([t,...SC.map(c=>hnum(m[c]||0).toFixed(2)),hnum(Object.values(m).reduce((x,y)=>x+y,0)).toFixed(2)].map(q).join(","))});
-  L.push("",["Shift date","Shift","Crew","Completed","Carried over","Below minimum"].map(q).join(","));
-  S.sh.forEach(r=>L.push([r.date,SHIFT[r.type],r.crew,(r.done||[]).length,(r.open||[]).length,belowMin(r)?"Yes":"No"].map(q).join(",")));
+  L.push("",["Shift date","Shift","Crew","Tasks done","Jobs completed","Carried over","Below minimum"].map(q).join(","));
+  S.sh.forEach(r=>L.push([r.date,SHIFT[r.type],r.crew,recTasksDone(r).length,(r.done||[]).length,(r.open||[]).length,belowMin(r)?"Yes":"No"].map(q).join(",")));
   download(`line-stats-${iso(S.a)}-to-${iso(S.b)}.csv`,L.join("\n"),"text/csv")};
 /* ---------- shifts, handover & diary ---------- */
 const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
@@ -2140,7 +2140,8 @@ function openHandover(){
   const doneJ=D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss&&ownJob(o)(j)),open=D.jobs.filter(j=>active(j)&&ownJob(o)(j));
   $("#hoSub").textContent=`${o!=="Line"?o+" · ":""}${SHIFT[sh.type]} · ${dlong(sh.date)}`;
   $("#hoRoster").closest("label").classList.toggle("hide",o!=="Line");
-  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br>${o!=="Line"?"":(n=>n===SIXS.length?`<span class="six-ok">✓ 6S reset complete</span>`:`<span class="six-warn">⚠ 6S reset ${n}/${SIXS.length} – outstanding: ${SIXS.filter(([k])=>!sixState()[k]).map(x=>x[1]).join(", ")}</span>`)(sixDone())}<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
+  const tDone=open.concat(doneJ).flatMap(j=>items(j).filter(it=>!it.info&&it.s==="done"&&(!it.at||new Date(it.at)>=ss))).length;
+  $("#hoSummary").innerHTML=`<b>${tDone}</b> task${tDone===1?"":"s"} completed · <b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} fully completed this shift · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br>${o!=="Line"?"":(n=>n===SIXS.length?`<span class="six-ok">✓ 6S reset complete</span>`:`<span class="six-warn">⚠ 6S reset ${n}/${SIXS.length} – outstanding: ${SIXS.filter(([k])=>!sixState()[k]).map(x=>x[1]).join(", ")}</span>`)(sixDone())}<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
   $("#hoCrew").value="";
   SIG.sigOff.clear();SIG.sigOn.clear();["hoOffNA","hoOnNA"].forEach(i=>{$("#"+i).checked=false;$("#"+i).onchange({target:$("#"+i)})});
   $("#hoOffName").value=window.__waCloud?.me?.()?.full_name||"";$("#hoOnName").value="";$("#hoOffWhy").value="";$("#hoOnWhy").value="";
@@ -2205,6 +2206,9 @@ function buildRecord(handover,o="Line"){
     sixs:o!=="Line"?null:SIXS.map(([k,n])=>({n,done:!!sixState()[k],at:sixState()[k]?.at||null,by:sixState()[k]?.by||""})),
     handover:handover||null};
 }
+// every task line finished during a shift (from fully completed jobs and from jobs still carrying over)
+const recTasksDone=r=>{const st=r.startedAt?new Date(r.startedAt):null,ok=it=>!it.info&&it.s==="done"&&(!it.at||!st||new Date(it.at)>=st);
+  return [...(r.done||[]),...(r.open||[])].flatMap(j=>(j.items||[]).filter(ok).map(it=>({tail:j.tail,t:it.t,who:it.who||[],at:it.at})))};
 function exportRecord(r,draft,win){
   const st={todo:"☐",work:"▶",done:"☑"},stn={todo:"Not started",work:"In progress",done:"Done"};
   const block=j=>`<table class="ac"><tr class="h"><th>${j.pri?"P"+esc(j.pri)+" · ":""}${esc(j.tail)}</th><th>${[j.acst,j.area,j.tag].filter(Boolean).map(esc).join(" · ")}</th><th>${j.bay?"Bay "+esc(j.bay):""}</th><th>${esc(j.lsj||"")}</th></tr>
@@ -2221,14 +2225,16 @@ function exportRecord(r,draft,win){
   .pre{white-space:pre-wrap;border:1px solid #D1D5DB;padding:8px;min-height:30px}
   .sgs{display:flex;gap:24px}.sg{flex:1;border:1px solid #9CA3AF;padding:8px;min-height:120px}.sl{font-size:10px;text-transform:uppercase;color:#555;font-weight:bold}.sn{font-weight:bold;margin:4px 0}.sg img{max-width:100%;height:70px;object-fit:contain}.ov{color:#B45309;font-style:italic;margin:8px 0}.st{font-size:10px;color:#555}
   .foot{margin-top:20px;font-size:10px;color:#666;border-top:1px solid #ccc;padding-top:6px}
-  @media print{body{margin:12mm}.np{display:none}}</style></head><body>
+  @media print{body{margin:12mm}.np{display:none}}.sum{margin:8px 0 4px;font-size:13px;background:#F1F5F9;border-radius:6px;padding:8px 10px}.tdone{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}.tdone th,.tdone td{border:1px solid #CBD5E1;padding:3px 6px;text-align:left;vertical-align:top}.tdone th{background:#E2E8F0}</style></head><body>
   <div class="np" style="margin-bottom:12px"><button onclick="print()">Print / Save as PDF</button></div>
   <h1>${r.owner&&r.owner!=="Line"?esc(r.owner):"Line"} – Shift Diary</h1>
   <div class="meta"><b>${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]}</b> · ${dlong(r.date)} · Shift ${tm(r.startedAt)} – ${r.endedAt?tm(r.endedAt):"in progress"}</div>
   ${draft||r.draft?`<div class="draft">DRAFT – shift not yet handed over</div>`:""}
   ${r.manning&&r.manning.length?"":"<!--"}<h2>Manning</h2><table class="mn"><tr><th>Group</th><th>On shift</th><th>Target</th><th>Minimum</th></tr>${r.manning.map(m=>`<tr><td>${m.n}</td><td class="${m.min&&m.count<m.min?"crit":m.target&&m.count<m.target?"low":""}">${m.count}</td><td>${m.target??"–"}</td><td>${m.min??"–"}</td></tr>`).join("")}</table>
   ${r.manning&&r.manning.length?"":"-->"}<h2 style="${r.manning&&r.manning.length?"display:none":""}">Personnel</h2><p style="font-size:11px">${r.onShift.map(e=>esc(e.n)+(e.t?` (${esc(e.t)})`:"")+(e.duty?` – ${esc(e.duty)}`:"")).join(" · ")||"–"}</p>
-  <h2>Completed this shift (${r.done.length})</h2>${r.done.map(block).join("")||"<p>None</p>"}
+  ${(td=>`<div class="sum"><b>${td.length}</b> task${td.length===1?"":"s"} completed · <b>${r.done.length}</b> job${r.done.length===1?"":"s"} fully completed · <b>${r.open.length}</b> carried to next shift</div>
+  <h2>Tasks completed this shift (${td.length})</h2>${td.length?`<table class="tdone"><tr><th>Tail</th><th>Task</th><th>By</th><th>Time</th></tr>${td.map(x=>`<tr><td><b>${esc(x.tail)}</b></td><td>${esc(x.t)}</td><td>${x.who.map(esc).join(", ")||"–"}</td><td>${x.at?tm(x.at):""}</td></tr>`).join("")}</table>`:"<p>None</p>"}`)(recTasksDone(r))}
+  <h2>Jobs fully completed this shift (${r.done.length})</h2>${r.done.map(block).join("")||"<p>None</p>"}
   <h2>Outstanding / due – carried to next shift (${r.open.length})</h2>${r.open.map(block).join("")||"<p>None</p>"}
   ${r.closed?.length?`<h2>Closed at handover – not carried forward (${r.closed.length})</h2>${r.closed.map(block).join("")}`:""}
   <h2>Shift notes</h2><div class="pre">${esc(r.notes)||"–"}</div>
@@ -2241,7 +2247,7 @@ function exportRecord(r,draft,win){
   w.document.open();w.document.write(html);w.document.close();
 }
 function renderDiary(){
-  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.owner&&r.owner!=="Line"?`<span class="ownbadge sm">${esc(r.owner)}</span> `:""}${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${r.done.length} completed · ${r.open.length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
+  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.owner&&r.owner!=="Line"?`<span class="ownbadge sm">${esc(r.owner)}</span> `:""}${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${recTasksDone(r).length} tasks done · ${r.done.length} jobs completed · ${r.open.length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
 }
 $("#diaryList").addEventListener("click",e=>{const b=e.target.closest("[data-rec]");if(b){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}});
 
