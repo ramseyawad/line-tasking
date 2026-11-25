@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125151652">
+<meta name="build" content="20261125152103">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -911,6 +911,13 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .aiocf button.on{background:#0E7490!important;color:#fff!important;border-color:#0E7490!important}
 .aiocf button i{position:static!important;background:rgba(15,23,42,.1)!important;color:inherit!important;margin-left:3px}
 .aiocf button.on i{background:rgba(255,255,255,.25)!important}
+.sentwrap{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center;min-width:0;max-width:100%}
+.sentpill{display:inline-flex;align-items:center;gap:4px;background:var(--sc);color:#fff;border-radius:6px;padding:3px 4px 3px 7px;font-size:11.5px;line-height:1}
+.sentpill b{font-weight:900}.sentpill small{font-size:10px;opacity:.85;font-weight:600}
+.sentpill button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:4px;width:16px;height:16px;line-height:14px;padding:0;cursor:pointer;font-size:13px}
+.sentpill button:hover{background:rgba(255,255,255,.45)}
+.sentwrap .sentsel{max-width:150px}
+.lmeta .blk-sent .sentwrap,.jmeta .sentwrap{flex:1 1 100%}
 </style>
 </head>
 <body>
@@ -1434,7 +1441,8 @@ function merge3(b,l,r,key){
       out.task=[...keepR,...addL].join("\n")}
     return out}
   if(Array.isArray(l)&&Array.isArray(r)){
-    const idKey={jobs:"id",engineers:"id",archived:"id",items:"t",nl:"t",more:null}[key];
+    let idKey={jobs:"id",engineers:"id",archived:"id",items:"t",nl:"t",more:null}[key];
+    if(idKey===undefined&&[...l,...r].length&&[...l,...r].every(x=>x&&typeof x==="object"&&typeof x.c==="string"&&!("t" in x)))idKey="c"; // an aircraft's sentences
     if(["sentLog","acstLog","ownLog","tko"].includes(key)){const seen=new Set(r.map(J));return [...r,...l.filter(x=>!seen.has(J(x)))]}
     if(idKey){const bb=Array.isArray(b)?b:[],K=x=>x&&typeof x==="object"?x[idKey]:undefined,mB=new Map(bb.map(x=>[K(x),x])),mL=new Map(l.map(x=>[K(x),x])),mR=new Map(r.map(x=>[K(x),x])),out=[];
       r.forEach(x=>{const k=K(x);if(mL.has(k))out.push(merge3(mB.get(k),mL.get(k),x,key+"[]"));else if(mB.has(k)&&J(mB.get(k))===J(x)){/* we deleted it */}else out.push(x)});
@@ -1463,7 +1471,7 @@ function sanitize(d){
     ["owner","rcfg","dass","ets"].forEach(k=>{if(k in a){a[k]=str(a[k]);if(!a[k])delete a[k]}})});
   d.owners=strArr(d.owners);if(d.owners.length&&!d.owners.includes("Line"))d.owners.unshift("Line");if(!d.owners.length)delete d.owners;
   ["sec","pos","sent","manning","manningN","shifts"].forEach(k=>{if(k in d&&!obj(d[k]))delete d[k]});
-  if(d.sent)Object.keys(d.sent).forEach(t=>{if(!obj(d.sent[t])||typeof d.sent[t].c!=="string")delete d.sent[t]});
+  if(d.sent)Object.keys(d.sent).forEach(t=>{const v=d.sent[t];const l=(Array.isArray(v)?v:[v]).filter(x=>obj(x)&&typeof x.c==="string"&&x.c);if(l.length)d.sent[t]=l;else delete d.sent[t]});
   if(d.shifts)Object.keys(d.shifts).forEach(o=>{if(!obj(d.shifts[o]))delete d.shifts[o]});
   ["sentLog","ownLog","archived"].forEach(k=>{if(k in d)d[k]=arr(d[k]).filter(obj)});
   if("shift" in d&&!obj(d.shift))delete d.shift;
@@ -1665,11 +1673,19 @@ const SENT_G=[["Cargo damage","#D946EF",[["CAR","Damage to cargo area"]]],
  ["Weather","#7F1D1D",[["WXW","Wind"],["WXT","Thunderstorm"]]],
  ["Shortfalls","#DC2626",[["MAT","Material"],["MDS","MDS"],["WOF","Line Workforce"],["TOO","Tooling"],["AGE","AGE"],["INF","Infrastructure"],["SWF","Specialist Workforce"],["COU","Courier"],["RDE","MDS RDE"],["TQN","TQN In Progress"],["DOC","Documentation"]]]];
 const SENT={};SENT_G.forEach(([g,col,l])=>l.forEach(([c,d])=>SENT[c]={c,d,g,col}));
-const sentOf=t=>{const x=(D.sent||{})[t];return x&&SENT[x.c]?x:null}; // ignore unknown codes rather than crash
-function setSent(tail,code){if(!canAc(ownerOf(tail))){toast("View only – "+ownerOf(tail)+" aircraft");render();return}D.sent=D.sent||{};D.sentLog=D.sentLog||[];const cur=sentOf(tail);if((cur?.c||"")===code)return;
-  const at=now(),by=(typeof myName==="function"&&myName())||"";
-  if(code)D.sent[tail]={c:code,at,by};else delete D.sent[tail];D.sentLog.push({t:tail,c:code,at,by});save()}
-const sentSel=(tail,dis)=>{const cur=sentOf(tail),c=cur?.c||"";return `<select class="acsel sentsel" data-sent="${esc(tail)}" ${dis||!canAc(ownerOf(tail))?"disabled":""} title="${c?esc(c+" – "+SENT[c].d)+(cur.at?" · since "+fmt(cur.at):""):"Aircraft sentencing (Airbus)"}" style="${c?`--sc:${SENT[c].col}`:""}"><option value="">Sentence…</option>${SENT_G.map(([g,col,l])=>`<optgroup label="${g}">${l.map(([k,d])=>`<option value="${k}" ${k===c?"selected":""}>${k} – ${esc(d)}</option>`).join("")}</optgroup>`).join("")}</select>`};
+// an aircraft can be in several sentences at once: D.sent[tail] = [{c,at,by},…] (older copies stored a single {c,at,by})
+const sentList=t=>{const x=(D.sent||{})[t];return (Array.isArray(x)?x:x?[x]:[]).filter(s=>s&&SENT[s.c])};
+const sentOf=t=>sentList(t)[0]||null;
+const sentChips=(t,cls="sentchip")=>sentList(t).map(s=>`<span class="${cls}" style="--sc:${SENT[s.c].col}" title="${esc(s.c+" – "+SENT[s.c].d)} · since ${esc(fmt(s.at))}">${esc(s.c)}</span>`).join("");
+function setSent(tail,code,remove){if(!canAc(ownerOf(tail))){toast("View only – "+ownerOf(tail)+" aircraft");render();return}if(!code||!SENT[code])return;
+  D.sent=D.sent||{};D.sentLog=D.sentLog||[];const cur=sentList(tail),at=now(),by=(typeof myName==="function"&&myName())||"";
+  if(remove){if(!cur.some(s=>s.c===code))return;const rest=cur.filter(s=>s.c!==code);if(rest.length)D.sent[tail]=rest;else delete D.sent[tail];D.sentLog.push({t:tail,c:code,op:"del",at,by})}
+  else{if(cur.some(s=>s.c===code))return;D.sent[tail]=[...cur,{c:code,at,by}];D.sentLog.push({t:tail,c:code,op:"add",at,by})}
+  save()}
+// current sentences as chips (× to clear, time in it) plus a picker to add another
+const sentSel=(tail,dis)=>{const cur=sentList(tail),ed=!dis&&canAc(ownerOf(tail)),have=new Set(cur.map(s=>s.c));
+  return `<span class="sentwrap">${cur.map(s=>`<span class="sentpill" style="--sc:${SENT[s.c].col}" title="${esc(s.c+" – "+SENT[s.c].d)} · since ${esc(fmt(s.at))}${s.by?" ("+esc(s.by)+")":""}"><b>${esc(s.c)}</b><small>${ago(s.at)}</small>${ed?`<button type="button" data-sentdel="${esc(tail)}|${esc(s.c)}" title="Clear ${esc(s.c)}">×</button>`:""}</span>`).join("")}${ed||!cur.length?`<select class="acsel sentsel" data-sent="${esc(tail)}" ${ed?"":"disabled"} title="Add an Airbus sentence"><option value="">${cur.length?"+ Sentence…":"Sentence…"}</option>${SENT_G.map(([g,col,l])=>`<optgroup label="${g}">${l.filter(([k])=>!have.has(k)).map(([k,d])=>`<option value="${k}">${k} – ${esc(d)}</option>`).join("")}</optgroup>`).join("")}</select>`:""}</span>`};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-sentdel]");if(!b)return;e.preventDefault();e.stopPropagation();const[t,c]=b.dataset.sentdel.split("|");setSent(t,c,true);if(!$("#acModal").classList.contains("hide"))openAc(t)},true);
 const ltype=(j,t)=>(j.lt||{})[t]||"L";
 const aiocTick=(j,it,i,done)=>{const on=aiocOn(j,it.t);if(canFlight()&&!done)return `<label class="aiocchk ${on?"on":""}" title="Highlight to AIOC – they see this line in full"><input type="checkbox" data-ha="${j.id}|${i}" ${on?"checked":""}>AIOC</label>`;
   return on?`<span class="aiocchk on ro" title="Shown to AIOC">AIOC</span>`:""};
@@ -1823,7 +1839,7 @@ function renderBoard(){
   $("#acBar").innerHTML=(isAIOC()
     ?`<div class="aiocf"><button data-aiocf="All" class="${AIOCF==="All"?"on":""}">All <i>${TAILS.length-1}</i></button>${owners().filter(o=>ownCount(o)).map(o=>`<button data-aiocf="${esc(o)}" class="${AIOCF===o?"on":""}">${esc(o)} <i>${ownCount(o)}</i></button>`).join("")}</div>`
     :`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`)+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
-    const aog=js.some(j=>j.acst==="AOG"),own=ownerOf(t),sc=sentOf(t)?.c;
+    const aog=js.some(j=>j.acst==="AOG"),own=ownerOf(t),sc=sentList(t).map(s=>s.c).join(", ");
     return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""} ${(t==="Off Aircraft"?"Line":own)!==mySec()?"nm":""}" title="${t}${isNS3(t)?" · NS3 national standby (P1)":""} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${isNS3(t)?`<b class="ns3mini">NS3</b>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
   setTimeout(renderSeenBits,0);
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
@@ -1872,7 +1888,7 @@ function renderBoard(){
       dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canAc(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
       role:`${j.tail!=="Off Aircraft"?roleBoxes(j.tail,done):""}`,
       ets:`${j.tail!=="Off Aircraft"?etsBox(j.tail,done):""}`,
-      sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}`,
+      sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done):""}`,
       notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${lk?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${lk?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
       lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${lk?"disabled":""} placeholder="+ LSJ set">`,
       crew:AI?"":`<div class="crewbox">${rows}</div>`,
@@ -1960,7 +1976,7 @@ $("#jobs").addEventListener("change",e=>{
   if(t.dataset.add)assign(t.dataset.add,t.value);
   else if(t.dataset.iadd){const[j,i]=t.dataset.iadd.split("|");assignItem(j,+i,t.value)}
   else if(t.dataset.tagadd)addTag(t);
-  else if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value);
+  else if(t.dataset.sent!=null){if(t.value)setSent(t.dataset.sent,t.value)}
   else if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save()}
   else if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save()}
   else if(t.dataset.ets!=null){if(!canAc(ownerOf(t.dataset.ets)))return;const a=acRec(t.dataset.ets);if(t.value)a.ets=t.value;else delete a.ets;save()}
@@ -2234,7 +2250,7 @@ function openAc(t){
      <div class="mv-f"><span>Role config</span>${roleBoxes(t,false)}</div><div class="mv-f"><span>Estimated time to serviceability</span>${etsBox(t,false)}</div></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canCRS(t)?(techReady(t)?`<button class="btn sm" data-crs="${t}">Undo</button>`:openTasks(t)?`<button class="btn sm" disabled>CRS – ${openTasks(t)} task${openTasks(t)>1?"s":""} still open</button>`:`<button class="btn sm ok" data-crs="${t}">CRS – Tech ready</button>`):""}</div>
    <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
-   <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${se?` · ${esc(se.c)} for ${ago(se.at)}`:""}</p>
+   <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${sentList(t).map(x=>` · ${esc(x.c)} for ${ago(x.at)}`).join("")}</p>
    ${isAIOC()?`<h4 class="mv-h">Jobs</h4>${js.length?js.map(aiocTasks).join(""):'<p class="sub">No open jobs.</p>'}`:""}<h4 class="mv-h ${isAIOC()?"hide":""}">Open jobs</h4>${isAIOC()?"":js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
   $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canAddTask(own));$("#acBody .acp-jobs")?.classList.toggle("hide",isAIOC());$("#acModal").classList.remove("hide");
 }
@@ -2248,7 +2264,7 @@ $("#acModal").addEventListener("change",e=>{const t=e.target;
   if(t.dataset.ets!=null){if(!canAc(ownerOf(t.dataset.ets)))return;const a=acRec(t.dataset.ets);if(t.value)a.ets=t.value;else delete a.ets;save();openAc(t.dataset.ets);return}
   if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save();openAc(t.dataset.rcfg);return}
   if(t.dataset.rreq!=null){if(!canNF())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save();openAc(t.dataset.rreq);return}
-  if(t.dataset.owner!=null){setOwner(t.dataset.owner,t.value);openAc(t.dataset.owner)}else if(t.dataset.sent!=null){setSent(t.dataset.sent,t.value);openAc(t.dataset.sent)}});
+  if(t.dataset.owner!=null){setOwner(t.dataset.owner,t.value);openAc(t.dataset.owner)}else if(t.dataset.sent!=null){if(t.value)setSent(t.dataset.sent,t.value);openAc(t.dataset.sent)}});
 $("#acRaise").onclick=()=>{const t=$("#acRaise").dataset.tail;$("#acModal").classList.add("hide");openNew();$("#nTail").value=t};
 function openOwners(){$("#ownList").value=owners().join("\n");$("#ownErr").textContent="";$("#ownModal").classList.remove("hide");setTimeout(()=>$("#ownList").focus(),30)}
 $("#ownClose").onclick=$("#ownCancel").onclick=()=>$("#ownModal").classList.add("hide");
@@ -2315,7 +2331,7 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   const done=j?tasksOnly(j).length:0;
   const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
-    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${!off&&etsOf(t)?`<span class="ct-ets ${new Date(etsOf(t))<new Date()?"od":""}" title="Estimated time to serviceability">ETS ${etsTxt(etsOf(t))}</span>`:""}${(own!=="Line"||isAIOC())&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:crsBtn(t,"ct-crs")):""}<span class="ct-chev">▾</span></div>
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${!off&&etsOf(t)?`<span class="ct-ets ${new Date(etsOf(t))<new Date()?"od":""}" title="Estimated time to serviceability">ETS ${etsTxt(etsOf(t))}</span>`:""}${(own!=="Line"||isAIOC())&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${sentChips(t)}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:crsBtn(t,"ct-crs")):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightsOf(t).some(flReal)?`<div class="ct-fl">${flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join("")}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
@@ -2612,7 +2628,12 @@ function statsData(){
 function sentHours(a,b){ // {tail:{code:ms}}
   const out={},L=(D.sentLog||[]).slice().sort((x,y)=>x.at.localeCompare(y.at)),by={};
   L.forEach(e=>(by[e.t]=by[e.t]||[]).push(e));
-  Object.entries(by).forEach(([t,l])=>l.forEach((e,i)=>{if(!e.c)return;const end=l[i+1]?.at||new Date().toISOString();const ms=clip(new Date(e.at),new Date(end),a,b);if(ms>0){out[t]=out[t]||{};out[t][e.c]=(out[t][e.c]||0)+ms}}));
+  const addMs=(t,c,from,to)=>{const ms=clip(new Date(from),new Date(to),a,b);if(ms>0){out[t]=out[t]||{};out[t][c]=(out[t][c]||0)+ms}};
+  Object.entries(by).forEach(([t,l])=>{const open={};
+    l.forEach(e=>{if(!e.op){Object.entries(open).forEach(([c,from])=>addMs(t,c,from,e.at));Object.keys(open).forEach(k=>delete open[k]);if(e.c)open[e.c]=e.at}
+      else if(e.op==="add"){if(e.c&&!open[e.c])open[e.c]=e.at}
+      else if(e.op==="del"&&open[e.c]){addMs(t,e.c,open[e.c],e.at);delete open[e.c]}});
+    const nowIso=new Date().toISOString();Object.entries(open).forEach(([c,from])=>addMs(t,c,from,nowIso))});
   return out;
 }
 const hh=ms=>{const h=ms/3600000;return h>=10?Math.round(h)+"h":h>=1?h.toFixed(1)+"h":Math.round(ms/60000)+"m"};
@@ -2625,10 +2646,10 @@ function renderSent(a,b){
   const bar=tot?`<div class="sent-bar">${gTot.map(x=>`<i style="flex:${x.ms};background:${x.col}" title="${x.g}: ${hh(x.ms)} (${Math.round(x.ms/tot*100)}%)"></i>`).join("")}</div><div class="sent-leg">${gTot.map(x=>`<span><i style="background:${x.col}"></i>${x.g} <b>${hh(x.ms)}</b> ${Math.round(x.ms/tot*100)}%</span>`).join("")}</div>`:"";
   const codeBars=codes.length?`<div class="sent-codes">${bars(codes.map(([c,ms])=>({l:c,lh:`<span class="sentchip" style="--sc:${SENT[c]?.col||"#94A3B8"}">${esc(c)}</span> ${esc(SENT[c]?.d||"")}`,v:ms,d:hh(ms),x:Math.round(ms/tot*100)+"%",tip:`${c} – ${SENT[c]?.d}: ${hh(ms)}`})))}</div>`:`<div class="sx-empty">No sentencing hours in this period yet – set a sentence on an aircraft below or on its job card.</div>`;
   const rows=tails.map(t=>{const m=H[t]||{},tt=Object.values(m).reduce((x,y)=>x+y,0);const top=Object.entries(m).sort((x,y)=>y[1]-x[1]);
-    return `<tr><td class="tail">${t}</td><td>${sentSel(t,false)}</td><td class="sub">${sentOf(t)?ago(sentOf(t).at):""}</td><td>${tt?`<div class="sent-mini">${top.map(([c,ms])=>`<i style="flex:${ms};background:${SENT[c]?.col||"#94A3B8"}" title="${esc(c)}: ${hh(ms)}"></i>`).join("")}</div>`:""}</td><td class="sent-top">${top.slice(0,4).map(([c,ms])=>`<span class="sentchip" style="--sc:${SENT[c]?.col||"#94A3B8"}">${esc(c)}</span> ${hh(ms)}`).join(" &nbsp;")}</td><td style="text-align:right;font-weight:700">${tt?hh(tt):""}</td></tr>`}).join("");
-  $("#sxSent").innerHTML=bar+codeBars+`<div class="tbl-wrap" style="margin-top:14px"><table class="sent-tbl"><thead><tr><th>Tail</th><th>Current sentence</th><th>For</th><th>Split</th><th>Hours by sentence</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<tr><td class="tail">${t}</td><td colspan="2">${sentSel(t,false)}</td><td>${tt?`<div class="sent-mini">${top.map(([c,ms])=>`<i style="flex:${ms};background:${SENT[c]?.col||"#94A3B8"}" title="${esc(c)}: ${hh(ms)}"></i>`).join("")}</div>`:""}</td><td class="sent-top">${top.slice(0,4).map(([c,ms])=>`<span class="sentchip" style="--sc:${SENT[c]?.col||"#94A3B8"}">${esc(c)}</span> ${hh(ms)}`).join(" &nbsp;")}</td><td style="text-align:right;font-weight:700">${tt?hh(tt):""}</td></tr>`}).join("");
+  $("#sxSent").innerHTML=bar+codeBars+`<div class="tbl-wrap" style="margin-top:14px"><table class="sent-tbl"><thead><tr><th>Tail</th><th colspan="2">Current sentences</th><th>Split</th><th>Hours by sentence</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-$("#sxSent")?.addEventListener("change",e=>{const t=e.target;if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value)});
+$("#sxSent")?.addEventListener("change",e=>{const t=e.target;if(t.dataset.sent!=null&&t.value)setSent(t.dataset.sent,t.value)});
 const belowMin=r=>(r.manning||[]).some(m=>m.min!=null&&m.min!==""&&m.count<+m.min);
 function renderStats(){
   $("#sxRange").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.r===SXR));
@@ -2742,7 +2763,7 @@ const openTasks=t=>D.jobs.filter(j=>active(j)&&j.tail===t).reduce((n,j)=>n+tasks
 const crsBtn=(t,cls="")=>{const n=openTasks(t);return n?`<button class="btn sm crsbtn ${cls}" disabled title="${n} task${n>1?"s":""} still open – CRS when every task is done">CRS <small>${n} open</small></button>`:`<button class="btn ok sm crsbtn ${cls}" data-crs="${esc(t)}" title="Certify – marks ${esc(t)} Tech ready">CRS</button>`};
 function setCRS(t,on){if(!canCRS(t)){toast("View only – "+ownerOf(t)+" aircraft");return}if(on&&openTasks(t)){toast(`${t}: ${openTasks(t)} task${openTasks(t)>1?"s":""} still open – complete them before CRS`);return}const a=acRec(t);
   if(on)a.crs={at:now(),by:(typeof myName==="function"&&myName())||""};else delete a.crs;save();toast(on?`${t} CRS – Tech ready`:`${t} no longer tech ready`)}
-const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentOf(t)?.c==="AOG";
+const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentList(t).some(s=>s.c==="AOG");
 const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";if(tailAOG(t))return "g-aog";const o=ownerOf(t);return o==="Deployed"?"g-dep":o==="Retrofit"?"g-ret":"g-o"};
 const clearCRS=t=>{const a=(D.ac||{})[t];if(a&&a.crs){delete a.crs}};
 const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
@@ -2960,7 +2981,7 @@ function card(j){
   const cls=done?"green":j.status==="work"?"amber":"red";
   const its=tasksOnly(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
-  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${!off&&sentOf(j.tail)?`<span class="jc-bay jc-sent" style="--sc:${SENT[sentOf(j.tail).c]?.col}" title="${esc(SENT[sentOf(j.tail).c]?.d||"")}">${esc(sentOf(j.tail).c)}</span>`:""}${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${ownerOf(j.tail)!=="Line"&&j.tail!=="Off Aircraft"?`<span class="jc-bay">${esc(ownerOf(j.tail))}</span>`:""}<span class="jc-st">${st}</span></div>
+  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${off?"":sentChips(j.tail,"jc-bay jc-sent")}${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${ownerOf(j.tail)!=="Line"&&j.tail!=="Off Aircraft"?`<span class="jc-bay">${esc(ownerOf(j.tail))}</span>`:""}<span class="jc-st">${st}</span></div>
     <ul class="jc-tasks">${items(j).map(t=>t.info?`<li class="t-info">${esc(itxt(t))}</li>`:`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
