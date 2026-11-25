@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125131259">
+<meta name="build" content="20261125131735">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -836,6 +836,12 @@ body.aioc #shareAll,body.aioc .jobs-h .search,body.aioc #openDisplay,body.aioc #
 body.aioc .ct-crs,body.aioc .crsbtn,body.aioc [data-share],body.aioc #acRaise,body.aioc #sxKpis,body.aioc .sx-note,body.aioc #sxCsv,
 body.aioc #tab-stats .sx-grid>.card:not(:has(#sxSent)):not(:has(#sxAc)){display:none!important}
 body.aioc .acbar button.unseen::after{display:none}
+.flcard{border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#FBFCFE}
+.flcard-h{display:flex;align-items:center;margin-bottom:6px}.flcard-h b{font-size:13px}.flcard-h .linkbtn{margin-left:auto;color:#DC2626}
+#flList .flgrid{grid-template-columns:repeat(30,minmax(0,1fr))!important;gap:8px}
+#flList .flgrid label{grid-column:span 6!important}
+#flList .flgrid label:nth-child(-n+2){grid-column:span 15!important}
+#flList .flgrid label:nth-child(n+3):nth-child(-n+5){grid-column:span 10!important}
 </style>
 </head>
 <body>
@@ -1258,20 +1264,10 @@ body.aioc .acbar button.unseen::after{display:none}
   <div class="card-b"><textarea id="ownList" rows="8" style="width:100%"></textarea><p class="sub" style="margin:6px 0 0">"Line" is us and is always kept. Order here is the order in the dropdowns.</p><div class="err" id="ownErr"></div>
   <div class="mvbtns" style="margin-top:12px"><button class="btn" id="ownCancel">Cancel</button><button class="btn pri" id="ownSave">Save</button></div></div>
 </div></div>
-<div id="flModal" class="modal hide"><div class="mcard card" style="width:min(520px,100%)">
+<div id="flModal" class="modal hide"><div class="mcard card" style="width:min(600px,100%);max-height:92vh;overflow:auto">
   <div class="mhead"><h2 id="flTitle">Next flight</h2><span class="sub" id="flSub"></span><button class="btn icon" id="flClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <div class="card-b"><div class="flgrid">
-    <label class="mv-f"><span>Flight number</span><input id="flNo" placeholder="e.g. RRR4401"></label>
-    <label class="mv-f"><span>Role required</span><input id="flRole" placeholder="e.g. AAR, Cargo"></label>
-    <label class="mv-f"><span>Date</span><input type="date" id="flDate"></label>
-    <label class="mv-f"><span>Time</span><input type="time" id="flTime"></label>
-    <label class="mv-f"><span title="Flight hours">FH</span><input id="flFH" inputmode="decimal" placeholder="hrs"></label>
-    <label class="mv-f"><span title="Flight cycles">FC</span><input id="flFC" inputmode="numeric" placeholder="cycles"></label>
-    <label class="mv-f"><span title="Days">DY</span><input id="flDY" inputmode="numeric" placeholder="days"></label>
-    <label class="mv-f"><span title="Landings">LG</span><input id="flLG" inputmode="numeric" placeholder="landings"></label>
-    <label class="mv-f"><span title="Touch and go's">TG</span><input id="flTG" inputmode="numeric" placeholder="T&amp;Gs"></label>
-  </div><p class="sub" id="flWho" style="margin:10px 0 0"></p></div>
-  <div class="mv-foot"><div class="mvbtns"><button class="linkbtn" id="flClear">Clear</button><button class="btn" id="flCancel">Close</button><button class="btn pri" id="flSave">Save</button></div></div>
+  <div class="card-b"><div id="flList"></div><button class="linkbtn" id="flAdd" style="margin-top:8px">+ Add another flight</button><p class="sub" id="flWho" style="margin:10px 0 0"></p></div>
+  <div class="mv-foot"><div class="mvbtns"><button class="linkbtn" id="flClear">Clear all</button><button class="btn" id="flCancel">Close</button><button class="btn pri" id="flSave">Save</button></div></div>
 </div></div>
 <div id="layModal" class="modal hide"><div class="mcard card" style="width:min(1560px,98vw)">
   <div class="mhead"><h2>Edit tile layout</h2><span class="sub" id="laySub">Drag boxes to move them · drag the right edge to resize · applies to every aircraft</span><button class="btn icon" id="layClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -2081,18 +2077,28 @@ $("#ownSave").onclick=()=>{let l=[...new Set($("#ownList").value.split("\n").map
 
 /* ---------- next flight details (editable by SLE / Line Control / admin) ---------- */
 let FL_T="";
-const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flTime","time"],["flFH","fh"],["flFC","fc"],["flDY","dy"],["flLG","lg"],["flTG","tg"]];
-function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canNF();
-  $("#flTitle").textContent=t+" – next flight";$("#flSub").textContent=ed?"":"View only – SLE / Line Control can edit";
-  FLF.forEach(([id,k])=>{$("#"+id).value=f[k]||"";$("#"+id).disabled=!ed});
-  ["flSave","flClear"].forEach(id=>$("#"+id).classList.toggle("hide",!ed));
-  $("#flWho").textContent=f.at?`Last updated ${fmt(f.at)}${f.by?" by "+f.by:""}`:"";
-  $("#flModal").classList.remove("hide");if(ed)setTimeout(()=>$("#flNo").focus(),30)}
+const FLF=[["no","Flight number","e.g. RRR4401"],["role","Role required","e.g. CDS1, LS1"],["date","Date","","date"],["time","Take off","","time"],["ld","Landing (optional)","","time"],["fh","FH","hrs"],["fc","FC","cycles"],["dy","DY","days"],["lg","LG","landings"],["tg","TG","T&Gs"]];
+const flightsOf=t=>{const a=acGet(t);return [a.flight,...(a.more||[])].filter(f=>f&&Object.keys(f).some(k=>!["at","by"].includes(k)&&f[k]))};
+let FLD=[];
+function flRender(){const ed=canNF();
+  $("#flList").innerHTML=FLD.map((f,n)=>`<div class="flcard" data-fn="${n}"><div class="flcard-h"><b>${n===0?"Next flight":"Flight "+(n+1)}</b>${ed&&FLD.length>1?`<button class="linkbtn" data-fldel="${n}">Remove</button>`:""}</div><div class="flgrid">${FLF.map(([k,l,ph,ty])=>`<label class="mv-f"><span>${esc(l)}</span><input data-fk="${k}" ${ty?`type="${ty}"`:""} value="${esc(f[k]||"")}" placeholder="${esc(ph||"")}" ${ed?"":"disabled"}></label>`).join("")}</div></div>`).join("");
+  $("#flAdd").classList.toggle("hide",!ed)}
+const flRead=()=>{document.querySelectorAll("#flList .flcard").forEach(c=>{const f=FLD[+c.dataset.fn];c.querySelectorAll("[data-fk]").forEach(i=>{f[i.dataset.fk]=i.value.trim()})})};
+function openFlight(t){FL_T=t;const ed=canNF(),fs=flightsOf(t);FLD=fs.length?fs.map(f=>({...f})):[{}];
+  $("#flTitle").textContent=t+" – flights";$("#flSub").textContent=ed?"":"View only – SLE / Line Control can edit";
+  ["flSave","flClear"].forEach(id=>$("#"+id).classList.toggle("hide",!ed));flRender();
+  const f=acGet(t).flight||{};$("#flWho").textContent=f.at?`Last updated ${fmt(f.at)}${f.by?" by "+f.by:""}`:"";
+  $("#flModal").classList.remove("hide");if(ed)setTimeout(()=>$("#flList [data-fk=no]")?.focus(),30)}
+$("#flAdd").onclick=()=>{flRead();const last=FLD[FLD.length-1]||{};FLD.push({role:last.role||"",date:last.date||""});flRender();$("#flList .flcard:last-child [data-fk=no]")?.focus()};
+$("#flList").addEventListener("click",e=>{const d=e.target.closest("[data-fldel]");if(!d)return;flRead();FLD.splice(+d.dataset.fldel,1);if(!FLD.length)FLD=[{}];flRender()});
 const closeFl=()=>$("#flModal").classList.add("hide");
 $("#flClose").onclick=closeFl;$("#flCancel").onclick=closeFl;
-$("#flSave").onclick=()=>{if(!canNF())return;const f={};FLF.forEach(([id,k])=>{const v=$("#"+id).value.trim();if(v)f[k]=v});f.at=now();f.by=(typeof myName==="function"&&myName())||"";
-  acRec(FL_T).flight=f;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T);toast(FL_T+" next flight saved")};
-$("#flClear").onclick=()=>{if(!canNF())return;delete acRec(FL_T).flight;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
+$("#flSave").onclick=()=>{if(!canNF())return;flRead();const by=(typeof myName==="function"&&myName())||"",at=now();
+  // tidy, drop empty ones, sort by date/time (undated last) – the first becomes the "next flight"
+  let L=FLD.map(f=>{const o={};FLF.forEach(([k])=>{if(f[k])o[k]=f[k]});return o}).filter(o=>Object.keys(o).length);
+  L.sort((a,b)=>(a.date||"9999")+(a.time||"99")<(b.date||"9999")+(b.time||"99")?-1:1);
+  const r=acRec(FL_T);if(L.length){r.flight={...L[0],at,by};r.more=L.slice(1)}else{delete r.flight;delete r.more}save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T);toast(FL_T+" next flight saved")};
+$("#flClear").onclick=()=>{if(!canNF())return;if(flightsOf(FL_T).length>1&&!confirm("Clear all flights for "+FL_T+"?"))return;delete acRec(FL_T).flight;delete acRec(FL_T).more;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
 
 
 /* ---------- tile layout template (shared, editable) ---------- */
@@ -2537,8 +2543,9 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
 const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canAc(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></span>`};
-const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
-  return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
+const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role||f.time))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
+  const more=(acGet(t).more||[]).length;
+  return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,more&&`+${more} more flight${more>1?"s":""}`,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
