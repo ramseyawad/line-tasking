@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125150122">
+<meta name="build" content="20261125150704">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -891,8 +891,6 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .viewswrap.on{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
 .meb.tko{color:#B45309;background:#FFFBEB;border-color:#FCD34D;margin-left:4px}
 .crsbtn:disabled{background:#F1F5F9!important;color:#94A3B8!important;border-color:#E2E8F0!important;cursor:not-allowed}.crsbtn small{font-weight:600;font-size:10px;margin-left:3px}
-#jobs > .job{content-visibility:auto;contain-intrinsic-size:auto 420px}
-#jobs .cstack{content-visibility:auto;contain-intrinsic-size:auto 300px}
 .bktbl{width:100%;border-collapse:collapse;font-size:13px}.bktbl th{text-align:left;font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid #E2E8F0}.bktbl td{padding:6px 8px;border-bottom:1px solid #F1F5F9}
 .etsbox{flex:1 1 100%;display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:8px;padding:3px 6px 3px 0;background:#fff;min-width:0}
 .etsbox .etsh{font-size:10px;font-weight:900;letter-spacing:.06em;color:#fff;background:#64748B;border-radius:7px 0 0 7px;align-self:stretch;display:grid;place-items:center;padding:0 7px;margin:-3px 0}
@@ -1771,6 +1769,7 @@ function renderPicker(){
   $("#nSelCount").innerHTML=PICK.size?`<b>${PICK.size}</b> selected <button type="button" class="linkbtn" id="nClear">Clear</button>`:"";
   $("#nClear")?.addEventListener("click",()=>{PICK.clear();renderPicker()});
 }
+let LASTTAP=null;document.addEventListener("pointerdown",e=>{const t=e.target.closest?.("#jobs [data-tail]");if(t)LASTTAP={t:t.dataset.tail,at:Date.now()}},true);
 function renderBoard(){
   const {w,p,f}=jobMaps();
   const onShift=D.engineers.filter(e=>isOn(e)&&!duty(e)).sort(byTrade);
@@ -1895,7 +1894,11 @@ function renderBoard(){
     let run=[];const flush=()=>{if(run.length){html+=`<div class="cstack">${run.join("")}</div>`;run=[]}};
     parts.forEach(x=>{if(x.c)run.push(x.c);else{flush();html+=x.f}});flush();
   }else html=jobs.map(tileHtml).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
+  // keep the tile you're working on in the same place on screen when the board redraws
+  const anc=(()=>{const a=document.activeElement?.closest?.("#jobs [data-tail]")||(LASTTAP&&Date.now()-LASTTAP.at<4000?document.querySelector(`#jobs .job[data-tail="${CSS.escape(LASTTAP.t)}"],#jobs .ctile[data-tail="${CSS.escape(LASTTAP.t)}"]`):null)
+    ||[...document.querySelectorAll("#jobs > .job,#jobs .ctile")].find(x=>x.getBoundingClientRect().bottom>80);return a?{t:a.dataset.tail,y:a.getBoundingClientRect().top}:null})();
   $("#jobs").innerHTML=html;
+  if(anc){const n=document.querySelector(`#jobs .job[data-tail="${CSS.escape(anc.t)}"],#jobs .ctile[data-tail="${CSS.escape(anc.t)}"]`);if(n){const d=n.getBoundingClientRect().top-anc.y;if(Math.abs(d)>1)window.scrollBy(0,d)}}
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
   $("#teamSub").textContent=onShift.length+" on shift";$("#teamBadge").textContent=freeE.length+" free";
