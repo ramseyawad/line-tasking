@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125201133">
+<meta name="build" content="20261125201205">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2768,6 +2768,7 @@ const secOf=u=>(D.sec||{})[u]||"Line";
 const mySec=()=>window.__waCloud?secOf(window.__waCloud.me?.()?.username||""):"Line";
 // AIOC: a point of contact for every section. Real AIOC users get it from their position; Line Control / SLE / admins can preview it.
 let AIOCV=false;try{AIOCV=localStorage.getItem("wa-aiocv")==="1"}catch(e){}
+let MGV=false;try{MGV=localStorage.getItem("wa-mgv")==="1"}catch(e){}
 // AIOC is a section (not an aircraft owner) – anyone in it gets the AIOC view
 const isAIOC=()=>AIOCV||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC");
 // Engineer view: anyone signed in who isn't admin / Line Control / SLE / AIOC. They see the tiles they're tasked on,
@@ -2779,9 +2780,9 @@ const normN=n=>String(n||"").trim().replace(RANKRE,"").toLowerCase().replace(/[^
 function matchEng(full){const a=normN(full);if(!a.length)return null;
   const ex=D.engineers.filter(e=>normN(e.name).join(" ")===a.join(" "));if(ex.length===1)return ex[0].id;
   const L=a[a.length-1],F=a[0][0];const m=D.engineers.filter(e=>{const b=normN(e.name);return b.length&&b[b.length-1]===L&&(a.length<2||b.length<2||b[0][0]===F)});return m.length===1?m[0].id:null}
-const isMgmt=()=>!!window.__waCloud&&!isAdmin()&&!AIOCV&&mySec()==="Management"; // management: see everything, change only sentencing
+const isMgmt=()=>!AIOCV&&((MGV&&realFlight())||(!!window.__waCloud&&!isAdmin()&&mySec()==="Management")); // management: see everything, change only sentencing
 const realEngMode=()=>!!window.__waCloud&&!isAdmin()&&!isAIOC()&&!realFlight()&&!isMgmt();
-const engMode=()=>!AIOCV&&((!!ENGV&&realFlight())||realEngMode());
+const engMode=()=>!AIOCV&&!MGV&&((!!ENGV&&realFlight())||realEngMode());
 const myEng=()=>{if(ENGV&&realFlight())return ENGV;if(!realEngMode())return null;const p=window.__waCloud.me?.()||{};return matchEng(p.full_name)||matchEng(p.username)};
 const lineMine=(j,it)=>{const me=myEng();return !!me&&(it.who.includes(me)||(!it.who.length&&(j.ab||{})[it.t]===me))};
 const tileMine=j=>{const me=myEng();return !!me&&(current(j).includes(me)||items(j).some(it=>!it.info&&lineMine(j,it)))};
@@ -3120,8 +3121,8 @@ if(location.hash==="#display"){$("#display").classList.remove("hide")}
 function applyAIOC(){window.__waPriv=realFlight();const a=isAIOC();document.body.classList.toggle("aioc",a);document.body.classList.toggle("mgmt",isMgmt());
   const ev=engMode();document.body.classList.toggle("engv",ev);
   const es=$("#engvSel");if(es){$("#viewsWrap").classList.toggle("hide",!realFlight());const list=D.engineers.filter(e=>isOn(e)||e.id===ENGV).sort(byTrade);
-    const h=`<option value="">My normal view</option><option value="__aioc">AIOC view</option><optgroup label="Engineer views (on shift)">`+list.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")+`</optgroup>`;
-    if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=AIOCV?"__aioc":ENGV||"";
+    const h=`<option value="">My normal view</option><option value="__aioc">AIOC view</option><option value="__mgmt">Managers view</option><optgroup label="Engineer views (on shift)">`+list.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")+`</optgroup>`;
+    if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=AIOCV?"__aioc":MGV?"__mgmt":ENGV||"";
     $("#viewsWrap").classList.toggle("on",AIOCV||!!ENGV);$("#viewsWrap .l").textContent=AIOCV?"AIOC view":ENGV?engName(ENGV):"Views"}
   let eb=$("#engBan");if(ev&&!eb){eb=document.createElement("div");eb.id="engBan";$("#acWrap").prepend(eb)}
   if(eb){eb.classList.toggle("hide",!ev);if(ev){const me=myEng(),nm=me?engName(me):"";eb.innerHTML=ENGV&&realFlight()?`<b>Engineer view</b> – what <b>${esc(nm)}</b> sees: just the aircraft and tasks they're on. <button class="btn sm" id="engExit">Exit engineer view</button>`
@@ -3131,7 +3132,8 @@ function applyAIOC(){window.__waPriv=realFlight();const a=isAIOC();document.body
   if(ev){const on=document.querySelector("nav button.on");if(on&&on.dataset.tab!=="board")document.querySelector('nav button[data-tab="board"]').click()}
   if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
 function setENGV(id){ENGV=id||"";try{localStorage.setItem("wa-engv",ENGV)}catch(e){}if(ENGV&&AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(e){}}EXP.clear();render();window.scrollTo(0,0);toast(ENGV?"Engineer view – "+engName(ENGV):"Back to the normal view")}
-document.addEventListener("change",e=>{if(e.target.id!=="engvSel")return;const v=e.target.value;if(v==="__aioc")setAIOCV(true);else if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}setENGV(v)}else{if(AIOCV)setAIOCV(false);else setENGV("")}});
+function setMGV(v){MGV=v;try{localStorage.setItem("wa-mgv",v?"1":"0")}catch(e){}if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}if(ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(_){}}}EXP.clear();render();window.scrollTo(0,0);toast(v?"Managers view – what management see (read only apart from sentencing)":"Back to the normal view")}
+document.addEventListener("change",e=>{if(e.target.id!=="engvSel")return;const v=e.target.value;if(v==="__mgmt"){setMGV(true);return}if(MGV){MGV=false;try{localStorage.setItem("wa-mgv","0")}catch(_){}if(!v){setMGV(false);return}}if(v==="__aioc")setAIOCV(true);else if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}setENGV(v)}else{if(AIOCV)setAIOCV(false);else setENGV("")}});
 document.addEventListener("click",e=>{if(e.target.closest("#engExit"))setENGV("")});
 function setAIOCV(v){if(v&&ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(e){}}AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
 document.addEventListener("click",e=>{if(e.target.closest("#aiocBtn"))setAIOCV(!AIOCV);else if(e.target.closest("#aiocExit"))setAIOCV(false)});
