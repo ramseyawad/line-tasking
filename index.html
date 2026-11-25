@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125021450">
+<meta name="build" content="20261125085814">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -697,6 +697,21 @@ nav button{white-space:nowrap}
 .robadge{font-size:10.5px;font-weight:800;background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;border-radius:5px;padding:1px 6px;white-space:nowrap}
 fieldset[disabled] .tt.tedit{cursor:default}
 fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addmini,fieldset[disabled] .tagadd{display:none}
+.crsbtn{font-weight:900;letter-spacing:.5px;min-width:72px;justify-content:center}
+.crsbtn.on{background:#DCFCE7;border-color:#86EFAC;color:#15803D}
+.trbadge{font-size:10.5px;font-weight:900;background:#16A34A;color:#fff;border-radius:5px;padding:2px 7px;letter-spacing:.4px;white-space:nowrap}
+.acbar button.tr{box-shadow:inset 0 -3px 0 #16A34A}
+.nfbtn{flex:1 1 100%;order:99;border:0;background:#F0F9FF;color:#075985;font:inherit;font-size:12px;font-weight:700;border-radius:6px;padding:4px 8px;cursor:pointer;text-align:left;width:100%}
+.nfbtn span{color:#0284C7;font-weight:600}
+.nfbtn:hover{background:#E0F2FE}
+.acp-tr{display:flex;align-items:center;gap:10px;margin:12px 0 0;padding:10px 12px;border-radius:8px;background:#F8FAFC;border:1px solid var(--line);font-size:13px}
+.acp-tr.on{background:#F0FDF4;border-color:#86EFAC}.acp-tr.on b{color:#15803D}
+.acp-tr span{color:var(--mute);font-size:12px}.acp-tr button{margin-left:auto}
+.acp-fl{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:10px 12px;border-radius:8px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:13px;font-weight:600}
+.acp-fl>div{flex:1}.acp-fl button{flex:none}
+.flgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.flgrid label:nth-child(3){grid-column:1/-1}
+@media(min-width:520px){.flgrid{grid-template-columns:repeat(4,1fr)}.flgrid label:nth-child(1),.flgrid label:nth-child(2){grid-column:span 2}.flgrid label:nth-child(3){grid-column:span 4}}
 </style>
 </head>
 <body>
@@ -898,7 +913,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
       </div>
       <div class="card">
         <div class="card-h"><h2>Users</h2><span class="sub" style="margin-left:auto">Admins can approve people and manage users</span></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Since</th><th></th></tr></thead><tbody id="userList"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Access</th><th>Position</th><th>Since</th></tr></thead><tbody id="userList"></tbody></table></div>
       </div>
     </div>
     <div class="card pad">
@@ -1118,6 +1133,19 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
   <div class="card-b"><textarea id="ownList" rows="8" style="width:100%"></textarea><p class="sub" style="margin:6px 0 0">"Line" is us and is always kept. Order here is the order in the dropdowns.</p><div class="err" id="ownErr"></div>
   <div class="mvbtns" style="margin-top:12px"><button class="btn" id="ownCancel">Cancel</button><button class="btn pri" id="ownSave">Save</button></div></div>
 </div></div>
+<div id="flModal" class="modal hide"><div class="mcard card" style="width:min(520px,100%)">
+  <div class="mhead"><h2 id="flTitle">Next flight</h2><span class="sub" id="flSub"></span><button class="btn icon" id="flClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><div class="flgrid">
+    <label class="mv-f"><span>Flight number</span><input id="flNo" placeholder="e.g. RRR4401"></label>
+    <label class="mv-f"><span>Role required</span><input id="flRole" placeholder="e.g. AAR, Cargo"></label>
+    <label class="mv-f"><span>Date</span><input type="date" id="flDate"></label>
+    <label class="mv-f"><span>FH</span><input id="flFH" inputmode="decimal" placeholder="Flight hours"></label>
+    <label class="mv-f"><span>FC</span><input id="flFC" inputmode="numeric" placeholder="Flight cycles"></label>
+    <label class="mv-f"><span>LG</span><input id="flLG" inputmode="numeric"></label>
+    <label class="mv-f"><span>TG</span><input id="flTG" inputmode="numeric"></label>
+  </div><p class="sub" id="flWho" style="margin:10px 0 0"></p></div>
+  <div class="mv-foot"><div class="mvbtns"><button class="linkbtn" id="flClear">Clear</button><button class="btn" id="flCancel">Close</button><button class="btn pri" id="flSave">Save</button></div></div>
+</div></div>
 <div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
   <div class="mhead"><h2>Manning targets</h2><span class="sub">per shift</span><button class="btn icon" id="mnClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="card-b"><table class="mntbl"><thead><tr><th></th><th>Target</th><th>Minimum</th></tr></thead><tbody id="mnRows"></tbody></table>
@@ -1238,7 +1266,7 @@ $("#addJob").onclick=()=>{
   if(!canEdit(ownerOf($("#nTail").value))){toast(`${$("#nTail").value} is with ${ownerOf($("#nTail").value)} – only admins can raise jobs on it`);return}
   const task=$("#nTask").value.trim();
   if(!task){$("#nTask").focus();return}
-  const engs=[...PICK].filter(id=>isOn(eng(id)));
+  const engs=[...PICK].filter(id=>isOn(eng(id)));clearCRS($("#nTail").value);
   D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),pri:$("#nPri").value.trim(),acst:$("#nSt").value,acstLog:$("#nSt").value?[{v:$("#nSt").value,at:now()}]:[],area:$("#nArea").value,task,status:engs.length?"planned":"open",
     created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null})),
     lt:$("#nLt").value==="C"?Object.fromEntries(task.split("\n").map(t=>t.trim()).filter(t=>t&&!INFO_RE.test(t)).map(t=>[t,"C"])):undefined});
@@ -1453,7 +1481,7 @@ function renderBoard(){
   const vis=TAILS.filter(t=>OWNV==="All"||(t==="Off Aircraft"?OWNV==="Line":ownerOf(t)===OWNV));
   $("#acBar").innerHTML=`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
     const aog=js.some(j=>j.acst==="AOG"),own=ownerOf(t),sc=sentOf(t)?.c;
-    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"}" title="${t} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${OWNV==="All"&&own!=="Line"&&t!=="Off Aircraft"?`<em>${esc(own.slice(0,3).toUpperCase())}</em>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
+    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""}" title="${t} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${OWNV==="All"&&own!=="Line"&&t!=="Off Aircraft"?`<em>${esc(own.slice(0,3).toUpperCase())}</em>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
   setTimeout(renderSeenBits,0);
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
@@ -1483,16 +1511,16 @@ function renderBoard(){
       :j.status==="planned"?`<span class="status">Not started</span>`
       :`<span class="status">Unmanned</span>`;
     const acts=done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
-      :j.status==="work"?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button><button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
+      :j.status==="work"?(off?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button>`:techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`)+`<button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
     const us=unseen(j);
     return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
-        ${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
+        ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
+      <div class="jmeta">${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
@@ -1532,6 +1560,8 @@ $("#jobs").addEventListener("click",e=>{
   else if(t.dataset.stop)stop(t.dataset.stop);
   else if(t.dataset.reopen)reopen(t.dataset.reopen);
   else if(t.dataset.del)del(t.dataset.del);
+  else if(t.dataset.crs){const tl=t.dataset.crs;setCRS(tl,!techReady(tl))}
+  else if(t.dataset.flight)openFlight(t.dataset.flight);
   else if(t.dataset.tagdel){const[id,i]=t.dataset.tagdel.split("|"),l=tagList(job(id));l.splice(+i,1);editField(id,"tag",l.join(", "))}
 });
 $("#jobs").addEventListener("input",e=>{const t=e.target;if(t.classList.contains("task-edit")){t.rows=Math.max(1,t.value.split("\n").length)}});
@@ -1583,7 +1613,7 @@ $("#jobs").addEventListener("input",e=>{if(e.target.classList.contains("line-edi
 $("#jobs").addEventListener("keydown",e=>{const t=e.target;
   if(t.classList.contains("line-edit")){if(e.key==="Enter"){e.preventDefault();t.dataset.done=1;lineSave(t)}else if(e.key==="Escape"){t.dataset.done=1;LEDIT=null;LDRAFT=null;render()}}
   else if(t.classList.contains("line-add")&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const j=job(t.dataset.ladd);const id=j.id;
-    editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
+    clearCRS(j.tail);editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
 $("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("line-edit")&&!t.dataset.done)setTimeout(()=>{if(document.body.contains(t)&&!t.dataset.done){t.dataset.done=1;lineSave(t)}},0)});
 
 /* ---------- highlight changes made by other people until seen ---------- */
@@ -1803,14 +1833,24 @@ function openAc(t){
   $("#acBody").innerHTML=`<div class="acp-grid">
      <label class="mv-f"><span>Current owner</span>${ownSel(t,false,"big")}</label>
      <label class="mv-f"><span>Sentence</span>${sentSel(t,false)}</label></div>
+   <div class="acp-grid" style="margin-top:10px">
+     <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canEdit(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
+     <label class="mv-f"><span>Current role config</span><input data-rcfg="${t}" value="${esc(acGet(t).rcfg||"")}" placeholder="e.g. AAR, Cargo, Troops…" ${canEdit(own)?"":"disabled"} style="height:38px"></label></div>
+   <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canEdit(own)?`<button class="btn sm ${techReady(t)?"":"ok"}" data-crs="${t}">${techReady(t)?"Undo":"CRS – Tech ready"}</button>`:""}</div>
+   <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightLine(t)||'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canFlight()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${se?` · ${esc(se.c)} for ${ago(se.at)}`:""}</p>
    <h4 class="mv-h">Open jobs</h4>${js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
   $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canEdit(own));$("#acModal").classList.remove("hide");
 }
 $("#acClose").onclick=()=>$("#acModal").classList.add("hide");
 $("#acModal").addEventListener("click",e=>{if(e.target.id==="acModal"){$("#acModal").classList.add("hide");return}
+  const cr=e.target.closest("[data-crs]");if(cr){setCRS(cr.dataset.crs,!techReady(cr.dataset.crs));openAc(cr.dataset.crs);return}
+  const fl=e.target.closest("[data-flight]");if(fl){openFlight(fl.dataset.flight);return}
   const g=e.target.closest("[data-gojob]");if(g){const j=job(g.dataset.gojob);$("#acModal").classList.add("hide");if(j){OWNV="All";try{localStorage.setItem("wa-ownv","All")}catch(_){}HEAD="all";markHead();$("#q").value="";setFilter("active");setTimeout(()=>{const el=document.querySelector(`#jobs .job[data-id="${j.id}"]`);el?.scrollIntoView({behavior:"smooth",block:"start"});el?.classList.add("flash")},50)}}});
-$("#acModal").addEventListener("change",e=>{const t=e.target;if(t.dataset.owner!=null){setOwner(t.dataset.owner,t.value);openAc(t.dataset.owner)}else if(t.dataset.sent!=null){setSent(t.dataset.sent,t.value);openAc(t.dataset.sent)}});
+$("#acModal").addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save();return}
+  if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save();return}
+  if(t.dataset.owner!=null){setOwner(t.dataset.owner,t.value);openAc(t.dataset.owner)}else if(t.dataset.sent!=null){setSent(t.dataset.sent,t.value);openAc(t.dataset.sent)}});
 $("#acRaise").onclick=()=>{const t=$("#acRaise").dataset.tail;$("#acModal").classList.add("hide");openNew();$("#nTail").value=t};
 function openOwners(){$("#ownList").value=owners().join("\n");$("#ownErr").textContent="";$("#ownModal").classList.remove("hide");setTimeout(()=>$("#ownList").focus(),30)}
 $("#ownClose").onclick=$("#ownCancel").onclick=()=>$("#ownModal").classList.add("hide");
@@ -1819,6 +1859,21 @@ $("#ownSave").onclick=()=>{let l=[...new Set($("#ownList").value.split("\n").map
   const used=[...new Set(TAILS.map(ownerOf))].filter(o=>!l.includes(o));
   if(used.length){$("#ownErr").textContent=`Still in use: ${used.join(", ")} – move those aircraft to another owner first.`;return}
   D.owners=l;save();$("#ownModal").classList.add("hide");toast("Owners updated")};
+
+/* ---------- next flight details (editable by SLE / Line Control / admin) ---------- */
+let FL_T="";
+const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flFH","fh"],["flFC","fc"],["flLG","lg"],["flTG","tg"]];
+function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canFlight();
+  $("#flTitle").textContent=t+" – next flight";$("#flSub").textContent=ed?"":"View only – SLE / Line Control can edit";
+  FLF.forEach(([id,k])=>{$("#"+id).value=f[k]||"";$("#"+id).disabled=!ed});
+  ["flSave","flClear"].forEach(id=>$("#"+id).classList.toggle("hide",!ed));
+  $("#flWho").textContent=f.at?`Last updated ${fmt(f.at)}${f.by?" by "+f.by:""}`:"";
+  $("#flModal").classList.remove("hide");if(ed)setTimeout(()=>$("#flNo").focus(),30)}
+const closeFl=()=>$("#flModal").classList.add("hide");
+$("#flClose").onclick=closeFl;$("#flCancel").onclick=closeFl;
+$("#flSave").onclick=()=>{if(!canFlight())return;const f={};FLF.forEach(([id,k])=>{const v=$("#"+id).value.trim();if(v)f[k]=v});f.at=now();f.by=(typeof myName==="function"&&myName())||"";
+  acRec(FL_T).flight=f;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T);toast(FL_T+" next flight saved")};
+$("#flClear").onclick=()=>{if(!canFlight())return;delete acRec(FL_T).flight;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
@@ -2101,6 +2156,20 @@ const ownJob=o=>j=>ownerOf(j.tail)===o;
 // admins can edit every owner's aircraft; everyone else can see all but only edit Line
 const isAdmin=()=>!window.__waCloud||window.__waCloud.me?.()?.role==="admin";
 const canEdit=o=>o==="Line"||isAdmin();
+// user positions (set by an admin in Users) – SLE and Line Control can edit next-flight details
+const POSITIONS=["Line Control","SLE","B1","B2","A cert","AIOC"];
+const myUser=()=>window.__waCloud?.me?.()?.username||"";
+const myPos=()=>(D.pos||{})[myUser()]||"";
+const canFlight=()=>isAdmin()||["SLE","Line Control"].includes(myPos());
+const acRec=t=>{D.ac=D.ac||{};return D.ac[t]=D.ac[t]||{}};
+const acGet=t=>(D.ac||{})[t]||{};
+const techReady=t=>acGet(t).crs||null;
+function setCRS(t,on){if(!canEdit(ownerOf(t))){toast("View only – "+ownerOf(t)+" aircraft");return}const a=acRec(t);
+  if(on)a.crs={at:now(),by:(typeof myName==="function"&&myName())||""};else delete a.crs;save();toast(on?`${t} CRS – Tech ready`:`${t} no longer tech ready`)}
+const clearCRS=t=>{const a=(D.ac||{})[t];if(a&&a.crs){delete a.crs}};
+const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
+const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+  return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
@@ -2431,11 +2500,13 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const mem=PROFILES.filter(p=>p.role!=="pending");
     $("#userList").innerHTML=mem.map(p=>`<tr><td><b>${esc(p.full_name||"–")}</b>${p.id===ME.id?' <span class="sub">(you)</span>':""}</td><td>@${esc(p.username)}</td>
       <td><select class="rolesel" data-u="${p.id}" ${p.id===ME.id?"disabled":""}>${[["user","User"],["admin","Admin"],["rejected","No access"]].map(([v,l])=>`<option value="${v}" ${p.role===v?"selected":""}>${l}</option>`).join("")}</select></td>
-      <td class="sub">${fmt(p.created_at)}</td><td></td></tr>`).join("");
+      <td><select class="possel" data-pu="${esc(p.username)}"><option value="">–</option>${POSITIONS.map(x=>`<option ${(D.pos||{})[p.username]===x?"selected":""}>${x}</option>`).join("")}</select></td>
+      <td class="sub">${fmt(p.created_at)}</td></tr>`).join("");
   }
   const setRole=async(id,role)=>{const {error}=await sb.from("wa_profiles").update({role}).eq("id",id);toast(error?error.message:"Updated");loadUsers()};
   $("#reqList").onclick=e=>{const b=e.target.closest("[data-u]");if(b)setRole(b.dataset.u,b.dataset.role)};
-  $("#userList").onchange=e=>{const t=e.target.closest(".rolesel");if(t)setRole(t.dataset.u,t.value)};
+  $("#userList").onchange=e=>{const t=e.target.closest(".rolesel");if(t)setRole(t.dataset.u,t.value);
+    const ps=e.target.closest(".possel");if(ps){D.pos=D.pos||{};if(ps.value)D.pos[ps.dataset.pu]=ps.value;else delete D.pos[ps.dataset.pu];save();toast("Position updated")}};
   $("#auAdd").onclick=async()=>{
     const u=uname($("#auUser").value),pw=$("#auPass").value,name=$("#auName").value.trim(),role=$("#auRole").value;
     if(!name||!okUser(u)){toast("Enter a name and a username (3–30 letters/numbers)");return}
