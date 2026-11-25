@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125092341">
+<meta name="build" content="20261125093348">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -749,6 +749,13 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .jtimes{flex:1 1 100%;order:-1}
 .ti.nk-TO .ibadge{background:#E0F2FE;color:#075985}.ti.nk-LAND .ibadge{background:#FEF3C7;color:#92400E}.ti.nk-NOTE .ibadge{background:#F1F5F9;color:#334155}
 .etile .jh{display:flex;align-items:center;gap:8px}
+.ctile{align-self:start;scroll-margin-top:calc(var(--hdrH,60px) + var(--acH,46px) + 12px)}
+.ctile.flash{animation:jflash 1.6s ease-out}
+.ct-sub b{color:#B45309}
+#jobs{align-items:start}
+.cstack{display:flex;flex-direction:column;gap:8px;align-self:start;min-width:0}
+.cstack .ctile{align-self:stretch}
+#jobs.tiles .cstack{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
 </style>
 </head>
 <body>
@@ -1548,17 +1555,18 @@ function renderBoard(){
   let jobs=FILTER==="done"?doneShift:FILTER==="active"?act:act.filter(j=>j.status===FILTER);
   if(HEAD!=="all")jobs=jobs.filter(j=>tasksOnly(j).some(it=>ltype(j,it.t)===HEAD));
   const q=$("#q").value.trim().toLowerCase();
-  if(OWNV!=="All")jobs=jobs.filter(j=>ownerOf(j.tail)===OWNV||(j.tail==="Off Aircraft"&&OWNV==="Line"));
+  const showAll0=FILTER==="active"&&!$("#q").value.trim();
+  if(OWNV!=="All"&&!showAll0)jobs=jobs.filter(j=>ownerOf(j.tail)===OWNV||(j.tail==="Off Aircraft"&&OWNV==="Line"));
   if(q)jobs=jobs.filter(j=>(j.tail+" "+j.bay+" "+j.task+" "+j.assignments.map(a=>engName(a.eng)).join(" ")).toLowerCase().includes(q));
   const s=$("#sortBy").value, rank={work:0,planned:1,open:2,done:3};
   jobs=[...jobs].sort((a,b)=>prio(a)-prio(b)||(s==="new"?b.created.localeCompare(a.created):s==="bay"?String(a.bay).localeCompare(String(b.bay),undefined,{numeric:true}):s==="status"?rank[a.status]-rank[b.status]||TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail):TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail)));
   // aircraft jump bar
   if(OWNV!=="All"&&!owners().includes(OWNV))OWNV="Line";
   const ownCount=o=>TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)===o).length;
-  const vis=TAILS.filter(t=>OWNV==="All"||(t==="Off Aircraft"?OWNV==="Line":ownerOf(t)===OWNV));
+  const vis=TAILS;
   $("#acBar").innerHTML=`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
     const aog=js.some(j=>j.acst==="AOG"),own=ownerOf(t),sc=sentOf(t)?.c;
-    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""}" title="${t} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${OWNV==="All"&&own!=="Line"&&t!=="Off Aircraft"?`<em>${esc(own.slice(0,3).toUpperCase())}</em>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
+    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""}" title="${t} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${own!=="Line"&&t!=="Off Aircraft"?`<em>${esc(own.slice(0,3).toUpperCase())}</em>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
   setTimeout(renderSeenBits,0);
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
@@ -1588,7 +1596,7 @@ function renderBoard(){
       :j.status==="work"?`<span class="status">In work</span><span class="sub">${IC.clock} ${ago(j.started)}</span>`
       :j.status==="planned"?`<span class="status">Not started</span>`
       :`<span class="status">Unmanned</span>`;
-    const acts=(!done&&!tasksOnly(j).some(x=>x.s!=="done")?`<button class="btn sm" data-collapse="${esc(j.tail)}" title="Fold back into the collapsed strip">Collapse ▴</button>`:"")+(done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
+    const acts=(!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}" title="Fold back into the collapsed strip">Collapse ▴</button>`:"")+(done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
       :off?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`);
     const us=unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
@@ -1617,12 +1625,21 @@ function renderBoard(){
   // every aircraft has a tile; anything with no open tasks is collapsed into the strip below
   const openT=j=>tasksOnly(j).some(x=>x.s!=="done");
   const showAll=FILTER==="active"&&!q;
-  const viewTails=TAILS.filter(t=>OWNV==="All"||(t==="Off Aircraft"?OWNV==="Line":ownerOf(t)===OWNV));
-  const full=jobs.filter(j=>!showAll||openT(j)||EXP.has(j.tail));
-  const expEmpty=showAll?viewTails.filter(t=>EXP.has(t)&&!D.jobs.some(j=>active(j)&&j.tail===t)):[];
-  const coll=showAll?viewTails.filter(t=>!full.some(j=>j.tail===t)&&!expEmpty.includes(t)):[];
-  $("#jobs").innerHTML=(full.map(tileHtml).join("")+expEmpty.map(emptyTile).join("")||(showAll?"":`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`))
-    +(coll.length?`<div class="collhdr">No open tasks · tap a tail to expand</div><div class="colls">${coll.map(t=>collTile(t)).join("")}</div>`:"");
+  // every aircraft, in tail order (priority first); other owners' aircraft stay collapsed unless expanded
+  const notMine=t=>OWNV!=="All"&&(t==="Off Aircraft"?OWNV!=="Line":ownerOf(t)!==OWNV);
+  const tPri=t=>{const j=D.jobs.find(x=>active(x)&&x.tail===t);return j?prio(j):999};
+  let html="";
+  if(showAll){
+    // runs of collapsed aircraft share one grid cell, so the order reads left-to-right without big gaps
+    const parts=[...TAILS].sort((a,b)=>tPri(a)-tPri(b)||TAILS.indexOf(a)-TAILS.indexOf(b)).map(t=>{
+      const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
+      if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
+      if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:emptyTile(t)};
+      return{c:collTile(t)}});
+    let run=[];const flush=()=>{if(run.length){html+=`<div class="cstack">${run.join("")}</div>`;run=[]}};
+    parts.forEach(x=>{if(x.c)run.push(x.c);else{flush();html+=x.f}});flush();
+  }else html=jobs.map(tileHtml).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
+  $("#jobs").innerHTML=html;
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
   $("#teamSub").textContent=onShift.length+" on shift";$("#teamBadge").textContent=freeE.length+" free";
@@ -1679,11 +1696,11 @@ $("#acBar").addEventListener("click",e=>{
     const c=$("#notesCard");c.scrollIntoView({behavior:"smooth",block:"start"});c.classList.remove("flash");void c.offsetWidth;c.classList.add("flash");setTimeout(()=>$("#shiftNotes").focus({preventScroll:true}),500);return}
   const b=e.target.closest("button[data-jump]");if(!b)return;const t=b.dataset.jump;
   if($("#tab-board").classList.contains("hide"))document.querySelector('nav button[data-tab="board"]').click();
-  const find=()=>document.querySelector(`#jobs .job[data-tail="${t}"]`);
-  if(!find()&&D.jobs.some(j=>active(j)&&j.tail===t)){$("#q").value="";if(HEAD!=="all"){HEAD="all";markHead()}setFilter("active")}
+  const find=()=>document.querySelector(`#jobs [data-tail="${t}"]`);
+  if(!find()){$("#q").value="";setFilter("active")}
   const el=find();if(!el){openAc(t);return}
   el.scrollIntoView({behavior:"smooth",block:"start"});
-  document.querySelectorAll(`#jobs .job[data-tail="${t}"]`).forEach(x=>{x.classList.remove("flash");void x.offsetWidth;x.classList.add("flash")});
+  document.querySelectorAll(`#jobs [data-tail="${t}"]`).forEach(x=>{x.classList.remove("flash");void x.offsetWidth;x.classList.add("flash")});
 });
 
 function toggleTeam(on){on=on??!document.body.classList.contains("team-open");document.body.classList.toggle("team-open",on);$("#team").setAttribute("aria-hidden",!on)}
@@ -1974,12 +1991,13 @@ let EXP=new Set();
 function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),off=t==="Off Aircraft",own=ownerOf(t),se=sentOf(t);
   const notes=j?[...tagList(j).map(x=>`<span class="tagc">${esc(x)}</span>`),...items(j).filter(it=>it.info&&!timingOf(it.t)).map(it=>`<span class="cnote">${esc(itxt(it))}</span>`)]:[];
   const done=j?tasksOnly(j).length:0;
-  return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" title="Expand ${esc(t)}">
+  const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
+  return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
     <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg?`<span class="ct-role">${esc(a.rcfg)}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightLine(t)?`<div class="ct-fl">✈ ${flightLine(t)}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
-    ${done?`<div class="ct-sub">${done} task${done>1?"s":""} done this shift</div>`:""}
+    ${open?`<div class="ct-sub"><b>${open} open task${open>1?"s":""}</b> – tap to see</div>`:done?`<div class="ct-sub">${done} task${done>1?"s":""} done this shift</div>`:""}
   </div>`}
 function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t));
   return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
