@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125135832">
+<meta name="build" content="20261125142323">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -891,6 +891,8 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .viewswrap.on{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
 .meb.tko{color:#B45309;background:#FFFBEB;border-color:#FCD34D;margin-left:4px}
 .crsbtn:disabled{background:#F1F5F9!important;color:#94A3B8!important;border-color:#E2E8F0!important;cursor:not-allowed}.crsbtn small{font-weight:600;font-size:10px;margin-left:3px}
+#jobs > .job{content-visibility:auto;contain-intrinsic-size:auto 420px}
+#jobs .cstack{content-visibility:auto;contain-intrinsic-size:auto 300px}
 </style>
 </head>
 <body>
@@ -1387,10 +1389,72 @@ const now=()=>new Date().toISOString();
 const fmt=iso=>iso?new Date(iso).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"";
 const dur=(a,b)=>{if(!a||!b)return"";const m=Math.round((new Date(b)-new Date(a))/60000);return m<60?m+"m":Math.floor(m/60)+"h "+String(m%60).padStart(2,"0")+"m"};
 
+// Every copy of the board (this device, the cloud, other tabs) passes through here first, so one bad or
+// half-written record can never stop the app from starting. Anything unusable is dropped or reset to a safe default.
+// 3-way merge of the shared board: base = last copy both sides agreed on, l = this device, r = server now
+function merge3(b,l,r,key){
+  const J=x=>JSON.stringify(x);
+  if(J(l)===J(b))return r;if(J(r)===J(b))return l;if(J(l)===J(r))return l;
+  const isO=x=>x&&typeof x==="object"&&!Array.isArray(x);
+  if(isO(l)&&isO(r)){const bb=isO(b)?b:{},out={};
+    new Set([...Object.keys(r),...Object.keys(l)]).forEach(k=>{
+      const inL=k in l,inR=k in r,inB=k in bb;
+      if(!inL&&inB){if(inR&&J(r[k])!==J(bb[k]))out[k]=r[k];return}       // deleted here; keep only if server changed it
+      if(!inR&&inB){if(inL&&J(l[k])!==J(bb[k]))out[k]=l[k];return}       // deleted on server; keep only if we changed it
+      if(!inR){out[k]=l[k];return} if(!inL){out[k]=r[k];return}
+      out[k]=merge3(bb[k],l[k],r[k],k)});
+    // a job's task text is a list of lines: merge it line by line so lines added on both sides all survive
+    if(key==="jobs[]"&&typeof l.task==="string"&&typeof r.task==="string"&&l.task!==r.task){
+      const sp=x=>String(x||"").split("\n").map(t=>t.trim()).filter(Boolean),B=sp(bb.task),Lx=sp(l.task),Rx=sp(r.task);
+      const keepR=Rx.filter(t=>!(B.includes(t)&&!Lx.includes(t))),addL=Lx.filter(t=>!Rx.includes(t)&&!(B.includes(t)&&!Rx.includes(t)));
+      out.task=[...keepR,...addL].join("\n")}
+    return out}
+  if(Array.isArray(l)&&Array.isArray(r)){
+    const idKey={jobs:"id",engineers:"id",archived:"id",items:"t",nl:"t",more:null}[key];
+    if(["sentLog","acstLog","ownLog","tko"].includes(key)){const seen=new Set(r.map(J));return [...r,...l.filter(x=>!seen.has(J(x)))]}
+    if(idKey){const bb=Array.isArray(b)?b:[],K=x=>x&&typeof x==="object"?x[idKey]:undefined,mB=new Map(bb.map(x=>[K(x),x])),mL=new Map(l.map(x=>[K(x),x])),mR=new Map(r.map(x=>[K(x),x])),out=[];
+      r.forEach(x=>{const k=K(x);if(mL.has(k))out.push(merge3(mB.get(k),mL.get(k),x,key+"[]"));else if(mB.has(k)&&J(mB.get(k))===J(x)){/* we deleted it */}else out.push(x)});
+      l.forEach(x=>{const k=K(x);if(mR.has(k))return;if(mB.has(k)&&J(mB.get(k))===J(x))return; /* server deleted, we didn't touch */ out.push(x)});
+      return out}
+    return l}            // other lists: this device's version wins
+  return l}
+
+
+function sanitize(d){
+  const obj=x=>x&&typeof x==="object"&&!Array.isArray(x),str=x=>x==null?"":typeof x==="string"?x:typeof x==="number"?String(x):"",
+    arr=x=>Array.isArray(x)?x:[],iso=x=>typeof x==="string"&&!isNaN(new Date(x))?x:null,strArr=x=>arr(x).filter(v=>typeof v==="string"&&v);
+  d=obj(d)?d:{};
+  d.engineers=arr(d.engineers).filter(e=>obj(e)&&typeof e.id==="string"&&e.id).map(e=>({...e,name:str(e.name)||"(no name)",cat:str(e.cat),onShift:!!e.onShift,title:e.title?str(e.title):undefined}));
+  const ST=["open","planned","work","done"],IS=["todo","work","done"];
+  d.jobs=arr(d.jobs).filter(j=>obj(j)&&typeof j.id==="string"&&j.id&&typeof j.tail==="string"&&j.tail).map(j=>{
+    const o={...j,task:str(j.task),status:ST.includes(j.status)?j.status:"open",created:iso(j.created)||new Date().toISOString(),started:iso(j.started),completed:iso(j.completed)};
+    ["bay","tag","lsj","pri","acst","area","by","chBy"].forEach(k=>{if(k in o)o[k]=str(o[k])});
+    o.assignments=arr(j.assignments).filter(a=>obj(a)&&typeof a.eng==="string"&&a.eng).map(a=>({...a,from:iso(a.from),to:iso(a.to)}));
+    if("items" in o)o.items=arr(j.items).filter(it=>obj(it)&&typeof it.t==="string").map(it=>({...it,s:IS.includes(it.s)?it.s:"todo",who:strArr(it.who),at:iso(it.at)}));
+    ["lt","ha","ab"].forEach(k=>{if(k in o&&!obj(o[k]))delete o[k]});
+    if("nl" in o)o.nl=arr(o.nl).filter(x=>obj(x)&&typeof x.t==="string");if("acstLog" in o)o.acstLog=arr(o.acstLog).filter(obj);if("tko" in o)o.tko=arr(o.tko).filter(obj);
+    if(o.status==="done"&&!o.completed)o.completed=o.created;return o});
+  d.ac=obj(d.ac)?d.ac:{};Object.keys(d.ac).forEach(t=>{const a=d.ac[t];if(!obj(a)){delete d.ac[t];return}
+    if("flight" in a&&!obj(a.flight))delete a.flight;if("more" in a)a.more=arr(a.more).filter(obj);if("crs" in a&&!obj(a.crs))delete a.crs;
+    ["owner","rcfg","dass"].forEach(k=>{if(k in a){a[k]=str(a[k]);if(!a[k])delete a[k]}})});
+  d.owners=strArr(d.owners);if(d.owners.length&&!d.owners.includes("Line"))d.owners.unshift("Line");if(!d.owners.length)delete d.owners;
+  ["sec","pos","sent","manning","shifts"].forEach(k=>{if(k in d&&!obj(d[k]))delete d[k]});
+  if(d.sent)Object.keys(d.sent).forEach(t=>{if(!obj(d.sent[t])||typeof d.sent[t].c!=="string")delete d.sent[t]});
+  if(d.shifts)Object.keys(d.shifts).forEach(o=>{if(!obj(d.shifts[o]))delete d.shifts[o]});
+  ["sentLog","ownLog","archived"].forEach(k=>{if(k in d)d[k]=arr(d[k]).filter(obj)});
+  if("shift" in d&&!obj(d.shift))delete d.shift;
+  [d.shift,...Object.values(d.shifts||{})].forEach(sh=>{if(sh){if(!iso(sh.startedAt))sh.startedAt=new Date().toISOString();sh.notes=str(sh.notes);if(sh.crew!=null)sh.crew=str(sh.crew);if(!obj(sh.sixs))sh.sixs={}}});
+  if("tileLayout" in d&&!Array.isArray(d.tileLayout))d.tileLayout=null;
+  if(d.ns3!=null&&typeof d.ns3!=="string")d.ns3=null;
+  if(d.tileCol!=null&&!(+d.tileCol>0))d.tileCol=null;
+  return d}
 let D;
 try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!D||!Array.isArray(D.jobs))D={engineers:[],jobs:[]};
-const save=()=>{mergeTiles();D.jobs.forEach(j=>{if(j.status!=="done")j.status=deriveStatus(j)});markMine();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
+D=sanitize(D);
+const PRUNE_DAYS=60;
+function pruneOld(){const cut=Date.now()-PRUNE_DAYS*864e5,n=D.jobs.length;D.jobs=D.jobs.filter(j=>j.status!=="done"||!j.completed||new Date(j.completed).getTime()>=cut);
+  if(Array.isArray(D.sentLog)&&D.sentLog.length>20000)D.sentLog=D.sentLog.slice(-20000);return n-D.jobs.length}
+const save=()=>{pruneOld();AREAC=null;mergeTiles();D.jobs.forEach(j=>{if(j.status!=="done")j.status=deriveStatus(j)});markMine();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
 const alertMsg=m=>console.warn(m);
 
 const eng=id=>D.engineers.find(e=>e.id===id);
@@ -1548,7 +1612,10 @@ const ACSTATE=["Serviceable","AOG","Shed Maint"],ACAREA=["Line","Line Support","
 // who owns each aircraft (which Pt.145 / location). Per tail, shared, editable list.
 const OWN_DEF=["Line","Line Support","AAG","Retrofit","Deployed","Casualty Bay"];
 const owners=()=>D.owners&&D.owners.length?D.owners:OWN_DEF;
-const ownerOf=t=>{if(t==="Off Aircraft")return "Line";const o=(D.ac||{})[t]?.owner;if(o)return o;const j=D.jobs.find(x=>x.tail===t&&x.status!=="done"&&x.area&&x.area!=="Line");return j?j.area:"Line"};
+// older jobs carried their owner as "area"; that fallback is looked up once per change instead of on every call
+let AREAC=null,AREAK=null;
+const ownerOf=t=>{if(t==="Off Aircraft")return "Line";const o=(D.ac||{})[t]?.owner;if(o)return o;
+  if(AREAK!==D.jobs||!AREAC){AREAK=D.jobs;AREAC={};D.jobs.forEach(x=>{if(x.status!=="done"&&x.area&&x.area!=="Line"&&!AREAC[x.tail])AREAC[x.tail]=x.area})}return AREAC[t]||"Line"};
 function setOwner(tail,o){if(tail==="Off Aircraft")return;if(!canEdit(ownerOf(tail))){toast("Only admins can change aircraft owned by "+ownerOf(tail));render();return}D.ac=D.ac||{};D.ownLog=D.ownLog||[];if(ownerOf(tail)===o)return;
   D.ac[tail]={...(D.ac[tail]||{}),owner:o,at:now(),by:(typeof myName==="function"&&myName())||""};D.ownLog.push({t:tail,o,at:now()});save();toast(`${tail} now owned by ${o}`)}
 const ownSel=(tail,dis,cls="")=>tail==="Off Aircraft"?"":`<select class="acsel ownsel ${cls} ${ownerOf(tail)!=="Line"?"notline":""}" data-owner="${esc(tail)}" ${dis||!canEdit(ownerOf(tail))?"disabled":""} title="Current owner of ${esc(tail)}">${owners().map(o=>`<option ${o===ownerOf(tail)?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
@@ -1569,7 +1636,7 @@ const SENT_G=[["Cargo damage","#D946EF",[["CAR","Damage to cargo area"]]],
  ["Weather","#7F1D1D",[["WXW","Wind"],["WXT","Thunderstorm"]]],
  ["Shortfalls","#DC2626",[["MAT","Material"],["MDS","MDS"],["WOF","Line Workforce"],["TOO","Tooling"],["AGE","AGE"],["INF","Infrastructure"],["SWF","Specialist Workforce"],["COU","Courier"],["RDE","MDS RDE"],["TQN","TQN In Progress"],["DOC","Documentation"]]]];
 const SENT={};SENT_G.forEach(([g,col,l])=>l.forEach(([c,d])=>SENT[c]={c,d,g,col}));
-const sentOf=t=>(D.sent||{})[t]||null;
+const sentOf=t=>{const x=(D.sent||{})[t];return x&&SENT[x.c]?x:null}; // ignore unknown codes rather than crash
 function setSent(tail,code){if(!canAc(ownerOf(tail))){toast("View only – "+ownerOf(tail)+" aircraft");render();return}D.sent=D.sent||{};D.sentLog=D.sentLog||[];const cur=sentOf(tail);if((cur?.c||"")===code)return;
   const at=now(),by=(typeof myName==="function"&&myName())||"";
   if(code)D.sent[tail]={c:code,at,by};else delete D.sent[tail];D.sentLog.push({t:tail,c:code,at,by});save()}
@@ -1603,6 +1670,11 @@ function items(j){
   return j.items;
 }
 const shortName=e=>{const x=eng(e)||(D.archived||[]).find(a=>a.id===e);if(!x)return "(removed)";return x.title?x.title+" "+x.name.trim().split(/\s+/).pop():x.name};
+function fillAssign(sel){if(!sel||sel.dataset.lazy!=="1")return;const[jid,i]=sel.dataset.iadd.split("|"),j=job(jid),it=j&&items(j)[+i];if(!it)return;
+  const cur=current(j),onShift=D.engineers.filter(e=>isOn(e)&&!duty(e)).sort(byTrade),crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
+  const opt=e=>`<option value="${esc(e)}">${esc(engName(e))}</option>`;
+  sel.insertAdjacentHTML("beforeend",(crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:"")+(others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""));sel.dataset.lazy="0"}
+["mousedown","focusin","touchstart","keydown","mouseover"].forEach(ev=>document.addEventListener(ev,e=>{const s=e.target.closest?.("select.addmini[data-lazy='1']");if(s)fillAssign(s)},true));
 function assignItem(jobId,idx,engId){
   const j=job(jobId);const it=items(j)[idx];if(!it||!engId)return;
   if(!it.who.includes(engId))it.who.push(engId);
@@ -1766,12 +1838,12 @@ function renderBoard(){
           const nb=lineNew(j,it)?`<button class="lnew" data-lseen="${j.id}|${i}" title="Added by ${esc(nwOf(j,it).by||"someone")} ${fmt(nwOf(j,it).at)} – click to clear">NEW ✕</button>`:"";
           const tbox=txt=>`<span class="tline">${aiocTick(j,it,i,done)}${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done||EV?"":"tedit"}" ${done||EV?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
           if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
-          const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
+          
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
           ${(ty=>done||EV?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
           <button class="tstat" data-item="${j.id}|${i}" ${done||(EV&&!lineMine(j,it))?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
-          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done||(EV&&e!==myEng())?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${EV?(done||it.who.includes(myEng())?"":it.who.length?`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Join this task">+ me</button><button type="button" class="meb tko" data-itake="${j.id}|${i}" title="Take this task over – the others come off it">Take over</button>`:`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Assign yourself to this task">+ me</button>`):done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
+          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done||(EV&&e!==myEng())?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${EV?(done||it.who.includes(myEng())?"":it.who.length?`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Join this task">+ me</button><button type="button" class="meb tko" data-itake="${j.id}|${i}" title="Take this task over – the others come off it">Take over</button>`:`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Assign yourself to this task">+ me</button>`):done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}" data-lazy="1"><option value="">${it.who.length?"+":"+ assign"}</option></select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
       foot:AI?`<div class="jf"><span class="sub">${ownerOf(j.tail)}</span><div class="acts">${!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}">Collapse ▴</button>`:""}</div></div>`:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
     const us=AI?"":unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${layCustom()?" customlay":""}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
@@ -1911,7 +1983,7 @@ function markMine(){
     if(j.nl){const ts=items(j).map(i=>i.t);j.nl=j.nl.filter(x=>ts.includes(x.t));if(!j.nl.length)delete j.nl}
     SEEN[j.id]=jsig(j)}});
   SEEN.__init=1;BASE=sigs();BASEL=lineMap();
-  Object.keys(SEEN).forEach(k=>{if(k!=="__init"&&k!=="__ack"&&!D.jobs.some(j=>j.id===k))delete SEEN[k]});if(SEEN.__ack)Object.keys(SEEN.__ack).forEach(k=>{if(!D.jobs.some(j=>k.startsWith(j.id+"|")))delete SEEN.__ack[k]});seenSave();
+  const ids=new Set(D.jobs.map(j=>j.id));Object.keys(SEEN).forEach(k=>{if(k!=="__init"&&k!=="__ack"&&!ids.has(k))delete SEEN[k]});if(SEEN.__ack)Object.keys(SEEN.__ack).forEach(k=>{if(!ids.has(k.split("|")[0]))delete SEEN.__ack[k]});seenSave();
 }
 // new-line flags live on the job (j.nl) so older copies of the app can't strip them
 const nwOf=(j,it)=>it?((j.nl||[]).find(x=>x.t===it.t)||it.nw||null):null;
@@ -2165,10 +2237,10 @@ const LAY_NAMES={head:"Tail, bay & status",times:"Take off / landing",flight:"Ne
 const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",50],["sent",50],["role",100],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
 const defCol=k=>(k==="crew"||k==="tasks")?"R":"L";
 const colOf=b=>b.c||defCol(b.k);
-const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>LAY_NAMES[b.k]);
+const tileLayout=()=>{const L=(Array.isArray(D.tileLayout)&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>b&&LAY_NAMES[b.k]).map(b=>({...b,w:Math.max(10,Math.min(100,Math.round(+b.w)||100))}));
   LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
 let LAY_FORCE=false,LAYCOL=null;
-const colW=()=>(LAY_FORCE&&LAYCOL)||D.tileCol||290;
+const colW=()=>Math.max(200,Math.min(1200,Math.round(+((LAY_FORCE&&LAYCOL)||D.tileCol||290))||290));
 const packNr=L=>{let sum=0;return L.map((b,i)=>{const n=i===0||sum+b.w>100;sum=n?b.w:sum+b.w;return n})};
 const layCustom=()=>{if(LAY_FORCE)return true;if(D.tileCol&&D.tileCol!==290)return true;const L=D.tileLayout;if(!L||!L.length)return false;const dn=packNr(LAY_DEF);return JSON.stringify(L.map((b,i)=>[b.k,b.w,!!b.hide,colOf(b),b.nr==null?dn[i]:!!b.nr]))!==JSON.stringify(LAY_DEF.map((b,i)=>[b.k,b.w,false,colOf(b),dn[i]]))};
 function layoutHtml(BL,edit){edit=edit||LAY_FORCE;
@@ -2417,7 +2489,7 @@ function renderHistory(){
     <td class="sub" style="white-space:nowrap">${fmt(j.created)}</td><td>${dur(j.started||j.created,j.completed)}</td></tr>`).join("")||`<tr><td colspan="7" class="empty">No completed jobs match.</td></tr>`;
 }
 $("#exportCsv").onclick=()=>{
-  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"'$1").replace(/"/g,'""')}"`;
   const lines=[["Completed","Tail","Bay","Task","Engineers","Raised","Started","Duration"].join(",")];
   histRows().forEach(j=>lines.push([fmt(j.completed),j.tail,j.bay,j.task,whoDid(j).map(w=>w.name).join("; "),fmt(j.created),fmt(j.started),dur(j.started||j.created,j.completed)].map(q).join(",")));
   download(`work-record-${new Date().toISOString().slice(0,10)}.csv`,lines.join("\n"),"text/csv");
@@ -2498,7 +2570,7 @@ function renderSent(a,b){
   const bar=tot?`<div class="sent-bar">${gTot.map(x=>`<i style="flex:${x.ms};background:${x.col}" title="${x.g}: ${hh(x.ms)} (${Math.round(x.ms/tot*100)}%)"></i>`).join("")}</div><div class="sent-leg">${gTot.map(x=>`<span><i style="background:${x.col}"></i>${x.g} <b>${hh(x.ms)}</b> ${Math.round(x.ms/tot*100)}%</span>`).join("")}</div>`:"";
   const codeBars=codes.length?`<div class="sent-codes">${bars(codes.map(([c,ms])=>({l:c,lh:`<span class="sentchip" style="--sc:${SENT[c]?.col||"#94A3B8"}">${esc(c)}</span> ${esc(SENT[c]?.d||"")}`,v:ms,d:hh(ms),x:Math.round(ms/tot*100)+"%",tip:`${c} – ${SENT[c]?.d}: ${hh(ms)}`})))}</div>`:`<div class="sx-empty">No sentencing hours in this period yet – set a sentence on an aircraft below or on its job card.</div>`;
   const rows=tails.map(t=>{const m=H[t]||{},tt=Object.values(m).reduce((x,y)=>x+y,0);const top=Object.entries(m).sort((x,y)=>y[1]-x[1]);
-    return `<tr><td class="tail">${t}</td><td>${sentSel(t,false)}</td><td class="sub">${sentOf(t)?ago(sentOf(t).at):""}</td><td>${tt?`<div class="sent-mini">${top.map(([c,ms])=>`<i style="flex:${ms};background:${SENT[c]?.col||"#94A3B8"}" title="${c}: ${hh(ms)}"></i>`).join("")}</div>`:""}</td><td class="sent-top">${top.slice(0,4).map(([c,ms])=>`<span class="sentchip" style="--sc:${SENT[c]?.col}">${c}</span> ${hh(ms)}`).join(" &nbsp;")}</td><td style="text-align:right;font-weight:700">${tt?hh(tt):""}</td></tr>`}).join("");
+    return `<tr><td class="tail">${t}</td><td>${sentSel(t,false)}</td><td class="sub">${sentOf(t)?ago(sentOf(t).at):""}</td><td>${tt?`<div class="sent-mini">${top.map(([c,ms])=>`<i style="flex:${ms};background:${SENT[c]?.col||"#94A3B8"}" title="${esc(c)}: ${hh(ms)}"></i>`).join("")}</div>`:""}</td><td class="sent-top">${top.slice(0,4).map(([c,ms])=>`<span class="sentchip" style="--sc:${SENT[c]?.col||"#94A3B8"}">${esc(c)}</span> ${hh(ms)}`).join(" &nbsp;")}</td><td style="text-align:right;font-weight:700">${tt?hh(tt):""}</td></tr>`}).join("");
   $("#sxSent").innerHTML=bar+codeBars+`<div class="tbl-wrap" style="margin-top:14px"><table class="sent-tbl"><thead><tr><th>Tail</th><th>Current sentence</th><th>For</th><th>Split</th><th>Hours by sentence</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 $("#sxSent")?.addEventListener("change",e=>{const t=e.target;if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value)});
@@ -2544,7 +2616,7 @@ function renderStats(){
 const inRange=(j,S)=>[j.created,j.completed,j.started].some(d=>d&&new Date(d)>=S.a&&new Date(d)<=S.b);
 $("#sxRange").onclick=e=>{const x=e.target.closest("button");if(!x)return;SXR=x.dataset.r;renderStats()};
 ["#sxFrom","#sxTo"].forEach(id=>$(id).onchange=()=>{SXR="custom";renderStats()});
-$("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/"/g,'""')}"`,L=[];
+$("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"'$1").replace(/"/g,'""')}"`,L=[];
   L.push(q(`Line Tasking stats ${iso(S.a)} to ${iso(S.b)}`),"");
   L.push(["Engineer","Trade","Hours on jobs","Tasks done"].map(q).join(","));
   Object.entries(S.E).sort((x,y)=>y[1].ms-x[1].ms).forEach(([id,v])=>{const e=allNames().find(x=>x.id===id);L.push([e?.name,e?catShort(e):"",hnum(v.ms).toFixed(2),v.jobs.size].map(q).join(","))});
@@ -2654,7 +2726,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-flbin]");i
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role||f.time))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   const more=(acGet(t).more||[]).length;
   return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,more&&`+${more} more flight${more>1?"s":""}`,f.fh&&"FH "+f.fh,f.eh&&"EH "+f.eh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
-const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
+const crewLbl=sh=>sh?.crew?esc(sh.crew)+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
 async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary();if(!$("#tab-stats").classList.contains("hide"))renderStats()}
@@ -2664,7 +2736,7 @@ function renderShiftBar(){
   const o=SHO(),sh=curShift(o);
   const done=t=>DIARY.find(r=>r.date===sh.date&&r.type===t&&(r.owner||"Line")===o);
   $("#shiftBar").innerHTML=`<div class="stabs">${["E","L","N"].map(t=>{const r=done(t);return t===sh.type?`<button class="stab live" disabled>${SHIFT[t]}</button>`:r?`<button class="stab past" data-rec="${r.id}" title="Handed over ${tm(r.endedAt)} – view diary">✓ ${SHIFT[t]}</button>`:`<button class="stab" disabled>${SHIFT[t]}</button>`}).join("")}</div>
-    ${o!=="Line"?`<span class="ownbadge" title="Shift, notes, export and handover for ${esc(o)}">${esc(o)}</span>`:""}<span class="crewbadge">${sh.crew}</span><span class="shiftinfo"><b>${crewLbl(sh)} · ${SHIFT[sh.type]} · ${dlong(sh.date)}</b> – started ${tm(sh.startedAt)} ${canEdit(o)?`<button class="linkbtn" id="csOpen">Correct</button>`:""}</span>${(()=>{if(SHO()!=="Line")return "";const o=ovlInfo();if(!o)return "";const n=D.engineers.filter(e=>ovl(e)).length;return n?`<span class="ovlbar" title="Between 22:00 and 02:00 lates and nights overlap">⇄ Overlap – ${n} on ${o.lbl.toLowerCase()} also available till 02:00</span>`:""})()}
+    ${o!=="Line"?`<span class="ownbadge" title="Shift, notes, export and handover for ${esc(o)}">${esc(o)}</span>`:""}<span class="crewbadge">${esc(sh.crew||"")}</span><span class="shiftinfo"><b>${crewLbl(sh)} · ${SHIFT[sh.type]} · ${dlong(sh.date)}</b> – started ${tm(sh.startedAt)} ${canEdit(o)?`<button class="linkbtn" id="csOpen">Correct</button>`:""}</span>${(()=>{if(SHO()!=="Line")return "";const o=ovlInfo();if(!o)return "";const n=D.engineers.filter(e=>ovl(e)).length;return n?`<span class="ovlbar" title="Between 22:00 and 02:00 lates and nights overlap">⇄ Overlap – ${n} on ${o.lbl.toLowerCase()} also available till 02:00</span>`:""})()}
     <span style="margin-left:auto;display:flex;gap:8px">${o==="Line"?(n=>`<button class="btn sm sixbtn ${n===SIXS.length?"ok":""}" id="sixOpen" title="End-of-shift 6S reset checks">6S reset <i>${n}/${SIXS.length}</i></button>`)(sixDone()):""}<button class="btn sm" id="exportNow" title="Preview this shift's diary so far">Export so far</button>${canEdit(o)?`<button class="btn pri sm" id="hoOpen">Hand over${o!=="Line"?" "+esc(o):" shift"}</button>`:`<span class="sub">View only</span>`}</span>`;
 }
 $("#shiftBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
@@ -2772,13 +2844,13 @@ function buildRecord(handover,o="Line"){
 // every task line finished during a shift (from fully completed jobs and from jobs still carrying over)
 const recTasksDone=r=>{const st=r.startedAt?new Date(r.startedAt):null,ok=it=>!it.info&&it.s==="done"&&(!it.at||!st||new Date(it.at)>=st);
   return [...(r.done||[]),...(r.open||[])].flatMap(j=>(j.items||[]).filter(ok).map(it=>({tail:j.tail,t:it.t,who:(it.who&&it.who.length)?it.who:(j.crew||[]).map(c=>c.n),at:it.at||j.completed||r.endedAt})))};
-function exportRecord(r,draft,win){
+function exportRecord(r,draft,win){r={...r,open:r.open||[],closed:r.closed||[],manning:r.manning||[]};
   const st={todo:"☐",work:"▶",done:"☑"},stn={todo:"Not started",work:"In progress",done:"Done"};
   const block=j=>`<table class="ac"><tr class="h"><th>${j.pri?"P"+esc(j.pri)+" · ":""}${esc(j.tail)}</th><th>${[j.acst,j.area,j.tag].filter(Boolean).map(esc).join(" · ")}</th><th>${j.bay?"Bay "+esc(j.bay):""}</th><th>${esc(j.lsj||"")}</th></tr>
     ${j.items.map(it=>`<tr><td class="k">${it.info?"INFO":st[it.s]}</td><td colspan="2">${esc(it.t)}${it.who.length?`<div class="w">${it.who.map(esc).join(", ")}</div>`:""}</td><td class="s">${it.info?"":stn[it.s]+(it.at&&it.s!=="todo"?" "+tm(it.at):"")}</td></tr>`).join("")}
     <tr class="f"><td colspan="4">Crew: ${j.crew.map(c=>esc(c.n)+(c.t?` (${esc(c.t)})`:"")).join(", ")||"–"} · Raised ${fmt(j.created)}${j.started?" · Started "+fmt(j.started):""}${j.completed?" · Completed "+fmt(j.completed):""}</td></tr></table>`;
-  const sig=(l,x)=>`<div class="sg"><div class="sl">${l}</div>${x?`<div class="sn">${esc(x.name)}</div>${x.sig?`<img src="${x.sig}">`:`<div class="ov">Not available to sign – ${esc(x.reason)}</div>`}<div class="st">${fmt(x.at)}</div>`:`<div class="ov">Not yet signed</div>`}</div>`;
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${r.owner&&r.owner!=="Line"?esc(r.owner)+" – ":""}Shift diary – ${SHIFT[r.type]} ${r.date}</title><style>
+  const sig=(l,x)=>`<div class="sg"><div class="sl">${l}</div>${x?`<div class="sn">${esc(x.name)}</div>${/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(x.sig||"")?`<img src="${x.sig}">`:`<div class="ov">Not available to sign – ${esc(x.reason)}</div>`}<div class="st">${fmt(x.at)}</div>`:`<div class="ov">Not yet signed</div>`}</div>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${r.owner&&r.owner!=="Line"?esc(r.owner)+" – ":""}Shift diary – ${SHIFT[r.type]} ${esc(r.date)}</title><style>
   body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;font-size:12px}h1{font-size:20px;margin:0}h2{font-size:14px;border-bottom:2px solid #111;padding-bottom:3px;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.5px}
   .meta{color:#444;margin-top:4px}.draft{border:2px solid #B45309;color:#B45309;padding:6px 10px;font-weight:bold;margin:10px 0;display:inline-block}
   table{border-collapse:collapse;width:100%}table.ac{margin-bottom:10px;page-break-inside:avoid}.ac th,.ac td{border:1px solid #9CA3AF;padding:4px 6px;vertical-align:top;text-align:left}
@@ -2791,7 +2863,7 @@ function exportRecord(r,draft,win){
   @media print{body{margin:12mm}.np{display:none}}.sum{margin:8px 0 4px;font-size:13px;background:#F1F5F9;border-radius:6px;padding:8px 10px}.tdone{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}.tdone th,.tdone td{border:1px solid #CBD5E1;padding:3px 6px;text-align:left;vertical-align:top}.tdone th{background:#E2E8F0}</style></head><body>
   <div class="np" style="margin-bottom:12px"><button onclick="print()">Print / Save as PDF</button></div>
   <h1>${r.owner&&r.owner!=="Line"?esc(r.owner):"Line"} – Shift Diary</h1>
-  <div class="meta"><b>${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]}</b> · ${dlong(r.date)} · Shift ${tm(r.startedAt)} – ${r.endedAt?tm(r.endedAt):"in progress"}</div>
+  <div class="meta"><b>${r.crew?esc(r.crew)+" Shift · ":""}${SHIFT[r.type]}</b> · ${dlong(r.date)} · Shift ${tm(r.startedAt)} – ${r.endedAt?tm(r.endedAt):"in progress"}</div>
   ${draft||r.draft?`<div class="draft">DRAFT – shift not yet handed over</div>`:""}
   ${r.manning&&r.manning.length?"":"<!--"}<h2>Manning</h2><table class="mn"><tr><th>Group</th><th>On shift</th><th>Target</th><th>Minimum</th></tr>${r.manning.map(m=>`<tr><td>${m.n}</td><td class="${m.min&&m.count<m.min?"crit":m.target&&m.count<m.target?"low":""}">${m.count}</td><td>${m.target??"–"}</td><td>${m.min??"–"}</td></tr>`).join("")}</table>
   ${r.manning&&r.manning.length?"":"-->"}<h2 style="${r.manning&&r.manning.length?"display:none":""}">Personnel</h2><p style="font-size:11px">${r.onShift.map(e=>esc(e.n)+(e.t?` (${esc(e.t)})`:"")+(e.duty?` – ${esc(e.duty)}`:"")).join(" · ")||"–"}</p>
@@ -2803,13 +2875,13 @@ function exportRecord(r,draft,win){
   <h2>Useful information</h2><div class="pre">${esc(r.info)||"–"}</div>
   ${r.sixs?`<h2>6S reset</h2><p>${r.sixs.map(x=>`${x.done?"☑":"☐"} ${esc(x.n)}${x.done?` (${tm(x.at)}${x.by?" "+esc(x.by):""})`:""}`).join(" &nbsp; ")}</p>`:""}
   <h2>Handover</h2><div class="sgs">${sig("Going off shift",r.handover?.off)}${sig("Coming on shift",r.handover?.on)}</div>
-  <div class="foot">${r.handover?.nextCrew?"Handed over to "+r.handover.nextCrew+" Shift · ":""}Record ${r.id} · Generated ${fmt(new Date().toISOString())}${r.handover?.by?" · Handed over by "+esc(r.handover.by):""} · Key: ☐ not started ▶ in progress ☑ done</div>
+  <div class="foot">${r.handover?.nextCrew?"Handed over to "+esc(r.handover.nextCrew)+" Shift · ":""}Record ${esc(r.id)} · Generated ${fmt(new Date().toISOString())}${r.handover?.by?" · Handed over by "+esc(r.handover.by):""} · Key: ☐ not started ▶ in progress ☑ done</div>
   <script>setTimeout(()=>print(),400)<\/script></body></html>`;
   const w=win||window.open("","_blank");if(!w){toast("Allow pop-ups to export the diary");return}
   w.document.open();w.document.write(html);w.document.close();
 }
 function renderDiary(){
-  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${r.type}">${r.type}</span><div class="who"><b>${r.owner&&r.owner!=="Line"?`<span class="ownbadge sm">${esc(r.owner)}</span> `:""}${r.crew?r.crew+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${recTasksDone(r).length} tasks done · ${r.open.length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${r.id}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
+  $("#diaryList").innerHTML=DIARY.map(r=>`<div class="drow"><span class="dbadge ${esc(r.type)}">${esc(r.type)}</span><div class="who"><b>${r.owner&&r.owner!=="Line"?`<span class="ownbadge sm">${esc(r.owner)}</span> `:""}${r.crew?esc(r.crew)+" Shift · ":""}${SHIFT[r.type]} · ${dlong(r.date)}</b><span class="sub">${tm(r.startedAt)}–${tm(r.endedAt)} · ${recTasksDone(r).length} tasks done · ${(r.open||[]).length} carried over · Off: ${esc(r.handover?.off?.name||"–")}${r.handover?.off?.override?" (not signed)":""} → On: ${esc(r.handover?.on?.name||"–")}${r.handover?.on?.override?" (not signed)":""}</span></div><button class="btn sm" data-rec="${esc(r.id)}">View / Export</button></div>`).join("")||`<div class="empty"><b>No handovers yet</b>Each time a shift is handed over, its diary is locked here.</div>`;
 }
 $("#diaryList").addEventListener("click",e=>{const b=e.target.closest("[data-rec]");if(b){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}});
 
@@ -2921,7 +2993,7 @@ function render(){applyAIOC();curShift();renderBoard();renderShiftBar();renderNo
   if(!$("#tab-shift").classList.contains("hide"))renderShift();
   if(!$("#tab-history").classList.contains("hide"))renderHistory();
   if(!$("#tab-stats").classList.contains("hide"))renderStats();}
-window.addEventListener("storage",e=>{if(e.key===KEY){try{D=JSON.parse(e.newValue);window.__waRemote?.()}catch(_){}render()}});
+window.addEventListener("storage",e=>{if(e.key===KEY){try{D=sanitize(JSON.parse(e.newValue));window.__waRemote?.()}catch(_){}render()}});
 render();
 
 /* ---------- cloud: sign-in, users, live sync (Supabase) ---------- */
@@ -2934,7 +3006,8 @@ if(SB_URL&&SB_KEY&&window.supabase){
   const uname=u=>String(u||"").trim().toLowerCase();
   const okUser=u=>/^[a-z0-9._-]{3,30}$/.test(u);
   const toEmail=u=>uname(u)+"@"+UDOMAIN;
-  let ME=null,VER=-1,pushing=false,again=false,chan=null,PROFILES=[];
+  let ME=null,VER=-1,pushing=false,again=false,chan=null,PROFILES=[],BASED=null;
+  const clone=x=>JSON.parse(JSON.stringify(x));
   const gate=(mode,msg,ok)=>{$("#gate").classList.toggle("hide",!mode);if(!mode)return;
     ["fIn","fReq","gWait"].forEach(id=>$("#"+id).classList.add("hide"));$("#gTabs").classList.toggle("hide",mode==="wait");
     $(mode==="in"?"#fIn":mode==="req"?"#fReq":"#gWait").classList.remove("hide");
@@ -2967,14 +3040,16 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#userAv").style.background="#2563EB";
     $("#navUsers").classList.toggle("hide",prof.role!=="admin");
     await pull(true);loadDiary();
-    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){VER=p.new.version;D=fix(p.new.data);window.__waRemote?.();cache();render()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
+    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){const remote=fix(p.new.data);const dirty=BASED&&JSON.stringify(D)!==JSON.stringify(BASED);
+      // someone else saved: fold their change in, keeping anything this device hasn't sent yet
+      D=dirty?sanitize(merge3(BASED,D,remote,"")):remote;BASED=clone(remote);VER=p.new.version;window.__waRemote?.();cache();render();if(dirty)push()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
     // safety net for screens left running (wall board): realtime can drop silently after sleep / network blips,
     // so re-check the server every minute and whenever the screen wakes or the network comes back
     if(!window.__waPoll){window.__waPoll=setInterval(()=>{if(!pushing)pullIfNewer()},60000);
       document.addEventListener("visibilitychange",()=>{if(!document.hidden)pullIfNewer()});addEventListener("online",()=>pullIfNewer());addEventListener("focus",()=>pullIfNewer())}
     if(prof.role==="admin"){loadUsers();sb.channel("wa-p").on("postgres_changes",{event:"*",schema:"public",table:"wa_profiles"},loadUsers).subscribe()}
   }
-  const fix=d=>{d=d||{};d.engineers=d.engineers||[];d.jobs=d.jobs||[];return d};
+  const fix=d=>sanitize(d);
   const cache=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}};
   async function pull(first){
     const {data,error}=await sb.from("wa_state").select("data,version").eq("id",1).single();
@@ -2982,18 +3057,26 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const remote=fix(data.data),empty=!remote.engineers.length&&!remote.jobs.length;
     VER=data.version;
     if(first&&empty&&(D.engineers.length||D.jobs.length)&&ME.role==="admin"){toast("Uploading this device's board to the cloud…");push();return}
-    D=remote;window.__waRemote?.(first);cache();render();
+    const dirty=!first&&BASED&&JSON.stringify(D)!==JSON.stringify(BASED); // unsent changes on this device are merged, not dropped
+    D=dirty?sanitize(merge3(BASED,D,remote,"")):remote;BASED=clone(remote);window.__waRemote?.(first);cache();render();if(dirty)push();
   }
   async function pullIfNewer(){if(!ME)return;try{const {data,error}=await sb.from("wa_state").select("version").eq("id",1).single();
     if(!error&&data&&data.version>VER){await pull(false)}
     if(chan&&chan.state&&!["joined","joining"].includes(chan.state)){try{chan.subscribe()}catch(e){}}}catch(e){}}
   async function push(){
     if(!ME)return;if(pushing){again=true;return}pushing=true;
-    const {data,error}=await sb.rpc("wa_save",{new_data:D,expected:VER});
+    let tries=0;
+    while(true){
+      const sent=clone(D);
+      const {data,error}=await sb.rpc("wa_save",{new_data:sent,expected:VER});
+      if(error){toast("Not saved – "+error.message);$("#syncDot").classList.add("off");break}
+      if(data!==-1){VER=data;BASED=sent;$("#syncDot").classList.remove("off");break}
+      // someone saved first: fetch theirs, merge both sets of changes, try again
+      const {data:cur,error:e2}=await sb.from("wa_state").select("data,version").eq("id",1).single();
+      if(e2||++tries>5){toast("Couldn't save – reloading the board. Check your last change.");await pull();break}
+      const remote=fix(cur.data);D=sanitize(merge3(BASED||remote,D,remote,""));BASED=clone(remote);VER=cur.version;cache();render();
+    }
     pushing=false;
-    if(error){toast("Not saved – "+error.message);$("#syncDot").classList.add("off");}
-    else if(data===-1){toast("Someone else changed the board – reloaded. Check your last change.");await pull();}
-    else VER=data;
     if(again){again=false;push()}
   }
   window.__waCloud={push,me:()=>ME,
