@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125142323">
+<meta name="build" content="20261125143542">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -893,6 +893,7 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .crsbtn:disabled{background:#F1F5F9!important;color:#94A3B8!important;border-color:#E2E8F0!important;cursor:not-allowed}.crsbtn small{font-weight:600;font-size:10px;margin-left:3px}
 #jobs > .job{content-visibility:auto;contain-intrinsic-size:auto 420px}
 #jobs .cstack{content-visibility:auto;contain-intrinsic-size:auto 300px}
+.bktbl{width:100%;border-collapse:collapse;font-size:13px}.bktbl th{text-align:left;font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid #E2E8F0}.bktbl td{padding:6px 8px;border-bottom:1px solid #F1F5F9}
 </style>
 </head>
 <body>
@@ -1093,6 +1094,10 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
       <div class="card">
         <div class="card-h"><h2>Access requests</h2><span class="sub" style="margin-left:auto">People waiting to be let in</span></div>
         <div id="reqList"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Backups</h2><span class="sub" style="margin-left:auto">Every save keeps the previous board – restore one if something goes wrong</span><button class="btn sm" id="bkLoad" style="margin-left:10px">Show backups</button></div>
+        <div id="bkList" class="sx-body"></div>
       </div>
       <div class="card">
         <div class="card-h"><h2>Users</h2><span class="sub" style="margin-left:auto">Admins can approve people and manage users</span></div>
@@ -1392,8 +1397,9 @@ const dur=(a,b)=>{if(!a||!b)return"";const m=Math.round((new Date(b)-new Date(a)
 // Every copy of the board (this device, the cloud, other tabs) passes through here first, so one bad or
 // half-written record can never stop the app from starting. Anything unusable is dropped or reset to a safe default.
 // 3-way merge of the shared board: base = last copy both sides agreed on, l = this device, r = server now
+const stableJ=x=>JSON.stringify(x,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.keys(v).sort().reduce((o,kk)=>(o[kk]=v[kk],o),{}):v);
 function merge3(b,l,r,key){
-  const J=x=>JSON.stringify(x);
+  const J=stableJ;
   if(J(l)===J(b))return r;if(J(r)===J(b))return l;if(J(l)===J(r))return l;
   const isO=x=>x&&typeof x==="object"&&!Array.isArray(x);
   if(isO(l)&&isO(r)){const bb=isO(b)?b:{},out={};
@@ -1425,7 +1431,7 @@ function sanitize(d){
     arr=x=>Array.isArray(x)?x:[],iso=x=>typeof x==="string"&&!isNaN(new Date(x))?x:null,strArr=x=>arr(x).filter(v=>typeof v==="string"&&v);
   d=obj(d)?d:{};
   d.engineers=arr(d.engineers).filter(e=>obj(e)&&typeof e.id==="string"&&e.id).map(e=>({...e,name:str(e.name)||"(no name)",cat:str(e.cat),onShift:!!e.onShift,title:e.title?str(e.title):undefined}));
-  const ST=["open","planned","work","done"],IS=["todo","work","done"];
+  const ST=["open","planned","work","done","closed"],IS=["todo","work","done"];
   d.jobs=arr(d.jobs).filter(j=>obj(j)&&typeof j.id==="string"&&j.id&&typeof j.tail==="string"&&j.tail).map(j=>{
     const o={...j,task:str(j.task),status:ST.includes(j.status)?j.status:"open",created:iso(j.created)||new Date().toISOString(),started:iso(j.started),completed:iso(j.completed)};
     ["bay","tag","lsj","pri","acst","area","by","chBy"].forEach(k=>{if(k in o)o[k]=str(o[k])});
@@ -1452,7 +1458,7 @@ let D;
 try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 D=sanitize(D);
 const PRUNE_DAYS=60;
-function pruneOld(){const cut=Date.now()-PRUNE_DAYS*864e5,n=D.jobs.length;D.jobs=D.jobs.filter(j=>j.status!=="done"||!j.completed||new Date(j.completed).getTime()>=cut);
+function pruneOld(){if(window.__waCloud&&!window.__waPriv)return 0;const cut=Date.now()-PRUNE_DAYS*864e5,n=D.jobs.length;D.jobs=D.jobs.filter(j=>j.status!=="done"||!j.completed||new Date(j.completed).getTime()>=cut);
   if(Array.isArray(D.sentLog)&&D.sentLog.length>20000)D.sentLog=D.sentLog.slice(-20000);return n-D.jobs.length}
 const save=()=>{pruneOld();AREAC=null;mergeTiles();D.jobs.forEach(j=>{if(j.status!=="done")j.status=deriveStatus(j)});markMine();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
 const alertMsg=m=>console.warn(m);
@@ -2970,7 +2976,7 @@ setInterval(()=>{if(!$("#tab-board").classList.contains("hide")&&!document.activ
 if(location.hash==="#display"){$("#display").classList.remove("hide")}
 
 /* ---------- render ---------- */
-function applyAIOC(){const a=isAIOC();document.body.classList.toggle("aioc",a);
+function applyAIOC(){window.__waPriv=realFlight();const a=isAIOC();document.body.classList.toggle("aioc",a);
   const ev=engMode();document.body.classList.toggle("engv",ev);
   const es=$("#engvSel");if(es){$("#viewsWrap").classList.toggle("hide",!realFlight());const list=D.engineers.filter(e=>isOn(e)||e.id===ENGV).sort(byTrade);
     const h=`<option value="">My normal view</option><option value="__aioc">AIOC view</option><optgroup label="Engineer views (on shift)">`+list.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")+`</optgroup>`;
@@ -3006,7 +3012,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
   const uname=u=>String(u||"").trim().toLowerCase();
   const okUser=u=>/^[a-z0-9._-]{3,30}$/.test(u);
   const toEmail=u=>uname(u)+"@"+UDOMAIN;
-  let ME=null,VER=-1,pushing=false,again=false,chan=null,PROFILES=[],BASED=null;
+  let ME=null,VER=-1,pushing=false,again=false,chan=null,PROFILES=[],BASED=null,OLDSAVE=false;
   const clone=x=>JSON.parse(JSON.stringify(x));
   const gate=(mode,msg,ok)=>{$("#gate").classList.toggle("hide",!mode);if(!mode)return;
     ["fIn","fReq","gWait"].forEach(id=>$("#"+id).classList.add("hide"));$("#gTabs").classList.toggle("hide",mode==="wait");
@@ -3040,7 +3046,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#userAv").style.background="#2563EB";
     $("#navUsers").classList.toggle("hide",prof.role!=="admin");
     await pull(true);loadDiary();
-    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){const remote=fix(p.new.data);const dirty=BASED&&JSON.stringify(D)!==JSON.stringify(BASED);
+    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){const remote=fix(p.new.data);const dirty=BASED&&stableJ(D)!==stableJ(BASED);
       // someone else saved: fold their change in, keeping anything this device hasn't sent yet
       D=dirty?sanitize(merge3(BASED,D,remote,"")):remote;BASED=clone(remote);VER=p.new.version;window.__waRemote?.();cache();render();if(dirty)push()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
     // safety net for screens left running (wall board): realtime can drop silently after sleep / network blips,
@@ -3057,7 +3063,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const remote=fix(data.data),empty=!remote.engineers.length&&!remote.jobs.length;
     VER=data.version;
     if(first&&empty&&(D.engineers.length||D.jobs.length)&&ME.role==="admin"){toast("Uploading this device's board to the cloud…");push();return}
-    const dirty=!first&&BASED&&JSON.stringify(D)!==JSON.stringify(BASED); // unsent changes on this device are merged, not dropped
+    const dirty=!first&&BASED&&stableJ(D)!==stableJ(BASED); // unsent changes on this device are merged, not dropped
     D=dirty?sanitize(merge3(BASED,D,remote,"")):remote;BASED=clone(remote);window.__waRemote?.(first);cache();render();if(dirty)push();
   }
   async function pullIfNewer(){if(!ME)return;try{const {data,error}=await sb.from("wa_state").select("version").eq("id",1).single();
@@ -3068,9 +3074,17 @@ if(SB_URL&&SB_KEY&&window.supabase){
     let tries=0;
     while(true){
       const sent=clone(D);
-      const {data,error}=await sb.rpc("wa_save",{new_data:sent,expected:VER});
+      let data,error,filtered=false;
+      if(!OLDSAVE){({data,error}=await sb.rpc("wa_save2",{new_data:sent,expected:VER}));
+        if(error&&/wa_save2|PGRST202|function/i.test(error.message+" "+(error.code||""))){OLDSAVE=true;error=null}else if(!error){filtered=!!data?.filtered;data=data?.v}}
+      if(OLDSAVE)({data,error}=await sb.rpc("wa_save",{new_data:sent,expected:VER}));
       if(error){toast("Not saved – "+error.message);$("#syncDot").classList.add("off");break}
-      if(data!==-1){VER=data;BASED=sent;$("#syncDot").classList.remove("off");break}
+      if(data!==-1){VER=data;$("#syncDot").classList.remove("off");
+        if(filtered){ // the database kept only the changes this login is allowed to make – take its copy, keep anything newer from here
+          const {data:cur}=await sb.from("wa_state").select("data,version").eq("id",1).single();
+          if(cur){const remote=fix(cur.data);D=sanitize(merge3(sent,D,remote,""));BASED=clone(remote);VER=cur.version;cache();render()}else BASED=sent}
+        else BASED=sent;
+        break}
       // someone saved first: fetch theirs, merge both sets of changes, try again
       const {data:cur,error:e2}=await sb.from("wa_state").select("data,version").eq("id",1).single();
       if(e2||++tries>5){toast("Couldn't save – reloading the board. Check your last change.");await pull();break}
@@ -3079,6 +3093,14 @@ if(SB_URL&&SB_KEY&&window.supabase){
     pushing=false;
     if(again){again=false;push()}
   }
+  async function loadBackups(){$("#bkList").innerHTML='<span class="sub">Loading…</span>';const {data,error}=await sb.rpc("wa_hist_list");
+    if(error){$("#bkList").innerHTML=`<span class="sub">${/wa_hist_list|PGRST202/.test(error.message+(error.code||""))?"Backups aren't switched on in the database yet.":esc(error.message)}</span>`;return}
+    $("#bkList").innerHTML=(data||[]).length?`<table class="bktbl"><tr><th>Saved</th><th>Version</th><th>By</th><th>Jobs</th><th>Size</th><th></th></tr>${data.map(b=>`<tr><td>${fmt(b.saved_at)}</td><td>${b.version}</td><td>${esc(b.saved_by||"–")}</td><td>${b.jobs}</td><td>${Math.round(b.bytes/1024)} KB</td><td><button class="btn sm" data-bkrestore="${b.id}" data-bkwhen="${esc(fmt(b.saved_at))}">Restore</button></td></tr>`).join("")}</table>`:'<span class="sub">No backups yet – one is kept every time the board is saved.</span>'}
+  $("#bkLoad").onclick=loadBackups;
+  $("#bkList").addEventListener("click",async e=>{const b=e.target.closest("[data-bkrestore]");if(!b)return;
+    if(!confirm(`Put the whole board back to how it was at ${b.dataset.bkwhen}?\n\nEverything changed since then is replaced for everyone. (The current board is kept as a backup first, so this can be undone.)`))return;
+    const {error}=await sb.rpc("wa_restore",{hist_id:+b.dataset.bkrestore});if(error){toast("Restore failed – "+error.message);return}
+    toast("Board restored to "+b.dataset.bkwhen);await pull(true);loadBackups()});
   window.__waCloud={push,me:()=>ME,
     async addDiary(rec){const {error}=await sb.from("wa_diary").insert({shift_date:rec.date,shift_type:rec.type,data:rec});if(error){toast("Diary not saved – "+error.message);return false}return true},
     async listDiary(){const {data,error}=await sb.from("wa_diary").select("id,data,created_at").order("created_at",{ascending:false}).limit(200);if(error)return [];return data.map(r=>({...r.data,id:r.id}))}};
