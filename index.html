@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125010436">
+<meta name="build" content="20261125010706">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -605,19 +605,50 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
 .chip.fin{background:#DCFCE7;border-color:#86EFAC}
 .chip small.fin,.ds.fin{color:#15803D;font-weight:700}
 .qforms .qf-row{display:flex;align-items:center;gap:12px;padding:12px 16px 16px;flex-wrap:wrap}
-.mvform{max-height:calc(88vh - 70px);overflow-y:auto}
-.mvgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px;align-items:end}
-.mvgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--ink2)}
-.mvgrid label.mvchk{flex-direction:row;align-items:center;gap:8px;font-weight:600;font-size:13px;padding-bottom:8px}
-.mvq{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px}
-.mvq th{background:#F1F5F9;text-align:left;padding:6px 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--mute)}
-.mvq td{border-top:1px solid var(--line);padding:6px 8px;vertical-align:middle}
-.mvq td.yn{white-space:nowrap}.mvq td.yn label{margin-right:10px;font-weight:700;cursor:pointer}.mvq td.yn input{margin-right:3px}
-.mvq td input:not([type=radio]){width:100%;min-width:140px}
-.mvconf{margin:0 0 10px}
-.mvto{font-size:12.5px;background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;word-break:break-all}
-.mvbtns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.mv .mhead{padding-bottom:10px}
+.mvform{max-height:calc(88vh - 150px);overflow-y:auto;padding:14px 18px}
+.mv-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mv-f>span{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.4px}
+.mv-f input,.mv-f select{height:38px}
+.mv-route{display:grid;grid-template-columns:120px 1fr 18px 1fr;gap:10px;align-items:end}
+.mv-arrow{font-size:18px;color:var(--mute);text-align:center;padding-bottom:8px}
+.mv-tail select{font-weight:800}
+.mv-opts{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 4px}
+.seg{display:inline-flex;background:#F1F4F8;border-radius:8px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;font:inherit;font-size:13px;font-weight:700;color:var(--mute);padding:6px 12px;border-radius:6px;cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+.seg.sm button{padding:4px 12px;font-size:12.5px}
+.mv-switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;user-select:none}
+.mv-switch input{position:absolute;opacity:0;width:0;height:0}
+.mv-switch i{width:34px;height:20px;border-radius:99px;background:#CBD5E1;position:relative;transition:background .15s;flex:none}
+.mv-switch i:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
+.mv-switch input:checked+i{background:var(--blue)}
+.mv-switch input:checked+i:after{transform:translateX(14px)}
+.mv-h{margin:16px 0 6px;font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.mv-checks{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mv-check{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center;padding:8px 10px 8px 12px}
+.mv-check+.mv-check{border-top:1px solid var(--line)}
+.mv-q{font-size:13.5px;font-weight:600;color:var(--ink)}
+.mv-check .yn button.on[data-v=Y]{background:#DCFCE7;color:#15803D}
+.mv-check .yn button.on[data-v=N]{background:#F1F5F9;color:var(--ink)}
+.mv-check.flag{background:#FFFBEB}
+.mv-check.flag .yn button.on{background:#FEF3C7!important;color:#92400E!important}
+.mv-d{grid-column:1/-1;height:34px;font-size:13px}
+.mv-check.flag .mv-d{border-color:#F59E0B}
+.mv-note{font-size:12px;padding:0}
+.mv-conf{display:grid;grid-template-columns:1fr 110px 150px;gap:10px}
+.mv-small{font-size:11.5px;color:var(--mute);margin:10px 0 0;line-height:1.4}
+.mv-foot{border-top:1px solid var(--line);padding:12px 18px;display:flex;flex-direction:column;gap:8px;background:#FAFBFD;border-radius:0 0 var(--r) var(--r)}
+.mv-to{display:flex;flex-direction:column;font-size:13px;font-weight:700;color:var(--ink)}
+.mv-to small{font-size:11.5px;font-weight:500;color:var(--mute);word-break:break-all}
+.mv-foot .err:empty{display:none}
+.mvbtns{display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.mvbtns .btn.pri{min-width:120px;justify-content:center}
 .mvpreview{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:14px;background:#fff;overflow-x:auto}
+@media(max-width:600px){.mv-route{grid-template-columns:1fr 1fr}.mv-tail{grid-column:1/-1}.mv-arrow{display:none}.mv-conf{grid-template-columns:1fr 1fr}.mv-conf .mv-f:first-child{grid-column:1/-1}}
+/* header: stop the top row wrapping on laptop screens */
+nav button{white-space:nowrap}
+@media(max-width:1500px){#guideOpen .l,#shareAll .l{display:none}.shiftpill{display:none}}
 </style>
 </head>
 <body>
@@ -984,30 +1015,35 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
     <p class="sub">Keep entries at OFFICIAL – nothing classified on here.</p></section>
   </div>
 </div></div>
-<div id="mvModal" class="modal hide"><div class="mcard card" style="width:min(780px,100%)">
+<div id="mvModal" class="modal hide"><div class="mcard card mv" style="width:min(640px,100%)">
   <div class="mhead"><h2>Aircraft move request</h2><span class="sub">Contractor tow request</span><button class="btn icon" id="mvClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="card-b mvform">
-    <div class="mvgrid">
-      <label>Tail<select id="mvTail"></select></label>
-      <label>Tow from (start location)<input id="mvFrom" list="mvLocs" placeholder="e.g. Bay 60"></label>
-      <label>Tow to (end location)<input id="mvTo" list="mvLocs" placeholder="e.g. Hangar 2"></label>
+    <div class="mv-route">
+      <label class="mv-f mv-tail"><span>Tail</span><select id="mvTail"></select></label>
+      <label class="mv-f"><span>From</span><input id="mvFrom" list="mvLocs" placeholder="Start location" autocomplete="off"></label>
+      <div class="mv-arrow">→</div>
+      <label class="mv-f"><span>To</span><input id="mvTo" list="mvLocs" placeholder="End location" autocomplete="off"></label>
       <datalist id="mvLocs"></datalist>
     </div>
-    <div class="mvgrid">
-      <label>Greeting<select id="mvGreet"><option>Good Morning</option><option>Good Afternoon</option><option>Good Evening</option></select></label>
-      <label class="mvchk"><input type="checkbox" id="mvLow"> Authorise the move in <b>low level light</b> conditions</label>
+    <div class="mv-opts">
+      <div class="seg" id="mvGreet"><button data-v="Good Morning">Morning</button><button data-v="Good Afternoon">Afternoon</button><button data-v="Good Evening">Evening</button></div>
+      <label class="mv-switch"><input type="checkbox" id="mvLow"><i></i>Low level light authorisation</label>
     </div>
-    <table class="mvq"><thead><tr><th>Requirement</th><th>Y/N</th><th>Details</th></tr></thead><tbody id="mvRows"></tbody></table>
-    <div class="mvgrid">
-      <label>Your name<input id="mvName" placeholder="Name"></label>
-      <label>Position<input id="mvPos" value="SLE"></label>
-      <label>Marking<select id="mvMark"><option value="">None</option><option>OFFICIAL</option><option>OFFICIAL-SENSITIVE</option><option>PRIVATE</option></select></label>
+    <h4 class="mv-h">Checks</h4>
+    <div class="mv-checks" id="mvRows"></div>
+    <h4 class="mv-h">Confirmation</h4>
+    <div class="mv-conf">
+      <label class="mv-f"><span>Name</span><input id="mvName" placeholder="Your name"></label>
+      <label class="mv-f mv-pos"><span>Position</span><input id="mvPos" value="SLE"></label>
+      <label class="mv-f mv-mark"><span>Marking</span><select id="mvMark"><option value="">None</option><option>OFFICIAL</option><option>OFFICIAL-SENSITIVE</option><option>PRIVATE</option></select></label>
     </div>
-    <p class="sub mvconf">By sending you confirm the aircraft is in a fit state to perform the move requested and the Pt.145 aircraft brake operator is competent and authorised.</p>
-    <div class="mvto"><b>To:</b> <span id="mvToList"></span><br><b>Subject:</b> <span id="mvSubj"></span></div>
-    <div class="err" id="mvErr"></div>
-    <div class="mvbtns"><button class="btn" id="mvPrev">Preview</button><button class="btn" id="mvEml" title="Download a draft that opens fully formatted in Outlook desktop">Download Outlook draft</button><button class="btn pri" id="mvGo">Submit – open in Outlook</button></div>
+    <p class="mv-small">Sending confirms the aircraft is in a fit state to perform the move and the Pt.145 aircraft brake operator is competent and authorised.</p>
     <div id="mvPreview" class="mvpreview hide"></div>
+  </div>
+  <div class="mv-foot">
+    <div class="mv-to"><span id="mvSubj"></span><small id="mvToList"></small></div>
+    <div class="err" id="mvErr"></div>
+    <div class="mvbtns"><button class="linkbtn" id="mvPrev">Preview</button><button class="btn" id="mvEml" title="Downloads a draft that opens fully formatted in Outlook desktop">Outlook draft</button><button class="btn pri" id="mvGo">Submit</button></div>
   </div>
 </div></div>
 <div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
@@ -1550,29 +1586,35 @@ addEventListener("keydown",e=>{const typing=/INPUT|TEXTAREA|SELECT/.test(documen
 
 /* ---------- aircraft move request (contractor tow request email) ---------- */
 const MV_TO=["bzn-opswg-eng-opscontrol@mod.gov.uk","BZN-SERCO-RAMP@mod.gov.uk"];
-const MV_Q=[["gpu","Ground Electrical Power Available?","Y"],["apu","APU Electrical Power Available?","Y"],["brk","Aircraft Brakes Available?","Y"],["cfg","Aircraft Unusual Configuration (e.g. panels open or removed, propellers removed, ballast fitted etc.)?","N"],["path","If towing in or out of a hangar, is the path clear?","Y"],["oth","Any other considerations for the aircraft tow request?","N"]];
+// [key, question in the email, short label, default, answer that needs details]
+const MV_Q=[["gpu","Ground Electrical Power Available?","Ground electrical power available","Y","N"],["apu","APU Electrical Power Available?","APU electrical power available","Y","N"],["brk","Aircraft Brakes Available?","Aircraft brakes available","Y","N"],["cfg","Aircraft Unusual Configuration (e.g. panels open or removed, propellers removed, ballast fitted etc.)?","Unusual configuration","N","Y","Panels open/removed, props removed, ballast fitted…"],["path","If towing in or out of a hangar, is the path clear?","Hangar path clear","Y","N"],["oth","Any other considerations for the aircraft tow request?","Other considerations","N","Y"]];
+const MVA={};
+function mvRow(k){const q=MV_Q.find(x=>x[0]===k),flag=MVA[k]===q[4],r=document.querySelector(`.mv-check[data-k="${k}"]`);if(!r)return;
+  r.querySelectorAll(".yn button").forEach(b=>b.classList.toggle("on",b.dataset.v===MVA[k]));r.classList.toggle("flag",flag);
+  const d=r.querySelector(".mv-d");d.classList.toggle("hide",!flag&&!d.value&&!r.classList.contains("noted"));r.querySelector(".mv-note").classList.toggle("hide",flag||!d.classList.contains("hide"));}
 let MV_LOCS=[];try{MV_LOCS=JSON.parse(localStorage.getItem("wa-mvlocs"))||[]}catch(e){}
 function openMove(tail){
   $("#mvTail").innerHTML=TAILS.filter(t=>t!=="Off Aircraft").map(t=>`<option>${t}</option>`).join("");if(tail)$("#mvTail").value=tail;
-  const h=new Date().getHours();$("#mvGreet").value=h<12?"Good Morning":h<17?"Good Afternoon":"Good Evening";
+  const h=new Date().getHours();mvGreet(h>=5&&h<12?"Good Morning":h>=12&&h<17?"Good Afternoon":"Good Evening");
   $("#mvLow").checked=h>=17||h<7;
-  $("#mvRows").innerHTML=MV_Q.map(([k,q,d])=>`<tr><td>${esc(q)}</td><td class="yn"><label><input type="radio" name="mv_${k}" value="Y" ${d==="Y"?"checked":""}>Y</label><label><input type="radio" name="mv_${k}" value="N" ${d==="N"?"checked":""}>N</label></td><td><input id="mvd_${k}" placeholder="Details"></td></tr>`).join("");
+  MV_Q.forEach(q=>MVA[q[0]]=q[3]);
+  $("#mvRows").innerHTML=MV_Q.map(([k,q,l,d,f,ph])=>`<div class="mv-check" data-k="${k}"><span class="mv-q" title="${esc(q)}">${esc(l)}</span><span class="mv-note-w"><button type="button" class="mv-note linkbtn">+ note</button></span><div class="yn seg sm"><button type="button" data-v="Y">Yes</button><button type="button" data-v="N">No</button></div><input class="mv-d hide" id="mvd_${k}" placeholder="${esc(ph||"Details")}"></div>`).join("");
+  MV_Q.forEach(q=>mvRow(q[0]));
   const me=window.__waCloud?.me?.();if(!$("#mvName").value)$("#mvName").value=me?.full_name||"";
   $("#mvLocs").innerHTML=MV_LOCS.map(l=>`<option value="${esc(l)}">`).join("");
   $("#mvFrom").value="";$("#mvTo").value="";$("#mvErr").textContent="";$("#mvPreview").classList.add("hide");
-  $("#mvToList").textContent=MV_TO.join("; ");mvSubj();$("#mvModal").classList.remove("hide");setTimeout(()=>$("#mvFrom").focus(),30);
+  $("#mvToList").textContent="To: "+MV_TO.join(" · ");mvSubj();$("#mvModal").classList.remove("hide");setTimeout(()=>$("#mvFrom").focus(),30);
 }
 const mvSubj=()=>$("#mvSubj").textContent="Aircraft move "+$("#mvTail").value;
 function mvData(){
-  const v=k=>(document.querySelector(`input[name=mv_${k}]:checked`)||{}).value||"";
-  return{tail:$("#mvTail").value,from:$("#mvFrom").value.trim(),to:$("#mvTo").value.trim(),greet:$("#mvGreet").value,low:$("#mvLow").checked,
+  const v=k=>MVA[k]||"";
+  return{tail:$("#mvTail").value,from:$("#mvFrom").value.trim(),to:$("#mvTo").value.trim(),greet:MV_GREET,low:$("#mvLow").checked,
     rows:MV_Q.map(([k,q])=>({q,yn:v(k),d:$("#mvd_"+k).value.trim()})),name:$("#mvName").value.trim(),pos:$("#mvPos").value.trim(),mark:$("#mvMark").value};
 }
 function mvCheck(m){
   if(!m.from||!m.to)return "Enter where the aircraft is being towed from and to.";
   if(!m.name)return "Enter your name for the confirmation statement.";
-  const c=m.rows[3],o=m.rows[5];if(c.yn==="Y"&&!c.d)return "Give details of the unusual configuration.";if(o.yn==="Y"&&!o.d)return "Give details of the other considerations.";
-  if(m.rows[4].yn==="N"&&!m.rows[4].d)return "Path not clear – add details.";return "";
+  const miss=MV_Q.find((q,i)=>m.rows[i].yn===q[4]&&!m.rows[i].d);if(miss){$("#mvd_"+miss[0])?.focus();return `Add details for “${miss[2]}”.`}return "";
 }
 function mvHtml(m){
   const td='style="border:1px solid #000;padding:2px 7px;font-family:Calibri,Arial,sans-serif;font-size:11pt;vertical-align:top"',th='style="border:1px solid #000;padding:2px 7px;background:#D9D9D9;font-family:Calibri,Arial,sans-serif;font-size:11pt;font-weight:bold;text-align:center"',p='style="margin:0;font-family:Calibri,Arial,sans-serif;font-size:11pt"';
@@ -1607,6 +1649,12 @@ async function mvCopy(m){
   try{await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]);return true}
   catch(e){try{const d=document.createElement("div");d.innerHTML=html;d.style.cssText="position:fixed;left:-9999px";document.body.append(d);const r=document.createRange();r.selectNodeContents(d);const s=getSelection();s.removeAllRanges();s.addRange(r);const ok=document.execCommand("copy");s.removeAllRanges();d.remove();return ok}catch(_){return false}}
 }
+
+let MV_GREET="Good Morning";const mvGreet=v=>{MV_GREET=v;document.querySelectorAll("#mvGreet button").forEach(b=>b.classList.toggle("on",b.dataset.v===v))};
+$("#mvGreet").onclick=e=>{const b=e.target.closest("button");if(b)mvGreet(b.dataset.v)};
+$("#mvRows").addEventListener("click",e=>{const r=e.target.closest(".mv-check");if(!r)return;const k=r.dataset.k;
+  const b=e.target.closest(".yn button");if(b){MVA[k]=b.dataset.v;mvRow(k);if(r.classList.contains("flag"))r.querySelector(".mv-d").focus()}
+  if(e.target.closest(".mv-note")){r.classList.add("noted");mvRow(k);r.querySelector(".mv-d").focus()}});
 $("#mvOpen").onclick=()=>openMove();
 $("#mvClose").onclick=()=>$("#mvModal").classList.add("hide");
 $("#mvTail").onchange=mvSubj;
