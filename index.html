@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125090058">
+<meta name="build" content="20261125090127">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -710,8 +710,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .acp-fl{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:10px 12px;border-radius:8px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:13px;font-weight:600}
 .acp-fl>div{flex:1}.acp-fl button{flex:none}
 .flgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.flgrid label:nth-child(3){grid-column:1/-1}
-@media(min-width:520px){.flgrid{grid-template-columns:repeat(4,1fr)}.flgrid label:nth-child(1),.flgrid label:nth-child(2){grid-column:span 2}.flgrid label:nth-child(3){grid-column:span 4}}
+@media(min-width:520px){.flgrid{grid-template-columns:repeat(4,1fr)}.flgrid label:nth-child(-n+4){grid-column:span 2}}
 .job.g-tr{border-color:#22C55E;box-shadow:0 0 0 2px #22C55E,0 0 18px rgba(34,197,94,.45)}
 .job.g-aog{border-color:#EF4444;box-shadow:0 0 0 2px #EF4444,0 0 18px rgba(239,68,68,.45)}
 .job.g-o{border-color:#F59E0B;box-shadow:0 0 0 2px #F59E0B,0 0 14px rgba(245,158,11,.35)}
@@ -1145,6 +1144,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
     <label class="mv-f"><span>Flight number</span><input id="flNo" placeholder="e.g. RRR4401"></label>
     <label class="mv-f"><span>Role required</span><input id="flRole" placeholder="e.g. AAR, Cargo"></label>
     <label class="mv-f"><span>Date</span><input type="date" id="flDate"></label>
+    <label class="mv-f"><span>Time</span><input type="time" id="flTime"></label>
     <label class="mv-f"><span>FH</span><input id="flFH" inputmode="decimal" placeholder="Flight hours"></label>
     <label class="mv-f"><span>FC</span><input id="flFC" inputmode="numeric" placeholder="Flight cycles"></label>
     <label class="mv-f"><span>LG</span><input id="flLG" inputmode="numeric"></label>
@@ -1868,7 +1868,7 @@ $("#ownSave").onclick=()=>{let l=[...new Set($("#ownList").value.split("\n").map
 
 /* ---------- next flight details (editable by SLE / Line Control / admin) ---------- */
 let FL_T="";
-const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flFH","fh"],["flFC","fc"],["flLG","lg"],["flTG","tg"]];
+const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flTime","time"],["flFH","fh"],["flFC","fc"],["flLG","lg"],["flTG","tg"]];
 function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canFlight();
   $("#flTitle").textContent=t+" – next flight";$("#flSub").textContent=ed?"":"View only – SLE / Line Control can edit";
   FLF.forEach(([id,k])=>{$("#"+id).value=f[k]||"";$("#"+id).disabled=!ed});
@@ -2178,7 +2178,7 @@ const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentOf(t
 const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";if(tailAOG(t))return "g-aog";const o=ownerOf(t);return o==="Deployed"?"g-dep":o==="Retrofit"?"g-ret":"g-o"};
 const clearCRS=t=>{const a=(D.ac||{})[t];if(a&&a.crs){delete a.crs}};
 const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
-const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
