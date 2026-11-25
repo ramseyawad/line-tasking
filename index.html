@@ -566,6 +566,8 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .seenall i{font-style:normal;background:#2563EB;color:#fff;border-radius:99px;padding:0 7px;margin-right:2px}
 .acbar button.unseen::after{content:"";position:absolute;top:-4px;left:-4px;width:10px;height:10px;border-radius:50%;background:#2563EB;box-shadow:0 0 0 2px #fff}
 @media(min-width:900px){#jobs.tiles .job .newrib{grid-column:1/-1}#jobs.tiles .job.unseen-new,#jobs.tiles .job.unseen-upd{grid-template-areas:"r r" "h c" "m j" "f j";grid-template-rows:auto auto auto 1fr}#jobs.tiles .newrib{grid-area:r}}
+.lnew{font-size:9.5px;font-weight:900;background:#2563EB;color:#fff;border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:2px;letter-spacing:.3px}
+.tline{min-width:0}.tline .line-edit{width:calc(100% - 4px)}
 </style>
 </head>
 <body>
@@ -1035,7 +1037,7 @@ function items(j){
   const used=new Set();
   j.items=lines.map((t,i)=>{let o=old.findIndex((x,k)=>!used.has(k)&&x.t===t);if(o<0&&old[i]&&!used.has(i)&&!lines.includes(old[i].t))o=i;
     const info=INFO_RE.test(t);
-    if(o>=0){used.add(o);return {t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[],info,cf:!!old[o].cf}}return {t,s:j.status==="done"?"done":"todo",at:null,who:[],info,cf:false}});
+    if(o>=0){used.add(o);const r={t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[],info,cf:!!old[o].cf};if(old[o].nw&&old[o].t===t)r.nw=old[o].nw;return r}return {t,s:j.status==="done"?"done":"todo",at:null,who:[],info,cf:false}});
   return j.items;
 }
 const shortName=e=>{const x=eng(e)||(D.archived||[]).find(a=>a.id===e);if(!x)return "(removed)";return x.title?x.title+" "+x.name.trim().split(/\s+/).pop():x.name};
@@ -1169,7 +1171,7 @@ function renderBoard(){
       :j.status==="work"?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button><button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
     const us=unseen(j);
-    return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:j.chAt)}<span>tap to clear</span></div>`:""}
+    return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")((j.items||[]).find(it=>lineNew(j,it))?.nw.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?(j.items||[]).find(it=>lineNew(j,it))?.nw.at:j.chAt)}<span>tap to clear</span></div>`:""}
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
@@ -1180,7 +1182,8 @@ function renderBoard(){
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
-          const tbox=txt=>ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`;
+          const nb=lineNew(j,it)?`<span class="lnew" title="Added by ${esc(it.nw.by||"someone")} ${fmt(it.nw.at)}">NEW</span>`:"";
+          const tbox=txt=>`<span class="tline">${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
           if(it.info)return `<div class="ti info"><span class="ibadge">INFO</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
@@ -1274,19 +1277,26 @@ const myName=()=>{const m=window.__waCloud?.me?.();return m?(m.full_name||m.user
 function seenStart(){ // first time on this device: everything already on the board counts as seen
   if(!SEEN.__init&&D.jobs.length){D.jobs.forEach(j=>SEEN[j.id]=jsig(j));SEEN.__init=1;seenSave()}
 }
-window.__waRemote=()=>{seenStart();BASE=sigs();
+window.__waRemote=()=>{seenStart();BASE=sigs();BASEL=lineMap();
   const fresh=D.jobs.filter(j=>j.status!=="done"&&SEEN.__init&&!SEEN[j.id]);
   if(fresh.length&&document.readyState==="complete")toast(fresh.length===1?`New job: ${fresh[0].tail}${fresh[0].by?" – added by "+fresh[0].by:""}`:`${fresh.length} new jobs added`)};
+let BASEL={};const lineMap=()=>Object.fromEntries(D.jobs.map(j=>[j.id,(j.items||[]).map(i=>i.t)]));
 function markMine(){
-  if(!BASE)BASE=sigs();const me=myName();
-  D.jobs.forEach(j=>{const s0=jsig(j);if(s0!==BASE[j.id]){if(!BASE[j.id]&&!j.by&&me)j.by=me;if(BASE[j.id]){j.chBy=me;j.chAt=now()}SEEN[j.id]=jsig(j)}});
-  SEEN.__init=1;BASE=sigs();
-  Object.keys(SEEN).forEach(k=>{if(k!=="__init"&&!D.jobs.some(j=>j.id===k))delete SEEN[k]});seenSave();
+  if(!BASE){BASE=sigs();BASEL=lineMap()}const me=myName();
+  D.jobs.forEach(j=>{const s0=jsig(j);if(s0!==BASE[j.id]){if(!BASE[j.id]&&!j.by&&me)j.by=me;
+    if(BASE[j.id]){j.chBy=me;j.chAt=now();const was=BASEL[j.id]||[];items(j).forEach(it=>{if(!was.includes(it.t)&&!it.nw)it.nw={by:me,at:now()}})}
+    SEEN[j.id]=jsig(j)}});
+  SEEN.__init=1;BASE=sigs();BASEL=lineMap();
+  Object.keys(SEEN).forEach(k=>{if(k!=="__init"&&k!=="__ack"&&!D.jobs.some(j=>j.id===k))delete SEEN[k]});if(SEEN.__ack)Object.keys(SEEN.__ack).forEach(k=>{if(!D.jobs.some(j=>k.startsWith(j.id+"|")))delete SEEN.__ack[k]});seenSave();
 }
-const unseen=j=>{if(!SEEN.__init||j.status==="done")return "";const v=SEEN[j.id];return !v?"new":v!==jsig(j)?"upd":""};
-function markSeen(id){const j=job(id);if(!j)return;SEEN[id]=jsig(j);seenSave();
+const ackKey=(j,it)=>j.id+"|"+it.nw.at+"|"+it.t;
+const lineNew=(j,it)=>!!(it&&it.nw&&it.nw.by!==myName()&&!(SEEN.__ack||{})[ackKey(j,it)]);
+const hasNewLines=j=>(j.items||[]).some(it=>lineNew(j,it));
+const unseen=j=>{if(j.status==="done")return "";if(hasNewLines(j))return SEEN[j.id]?"upd":(SEEN.__init?"new":"upd");if(!SEEN.__init)return "";const v=SEEN[j.id];return !v?"new":v!==jsig(j)?"upd":""};
+function ackLines(j){const A=SEEN.__ack=SEEN.__ack||{};(j.items||[]).forEach(it=>{if(it.nw)A[ackKey(j,it)]=1})}
+function markSeen(id){const j=job(id);if(!j)return;SEEN[id]=jsig(j);ackLines(j);seenSave();document.querySelectorAll(`#jobs .job[data-id="${id}"] .lnew`).forEach(x=>x.remove());
   document.querySelectorAll(`#jobs .job[data-id="${id}"]`).forEach(c=>{c.classList.remove("unseen-new","unseen-upd");c.querySelector(".newrib")?.remove()});renderSeenBits()}
-function markAllSeen(){D.jobs.forEach(j=>SEEN[j.id]=jsig(j));SEEN.__init=1;seenSave();render()}
+function markAllSeen(){D.jobs.forEach(j=>{SEEN[j.id]=jsig(j);ackLines(j)});SEEN.__init=1;seenSave();render()}
 function renderSeenBits(){
   const n=D.jobs.filter(j=>unseen(j)).length;
   const b=$("#seenAll");if(b){b.classList.toggle("hide",!n);b.querySelector("i").textContent=n}
@@ -1297,7 +1307,7 @@ $("#jobs").addEventListener("pointerdown",e=>{const c=e.target.closest(".job.uns
 $("#jobs").addEventListener("mouseover",e=>{const c=e.target.closest(".job.unseen-new,.job.unseen-upd");clearTimeout(hoverT);if(c)hoverT=setTimeout(()=>markSeen(c.dataset.id),1500)});
 $("#jobs").addEventListener("mouseleave",()=>clearTimeout(hoverT));
 $("#seenAll").onclick=markAllSeen;
-seenStart();BASE=sigs();
+seenStart();BASE=sigs();BASEL=lineMap();
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
