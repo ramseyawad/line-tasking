@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125201727">
+<meta name="build" content="20261125201914">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -837,7 +837,7 @@ body.aioc .ct-crs,body.aioc .crsbtn,body.aioc [data-share],body.aioc #acRaise,bo
 body.aioc #tab-stats .sx-grid>.card:not(:has(#sxSent)):not(:has(#sxAc)){display:none!important}
 body.aioc .acbar button.unseen::after{display:none}
 body.aioc .job.dp .aiocchk{display:none!important}
-body.mgmt #openNew,body.mgmt #teamOpen,body.mgmt #layOpen,body.mgmt #team,body.mgmt #teamBg,body.mgmt .line-add,body.mgmt .addmini,body.mgmt .addeng,body.mgmt #acRaise,body.mgmt .ownmgr,body.mgmt .meb{display:none!important}
+body.mgmt #openNew,body.mgmt #layOpen,body.mgmt .line-add,body.mgmt .addmini,body.mgmt .addeng,body.mgmt #acRaise,body.mgmt .ownmgr,body.mgmt .meb{display:none!important}
 body.aioc .job.dp .crsbtn,body.aioc .job.dp [data-share]{display:inline-flex!important}
 .flcard{border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#FBFCFE}
 .flcard-h{display:flex;align-items:center;margin-bottom:6px}.flcard-h b{font-size:13px}.flcard-h .linkbtn{margin-left:auto;color:#DC2626}
@@ -3144,9 +3144,9 @@ document.addEventListener("click",e=>{if(e.target.closest("#engExit"))setENGV(""
 function setAIOCV(v){if(v&&ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(e){}}AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
 document.addEventListener("click",e=>{if(e.target.closest("#aiocBtn"))setAIOCV(!AIOCV);else if(e.target.closest("#aiocExit"))setAIOCV(false)});
 const MG_OK="[data-sent],[data-sentdel],[data-docview],[data-collapse],[data-expand],[data-jump],[data-actile],[data-share],[data-gojob],.seenbtn,.acclose,[data-close]";
-function mgLock(root){if(!isMgmt()||!root)return;root.querySelectorAll("input,select,textarea,button").forEach(el=>{if(!el.matches(MG_OK)&&!el.closest(".acbar,.aiocf"))el.disabled=true})}
+function mgLock(root){if(!isMgmt()||!root)return;root.querySelectorAll("[draggable=true]").forEach(el=>el.draggable=false);root.querySelectorAll("input,select,textarea,button").forEach(el=>{if(!el.matches(MG_OK)&&!el.closest(".acbar,.aiocf"))el.disabled=true})}
 document.addEventListener("click",e=>{if(!isMgmt())return;const t=e.target.closest("#jobs [data-un],#jobs [data-iun],#jobs [data-geun],#jobs [data-etsclr],#jobs [data-docdel],#jobs [data-ns3]");if(t){e.preventDefault();e.stopPropagation()}},true);
-function render(){applyAIOC();curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();mgLock($("#jobs"));mgLock($("#notesCard"));mgLock($("#shiftBar"));
+function render(){applyAIOC();curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();mgLock($("#jobs"));mgLock($("#notesCard"));mgLock($("#freeList"));mgLock($("#busyList"));mgLock($("#dutyList"));mgLock($("#offList"));mgLock($("#shiftBar"));
   if(!$("#tab-diary").classList.contains("hide"))renderDiary();
   if(!$("#tab-shift").classList.contains("hide"))renderShift();
   if(!$("#tab-history").classList.contains("hide"))renderHistory();
