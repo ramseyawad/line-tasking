@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125010706">
+<meta name="build" content="20261125012050">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -649,6 +649,21 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
 /* header: stop the top row wrapping on laptop screens */
 nav button{white-space:nowrap}
 @media(max-width:1500px){#guideOpen .l,#shareAll .l{display:none}.shiftpill{display:none}}
+.sentsel{font-weight:800;max-width:150px}
+.sentsel[style*="--sc"]{background:var(--sc);color:#fff;border-color:var(--sc)}
+.sentsel option,.sentsel optgroup{color:#0F172A;background:#fff;font-weight:600}
+.sentage{font-size:11px;color:var(--mute);font-weight:600;white-space:nowrap;align-self:center}
+.jc-sent{background:var(--sc)!important;color:#fff!important}
+.sentchip{display:inline-block;font-size:10.5px;font-weight:900;color:#fff;background:var(--sc);border-radius:4px;padding:1px 5px;margin-right:2px}
+.sent-bar{display:flex;height:14px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:8px}
+.sent-bar i{display:block;min-width:3px}
+.sent-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink2);margin-bottom:14px}
+.sent-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.sent-mini{display:flex;height:10px;border-radius:4px;overflow:hidden;gap:1px;min-width:120px}
+.sent-mini i{display:block;min-width:2px}
+.sent-tbl td{vertical-align:middle}
+.sent-tbl .sentsel{max-width:210px}
+.sent-top{font-size:12px;color:var(--ink2);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -816,6 +831,7 @@ nav button{white-space:nowrap}
     <div class="card"><div class="card-h"><h2>Busiest hours</h2><span class="sub" style="margin-left:auto">Jobs started and completed by hour</span></div><div id="sxHour" class="sx-body"></div></div>
     <div class="card"><div class="card-h"><h2>Most common tasks</h2></div><div id="sxTask" class="sx-body"></div></div>
     <div class="card"><div class="card-h"><h2>Carried over most</h2><span class="sub" style="margin-left:auto">Jobs handed to another shift</span></div><div id="sxCf" class="sx-body"></div></div>
+    <div class="card sx-wide"><div class="card-h"><h2>Aircraft sentencing</h2><span class="sub" style="margin-left:auto">Hours each tail spent in each sentence · set or change any tail here</span></div><div id="sxSent" class="sx-body"></div></div>
     <div class="card sx-wide"><div class="card-h"><h2>Shifts</h2><span class="sub" style="margin-left:auto" id="sxShiftSub"></span></div><div id="sxShift" class="sx-body"></div></div>
   </div>
 </section>
@@ -966,6 +982,7 @@ nav button{white-space:nowrap}
   <section id="g-card"><h3>6 · Card details</h3><ul>
     <li><b>P</b> = priority (1 is highest – sorts to the top).</li>
     <li><b>State</b>: Serviceable / AOG / Shed Maint – AOG time is recorded for Stats. <b>Area</b>: Line / Line Support / Deployed.</li>
+    <li><b>Sentence…</b> (under the state) is the Airbus sentencing code for the aircraft – it belongs to the tail, so it's the same on every card for that aircraft. Change it whenever the aircraft's situation changes; the hours in each code show in <b>Stats → Aircraft sentencing</b>, where you can also set tails that have no job open.</li>
     <li><b>Status notes</b>: type a note and press Enter; × removes it.</li>
     <li>Change the tail or bay straight on the card.</li></ul></section>
 
@@ -1239,6 +1256,20 @@ const EDIT=new Set();
 const ACSTATE=["Serviceable","AOG","Shed Maint"],ACAREA=["Line","Line Support","Deployed"];
 const stCls=v=>({Serviceable:"sv",AOG:"aog","Shed Maint":"shed"}[v]||"");
 const prio=j=>{const p=parseInt(j.pri);return p>0?p:999};
+// Airbus aircraft sentencing – one code per tail, hours tracked from every change
+const SENT_G=[["Cargo damage","#D946EF",[["CAR","Damage to cargo area"]]],
+ ["Delays","#22D3EE",[["FUE","Delay Refuel/Defuel"],["TOW","Delay in Towing"]]],
+ ["Maintenance","#F97316",[["SMR","Schedule Maintenance - Late Release"],["SML","Schedule Maintenance - Late Input"],["DEF","Post Flight Defect"],["WAS","Wash"],["MAR","MAR"],["CCK","C-Check"],["ACK","A-Check"],["OOP","OOP"],["AOG","AOG Rectification in progress"],["CRE","C-Check Recovery"],["PRE","Prep For Task"],["RET","Retrofit"]]],
+ ["Damage","#7C3AED",[["DAF","Damage during flight"],["DAG","Damage during ground operation"]]],
+ ["Operational","#3B82F6",[["SBY","Standby Aircraft"],["DEP","Deployed Operations"],["EXE","Exercise"],["ROU","Route"],["LOC","Local / Training"],["NAN","Serviceable; No Task"],["CON","Configuration/Role Change"]]],
+ ["Weather","#7F1D1D",[["WXW","Wind"],["WXT","Thunderstorm"]]],
+ ["Shortfalls","#DC2626",[["MAT","Material"],["MDS","MDS"],["WOF","Line Workforce"],["TOO","Tooling"],["AGE","AGE"],["INF","Infrastructure"],["SWF","Specialist Workforce"],["COU","Courier"],["RDE","MDS RDE"],["TQN","TQN In Progress"],["DOC","Documentation"]]]];
+const SENT={};SENT_G.forEach(([g,col,l])=>l.forEach(([c,d])=>SENT[c]={c,d,g,col}));
+const sentOf=t=>(D.sent||{})[t]||null;
+function setSent(tail,code){D.sent=D.sent||{};D.sentLog=D.sentLog||[];const cur=sentOf(tail);if((cur?.c||"")===code)return;
+  const at=now(),by=(typeof myName==="function"&&myName())||"";
+  if(code)D.sent[tail]={c:code,at,by};else delete D.sent[tail];D.sentLog.push({t:tail,c:code,at,by});save()}
+const sentSel=(tail,dis)=>{const cur=sentOf(tail),c=cur?.c||"";return `<select class="acsel sentsel" data-sent="${esc(tail)}" ${dis?"disabled":""} title="${c?esc(c+" – "+SENT[c].d)+(cur.at?" · since "+fmt(cur.at):""):"Aircraft sentencing (Airbus)"}" style="${c?`--sc:${SENT[c].col}`:""}"><option value="">Sentence…</option>${SENT_G.map(([g,col,l])=>`<optgroup label="${g}">${l.map(([k,d])=>`<option value="${k}" ${k===c?"selected":""}>${k} – ${esc(d)}</option>`).join("")}</optgroup>`).join("")}</select>`};
 const ltype=(j,t)=>(j.lt||{})[t]||"L";
 let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
 const lineShown=(j,it)=>it.info||HEAD==="all"||ltype(j,it.t)===HEAD;
@@ -1393,7 +1424,7 @@ function renderBoard(){
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
+      <div class="jmeta"><label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${selHtml("area",j.id,ACAREA,j.area||"Line",done)}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
@@ -1443,6 +1474,7 @@ $("#jobs").addEventListener("change",e=>{
   if(t.dataset.add)assign(t.dataset.add,t.value);
   else if(t.dataset.iadd){const[j,i]=t.dataset.iadd.split("|");assignItem(j,+i,t.value)}
   else if(t.dataset.tagadd)addTag(t);
+  else if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value);
   else if(t.dataset.lt){const[id,i]=t.dataset.lt.split("|"),j=job(id),it=items(j)[+i];if(it){j.lt=j.lt||{};if(t.value==="C")j.lt[it.t]="C";else delete j.lt[it.t];save()}}
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
 });
@@ -1857,6 +1889,28 @@ function statsData(){
   const sh=(DIARY||[]).filter(r=>!r.draft&&inR(r.endedAt||r.startedAt)).sort((x,y)=>(y.endedAt||"").localeCompare(x.endedAt||""));
   return{a,b,done,raised,E,AC,TK,HS,HC,perDay,sh,waitMed:med(waits),workMed:med(works),totMs:Object.values(E).reduce((t,v)=>t+v.ms,0),aogTot:Object.values(aogMs).reduce((t,v)=>t+v,0)};
 }
+
+/* sentencing hours */
+function sentHours(a,b){ // {tail:{code:ms}}
+  const out={},L=(D.sentLog||[]).slice().sort((x,y)=>x.at.localeCompare(y.at)),by={};
+  L.forEach(e=>(by[e.t]=by[e.t]||[]).push(e));
+  Object.entries(by).forEach(([t,l])=>l.forEach((e,i)=>{if(!e.c)return;const end=l[i+1]?.at||new Date().toISOString();const ms=clip(new Date(e.at),new Date(end),a,b);if(ms>0){out[t]=out[t]||{};out[t][e.c]=(out[t][e.c]||0)+ms}}));
+  return out;
+}
+const hh=ms=>{const h=ms/3600000;return h>=10?Math.round(h)+"h":h>=1?h.toFixed(1)+"h":Math.round(ms/60000)+"m"};
+function renderSent(a,b){
+  const H=sentHours(a,b),tails=TAILS.filter(t=>t!=="Off Aircraft");
+  const byCode={};Object.values(H).forEach(m=>Object.entries(m).forEach(([c,ms])=>byCode[c]=(byCode[c]||0)+ms));
+  const tot=Object.values(byCode).reduce((x,y)=>x+y,0);
+  const gTot=SENT_G.map(([g,col,l])=>({g,col,ms:l.reduce((x,[c])=>x+(byCode[c]||0),0)})).filter(x=>x.ms);
+  const codes=Object.entries(byCode).sort((x,y)=>y[1]-x[1]);
+  const bar=tot?`<div class="sent-bar">${gTot.map(x=>`<i style="flex:${x.ms};background:${x.col}" title="${x.g}: ${hh(x.ms)} (${Math.round(x.ms/tot*100)}%)"></i>`).join("")}</div><div class="sent-leg">${gTot.map(x=>`<span><i style="background:${x.col}"></i>${x.g} <b>${hh(x.ms)}</b> ${Math.round(x.ms/tot*100)}%</span>`).join("")}</div>`:"";
+  const codeBars=codes.length?`<div class="sent-codes">${bars(codes.map(([c,ms])=>({l:c,lh:`<span class="sentchip" style="--sc:${SENT[c]?.col||"#94A3B8"}">${esc(c)}</span> ${esc(SENT[c]?.d||"")}`,v:ms,d:hh(ms),x:Math.round(ms/tot*100)+"%",tip:`${c} – ${SENT[c]?.d}: ${hh(ms)}`})))}</div>`:`<div class="sx-empty">No sentencing hours in this period yet – set a sentence on an aircraft below or on its job card.</div>`;
+  const rows=tails.map(t=>{const m=H[t]||{},tt=Object.values(m).reduce((x,y)=>x+y,0);const top=Object.entries(m).sort((x,y)=>y[1]-x[1]);
+    return `<tr><td class="tail">${t}</td><td>${sentSel(t,false)}</td><td class="sub">${sentOf(t)?ago(sentOf(t).at):""}</td><td>${tt?`<div class="sent-mini">${top.map(([c,ms])=>`<i style="flex:${ms};background:${SENT[c]?.col||"#94A3B8"}" title="${c}: ${hh(ms)}"></i>`).join("")}</div>`:""}</td><td class="sent-top">${top.slice(0,4).map(([c,ms])=>`<span class="sentchip" style="--sc:${SENT[c]?.col}">${c}</span> ${hh(ms)}`).join(" &nbsp;")}</td><td style="text-align:right;font-weight:700">${tt?hh(tt):""}</td></tr>`}).join("");
+  $("#sxSent").innerHTML=bar+codeBars+`<div class="tbl-wrap" style="margin-top:14px"><table class="sent-tbl"><thead><tr><th>Tail</th><th>Current sentence</th><th>For</th><th>Split</th><th>Hours by sentence</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+$("#sxSent")?.addEventListener("change",e=>{const t=e.target;if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value)});
 const belowMin=r=>(r.manning||[]).some(m=>m.min!=null&&m.min!==""&&m.count<+m.min);
 function renderStats(){
   $("#sxRange").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.r===SXR));
@@ -1889,6 +1943,7 @@ function renderStats(){
   const cf=D.jobs.filter(j=>(j.cf||0)>0&&(inRange(j,S))).sort((x,y)=>y.cf-x.cf).slice(0,8);
   $("#sxCf").innerHTML=bars(cf.map(j=>({l:j.tail+" – "+(j.task.split("\n")[0]||""),v:j.cf,d:j.cf+(j.cf===1?" shift":" shifts"),x:j.status==="done"?"done":"open"})),{empty:"No carried-over jobs in this period"});
   // shifts
+  renderSent(S.a,S.b);
   $("#sxShiftSub").textContent=S.sh.length?`${S.sh.length} handed over · ${shBelow} below minimum`:"";
   const byCrew={};S.sh.forEach(r=>{const c=r.crew||"?";const o=byCrew[c]=byCrew[c]||{n:0,d:0,o:0};o.n++;o.d+=(r.done||[]).length;o.o+=(r.open||[]).length});
   $("#sxShift").innerHTML=S.sh.length?`${Object.keys(byCrew).length>1?`<div class="sx-crews">${Object.entries(byCrew).sort().map(([c,o])=>`<div><b>${esc(c)} Shift</b> ${o.n} shift${o.n>1?"s":""} · ${o.d} done · ${(o.d/o.n).toFixed(1)} per shift · ${o.o} carried</div>`).join("")}</div>`:""}
@@ -1904,6 +1959,8 @@ $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/"/g
   Object.entries(S.E).sort((x,y)=>y[1].ms-x[1].ms).forEach(([id,v])=>{const e=allNames().find(x=>x.id===id);L.push([e?.name,e?catShort(e):"",hnum(v.ms).toFixed(2),v.jobs.size].map(q).join(","))});
   L.push("",["Tail","Hours worked","Jobs done","Jobs raised","Carry-overs","AOG hours"].map(q).join(","));
   Object.entries(S.AC).sort().forEach(([t,v])=>L.push([t,hnum(v.ms).toFixed(2),v.done,v.raised,v.cf,hnum(v.aog).toFixed(2)].map(q).join(",")));
+  const SH=sentHours(S.a,S.b),SC=Object.keys(SENT);L.push("",["Tail",...SC.map(c=>c+" hours"),"Total hours"].map(q).join(","));
+  TAILS.filter(t=>t!=="Off Aircraft").forEach(t=>{const m=SH[t]||{};L.push([t,...SC.map(c=>hnum(m[c]||0).toFixed(2)),hnum(Object.values(m).reduce((x,y)=>x+y,0)).toFixed(2)].map(q).join(","))});
   L.push("",["Shift date","Shift","Crew","Completed","Carried over","Below minimum"].map(q).join(","));
   S.sh.forEach(r=>L.push([r.date,SHIFT[r.type],r.crew,(r.done||[]).length,(r.open||[]).length,belowMin(r)?"Yes":"No"].map(q).join(",")));
   download(`line-stats-${iso(S.a)}-to-${iso(S.b)}.csv`,L.join("\n"),"text/csv")};
@@ -2059,7 +2116,7 @@ function card(j){
   const cls=done?"green":j.status==="work"?"amber":"red";
   const its=tasksOnly(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
-  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${j.area&&j.area!=="Line"?`<span class="jc-bay">${esc(j.area)}</span>`:""}<span class="jc-st">${st}</span></div>
+  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${!off&&sentOf(j.tail)?`<span class="jc-bay jc-sent" style="--sc:${SENT[sentOf(j.tail).c]?.col}" title="${esc(SENT[sentOf(j.tail).c]?.d||"")}">${esc(sentOf(j.tail).c)}</span>`:""}${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${j.area&&j.area!=="Line"?`<span class="jc-bay">${esc(j.area)}</span>`:""}<span class="jc-st">${st}</span></div>
     <ul class="jc-tasks">${items(j).map(t=>t.info?`<li class="t-info">${esc(itxt(t))}</li>`:`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
