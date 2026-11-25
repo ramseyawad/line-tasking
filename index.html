@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125124723">
+<meta name="build" content="20261125125224">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -802,13 +802,18 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .laying .blk:hover .laytag{z-index:4}
 .layname{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .laying .blk.bhid .laytag .layeye{display:inline-block}
-.rcfgin,.rreqin{width:110px}
+.rolepair{display:flex;gap:6px;flex:1 1 100%;width:100%;min-width:0}
+.rolepair>input{flex:1 1 0;min-width:0;width:auto!important}
+.laying .blk-role .layrs,.laying .blk-role .layw{display:none}
 .rcfgin.rok,.rreqin.rok,.ct-role.rok{background:#DCFCE7!important;border-color:#22C55E!important;color:#15803D!important;font-weight:700}
 .rcfgin.rbad,.rreqin.rbad,.ct-role.rbad{background:#FEE2E2!important;border-color:#EF4444!important;color:#B91C1C!important;font-weight:700}
 .laycolrs{position:absolute;top:0;bottom:0;width:12px;margin-left:-6px;cursor:col-resize;z-index:5;background:linear-gradient(90deg,transparent 4px,#3B82F6 4px,#3B82F6 8px,transparent 8px);opacity:.7}
 .laycolrs:hover{opacity:1}
 .lmeta .blk-role{flex-wrap:nowrap}
 .lmeta .blk-role>input{flex:1 1 0!important;width:auto!important;min-width:50px}
+.laynr{height:14px;margin:2px 14px;border:1px dashed transparent;border-radius:6px;font-size:9px;color:transparent;text-align:center;line-height:12px;transition:all .12s}
+.laying.dragging .laynr{border-color:#93C5FD;color:#3B82F6;height:20px;line-height:18px}
+.laying .laynr:hover{background:#EFF6FF}
 </style>
 </head>
 <body>
@@ -2062,19 +2067,23 @@ $("#flClear").onclick=()=>{if(!canFlight())return;delete acRec(FL_T).flight;save
 
 /* ---------- tile layout template (shared, editable) ---------- */
 const LAY_NAMES={head:"Tail, bay & status",times:"Take off / landing",flight:"Next flight",pri:"Priority",state:"State",owner:"Owner",dass:"DASS config",role:"Role config",sent:"Sentence",notes:"Status notes",lsj:"LSJ set",crew:"Manning (B1/B2/Mechs)",tasks:"Tasks",foot:"Footer (CRS, send)"};
-const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",30],["role",40],["sent",30],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
+const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",50],["sent",50],["role",100],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
 const defCol=k=>(k==="crew"||k==="tasks")?"R":"L";
 const colOf=b=>b.c||defCol(b.k);
 const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>LAY_NAMES[b.k]);
   LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
 let LAY_FORCE=false,LAYCOL=null;
 const colW=()=>(LAY_FORCE&&LAYCOL)||D.tileCol||290;
-const layCustom=()=>{if(LAY_FORCE)return true;if(D.tileCol&&D.tileCol!==290)return true;const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide,colOf(b)]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false,colOf(b)]))};
+const packNr=L=>{let sum=0;return L.map((b,i)=>{const n=i===0||sum+b.w>100;sum=n?b.w:sum+b.w;return n})};
+const layCustom=()=>{if(LAY_FORCE)return true;if(D.tileCol&&D.tileCol!==290)return true;const L=D.tileLayout;if(!L||!L.length)return false;const dn=packNr(LAY_DEF);return JSON.stringify(L.map((b,i)=>[b.k,b.w,!!b.hide,colOf(b),b.nr==null?dn[i]:!!b.nr]))!==JSON.stringify(LAY_DEF.map((b,i)=>[b.k,b.w,false,colOf(b),dn[i]]))};
 function layoutHtml(BL,edit){edit=edit||LAY_FORCE;
   // no custom template saved → the original tile exactly as it was
   if(!edit&&!layCustom())return BL.head+`<div class="jmeta">${BL.times}${BL.flight}${BL.pri}${BL.state}${BL.owner}${BL.dass}${BL.role}${BL.sent}${BL.notes}${BL.lsj}</div>`+BL.crew+BL.tasks+BL.foot;
   const BIG={head:1,crew:1,tasks:1,foot:1};
-  const rowsOf=list=>{const rows=[];let row=[],sum=0;list.forEach(b=>{if(b.hide&&!edit)return;if(row.length&&sum+b.w>100){rows.push(row);row=[];sum=0}row.push(b);sum+=b.w});if(row.length)rows.push(row);
+  const rowsOf=list=>{const rows=[];let row=[],sum=0,pend=false;const ex=list.some(b=>b.nr!=null);
+    list.forEach(b=>{if(b.hide&&!edit){if(b.nr)pend=true;return}
+      const brk=b.k==="role"||row.some(x=>x.k==="role");
+      if(row.length&&(brk||(ex?(b.nr||pend):sum+b.w>100))){rows.push(row);row=[];sum=0}pend=false;row.push(b.k==="role"?{...b,w:100}:b);sum+=b.k==="role"?100:b.w});if(row.length)rows.push(row);
     return rows.map(r=>{const full=r.length===1&&BIG[r[0].k]&&r[0].w===100;
       return `<div class="lrow ${full?"lfull":"lmeta"}${r.some(b=>b.k==="foot")?" hasfoot":""}">${r.map(b=>`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="${full?"":`flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)`}">${BL[b.k]||""}</div>`).join("")}</div>`}).join("")};
   const L=tileLayout();
@@ -2102,7 +2111,7 @@ function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf
 let LAYDRAFT=null,LAYCUR=null;
 function openLayout(){
   if(!canFlight()){toast("Only Line Control, SLE or admins can change the tile layout");return}
-  LAYDRAFT=tileLayout().map(b=>({...b}));LAYCOL=D.tileCol||290;
+  LAYDRAFT=tileLayout().map(b=>({...b}));LAYCOL=D.tileCol||290;layFixRows();
   const sample=D.jobs.find(j=>active(j)&&j.tail!=="Off Aircraft"&&tasksOnly(j).length)||D.jobs.find(j=>active(j));
   LAYCUR=sample;renderLayEditor();$("#layModal").classList.remove("hide");
 }
@@ -2121,6 +2130,9 @@ function renderLayEditor(){
   tile.classList.add("laying");tile.querySelectorAll(".newrib").forEach(x=>x.remove());
   // add hidden blocks so they can be shown again
   const lay=tile.querySelector(".tlay");
+  lay.querySelectorAll(".lrow").forEach(r=>{const z=document.createElement("div");z.className="laynr";z.textContent="drop here for a new line";r.after(z)});
+  lay.querySelectorAll("[data-col]").forEach(c=>{const z=document.createElement("div");z.className="laynr";z.textContent="drop here for a new line";c.prepend(z)});
+  if(!lay.querySelector("[data-col]")){const z=document.createElement("div");z.className="laynr";z.textContent="drop here for a new line";lay.prepend(z)}
   LAYDRAFT.forEach(b=>{let el=lay.querySelector(`[data-blk="${b.k}"]`);if(!el)return;el.classList.toggle("bhid",!!b.hide);
     const ov=document.createElement("div");ov.className="layov";ov.draggable=true;
     ov.innerHTML=`<span class="laytag"><span class="layname">${LAY_NAMES[b.k]}</span><span class="layw">${b.w}%</span><button class="layeye" title="${b.hide?"Show":"Hide"} this">${b.hide?"Show":"Hide"}</button></span><i class="layrs" title="Drag to resize"></i>`;el.append(ov)});
@@ -2129,8 +2141,12 @@ function renderLayEditor(){
 const layOrder=()=>[...document.querySelectorAll("#layPrev .tlay .blk")].map(x=>x.dataset.blk);
 $("#layPrev").addEventListener("click",e=>{const b=e.target.closest(".layeye");if(!b)return;const k=b.closest(".blk").dataset.blk,d=LAYDRAFT.find(x=>x.k===k);d.hide=!d.hide;if(!d.hide)delete d.hide;renderLayEditor()});
 let DRAGK=null;
-$("#layPrev").addEventListener("dragstart",e=>{const ov=e.target.closest?.(".layov");if(!ov)return;DRAGK=ov.closest(".blk").dataset.blk;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",DRAGK)}catch(_){}ov.closest(".blk").classList.add("laydrag")});
-$("#layPrev").addEventListener("dragover",e=>{if(!DRAGK)return;const t=e.target.closest(".blk");
+$("#layPrev").addEventListener("dragstart",e=>{const ov=e.target.closest?.(".layov");if(!ov)return;DRAGK=ov.closest(".blk").dataset.blk;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",DRAGK)}catch(_){}ov.closest(".blk").classList.add("laydrag");document.querySelector("#layPrev .job")?.classList.add("dragging")});
+$("#layPrev").addEventListener("dragover",e=>{if(!DRAGK)return;
+  const z=e.target.closest(".laynr");if(z){e.preventDefault();const src=document.querySelector(`#layPrev [data-blk="${DRAGK}"]`);let r=z.nextElementSibling;
+    if(!(r&&r.classList.contains("lrow")&&r.dataset.fresh)){r=document.createElement("div");r.className="lrow lmeta";r.dataset.fresh=1;z.after(r)}
+    if(src.parentNode!==r)r.append(src);document.querySelectorAll("#layPrev .lrow").forEach(x=>{if(!x.querySelector(".blk"))x.remove()});return}
+  const t=e.target.closest(".blk");
   if(!t){const col=e.target.closest("[data-col]");if(col){e.preventDefault();const src=document.querySelector(`#layPrev [data-blk="${DRAGK}"]`);if(src&&src.closest("[data-col]")!==col){let r=col.querySelector(".lrow:last-child");if(!r){r=document.createElement("div");r.className="lrow lmeta";col.append(r)}r.append(src)}}return}
   if(t.dataset.blk===DRAGK)return;e.preventDefault();
   const r=t.getBoundingClientRect(),before=(e.clientX-r.left)<r.width/2,src=document.querySelector(`#layPrev [data-blk="${DRAGK}"]`);
@@ -2141,6 +2157,12 @@ $("#layPrev").addEventListener("dragend",()=>{if(!DRAGK)return;document.querySel
 // read the editor's DOM back into the draft. In the stretched view each column keeps its own order, and the
 // overall order (used by the squares view) only changes within each column's own slots.
 function layApplyDom(){
+  // which line each box is on (first box in a line starts it); squeeze any line that's over 100%
+  const byK0=Object.fromEntries(LAYDRAFT.map(b=>[b.k,b]));
+  document.querySelectorAll("#layPrev .lrow").forEach(r=>{const bs=[...r.querySelectorAll(":scope>.blk")].map(x=>byK0[x.dataset.blk]).filter(Boolean);
+    bs.forEach((b,i)=>b.nr=i===0);const sum=bs.reduce((a,b)=>a+b.w,0);
+    const MINW={pri:20,state:25,owner:25,dass:20,role:35,sent:25,lsj:20,notes:30,times:30,flight:30};let tot=sum,g=0;
+    while(tot>100&&g++<60){const c=bs.filter(b=>b.w-5>=(MINW[b.k]||15)).sort((x,y)=>(y.w-(MINW[y.k]||15))-(x.w-(MINW[x.k]||15)))[0];if(!c)break;c.w-=5;tot-=5}});
   const two=!!document.querySelector("#layPrev .tlay2");
   if(!two){const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));return}
   const domCol={};document.querySelectorAll("#layPrev .blk").forEach(x=>domCol[x.dataset.blk]=x.closest("[data-col]").dataset.col);
@@ -2162,8 +2184,10 @@ $("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".layr
   const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);renderLayEditor()};
   addEventListener("pointermove",mv);addEventListener("pointerup",up)});
 $("#layClose").onclick=$("#layCancel").onclick=()=>{$("#layModal").classList.add("hide");render()};
-$("#laySave").onclick=()=>{layApplyDom();D.tileCol=LAYCOL&&LAYCOL!==290?LAYCOL:null;D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{}),...(b.c&&b.c!==defCol(b.k)?{c:b.c}:{})}));if(!layCustom())D.tileLayout=null;$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
-$("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));LAYCOL=290;renderLayEditor()};
+$("#laySave").onclick=()=>{layApplyDom();D.tileCol=LAYCOL&&LAYCOL!==290?LAYCOL:null;D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,nr:!!b.nr,...(b.hide?{hide:true}:{}),...(b.c&&b.c!==defCol(b.k)?{c:b.c}:{})}));if(!layCustom())D.tileLayout=null;$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
+$("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));LAYCOL=290;layFixRows();renderLayEditor()};
+// give every block an explicit row flag, per column, matching the current packing
+function layFixRows(){if(LAYDRAFT.some(b=>b.nr!=null))return;["L","R",null].forEach(c=>{const list=c?LAYDRAFT.filter(b=>colOf(b)===c):LAYDRAFT;const n=packNr(list);list.forEach((b,i)=>b.nr=n[i])})}
 $("#layOpen").onclick=openLayout;
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -2469,7 +2493,7 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 // role config: current (what's fitted) vs required (the next flight's role). Green when they match, red when they don't.
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
-const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canFlight()?"":"disabled"}>`};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canFlight()?"":"disabled"}></span>`};
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
