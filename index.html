@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125004112">
+<meta name="build" content="20261125004944">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -602,6 +602,8 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px solid #CBD5E1;border-bottom-width:2px;border-radius:4px;padding:0 5px}
 .shiftpill i{display:none}
 .syncdot{cursor:help}
+.chip.fin{background:#DCFCE7;border-color:#86EFAC}
+.chip small.fin,.ds.fin{color:#15803D;font-weight:700}
 </style>
 </head>
 <body>
@@ -898,7 +900,7 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
   <section id="g-crew"><h3>3 · Crew a job</h3><ul>
     <li>Each card has <b>B1, B2, Mechs</b> (and Other) boxes at the top – use <b>+ Add</b> in the right box. It only offers people on shift in that trade.</li>
     <li>Assigning doesn't make them busy. They stay <b>available</b> until you press <b>Start</b> – so you can line people up for the next job.</li>
-    <li>Press <b>Start</b> when they crack on. If someone's already working another started job, they're moved across.</li>
+    <li>Press <b>Start</b> when they crack on. Anyone already on another started job shows <i>on ZM…</i> next to their name. When someone has finished all the lines assigned to them, their name turns green – <b>✓ done – free</b> – and they show as available again.</li>
     <li>Press <b>×</b> on a name to take them off.</li>
     <li>To put someone on just one line, use <b>+ assign</b> at the right of that line.</li></ul></section>
 
@@ -1037,7 +1039,11 @@ const engName=id=>nameOf(id);
 const active=j=>j.status!=="done"&&j.status!=="closed";
 const current=j=>j.assignments.filter(a=>!a.to).map(a=>a.eng);
 // jobs each engineer is on, split by started (in work) vs not started
-const jobMaps=()=>{const w={},p={};D.jobs.filter(active).forEach(j=>current(j).forEach(e=>{const m=j.status==="work"?w:p;(m[e]=m[e]||[]).push(j)}));return{w,p}};
+// per-person task lines on a job: who has lines left, who has finished all theirs
+const myLines=(j,e)=>items(j).filter(it=>!it.info&&it.who.includes(e));
+const linesLeft=(j,e)=>myLines(j,e).filter(it=>it.s!=="done");
+const finishedOn=(j,e)=>{const m=myLines(j,e);return m.length>0&&m.every(it=>it.s==="done")};
+const jobMaps=()=>{const w={},p={},f={};D.jobs.filter(active).forEach(j=>current(j).forEach(e=>{const m=j.status==="work"?(finishedOn(j,e)?f:w):p;(m[e]=m[e]||[]).push(j)}));return{w,p,f}};
 const label=j=>esc(j.tail)+(j.bay?" B"+esc(j.bay):"");
 const TRADES=["Management / other","B1 Cert","B2 Cert","A+ Mech","A+ Av","A Cat Mech","A Cat Av"];
 const TRADE_CAT=["Shift Mgmt","B1 Cert","B2 Cert (A)","A Plus Mech","A Plus Av","A Cat Mech","A Cat Av"];
@@ -1236,7 +1242,7 @@ function renderPicker(){
   $("#nClear")?.addEventListener("click",()=>{PICK.clear();renderPicker()});
 }
 function renderBoard(){
-  const {w,p}=jobMaps();
+  const {w,p,f}=jobMaps();
   const onShift=D.engineers.filter(e=>isOn(e)&&!duty(e)).sort(byTrade);
   const where=id=>[...(w[id]||[]).map(j=>"on "+label(j)),...(p[id]||[]).map(j=>"next "+label(j))].join(", ");
   // picker
@@ -1280,8 +1286,8 @@ function renderBoard(){
     const people=done?did.map(x=>x.id):cur;
     const chip=e=>{
       if(done){const x=did.find(d=>d.id===e);return `<span class="chip plain">${av(e)}${esc(engName(e))} <small>${x.mins<60?x.mins+"m":Math.floor(x.mins/60)+"h"+String(x.mins%60).padStart(2,"0")}</small></span>`}
-      const other=(w[e]||[]).filter(o=>o.id!==j.id);
-      return `<span class="chip">${av(e)}${esc(engName(e))}${other.length?` <small>on ${label(other[0])}</small>`:""}<button data-un="${j.id}|${e}" title="Take ${esc(engName(e))} off this job">${IC.x}</button></span>`};
+      const other=(w[e]||[]).filter(o=>o.id!==j.id),fin=j.status==="work"&&finishedOn(j,e),left=j.status==="work"?linesLeft(j,e).length:0;
+      return `<span class="chip${fin?" fin":""}" title="${fin?"Finished their tasks here – available":left?left+" task"+(left>1?"s":"")+" left here":""}">${av(e)}${esc(engName(e))}${fin?` <small class="fin">✓ done – free</small>`:left?` <small>${left} left</small>`:""}${other.length?` <small>on ${label(other[0])}</small>`:""}<button data-un="${j.id}|${e}" title="Take ${esc(engName(e))} off this job">${IC.x}</button></span>`};
     const addFor=ri=>{
       const pool=onShift.filter(e=>!cur.includes(e.id)&&ROLES[ri][1].includes(tradeIx(e)));
       if(done||!pool.length)return "";
@@ -1327,9 +1333,9 @@ function renderBoard(){
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
   $("#teamSub").textContent=onShift.length+" on shift";$("#teamBadge").textContent=freeE.length+" free";
-  const fp=e=>`<div class="person" style="padding:5px 8px">${av(e.id)}<div><div class="nm">${esc(e.name)}${ovlTag(e)}</div>${p[e.id]?`<div class="ds">Next: <b>${p[e.id].map(label).join(", ")}</b></div>`:""}</div></div>`;
+  const fp=e=>`<div class="person" style="padding:5px 8px">${av(e.id)}<div><div class="nm">${esc(e.name)}${ovlTag(e)}</div>${f[e.id]?`<div class="ds fin">✓ Finished tasks on <b>${f[e.id].map(label).join(", ")}</b></div>`:""}${p[e.id]?`<div class="ds">Next: <b>${p[e.id].map(label).join(", ")}</b></div>`:""}</div></div>`;
   $("#freeList").innerHTML=(freeE.some(e=>e.cat)?groupByTrade(freeE).map((g,i)=>g.length?`<div class="tgh">${TRADES[i]} · ${g.length}</div>`+g.map(fp).join(""):"").join(""):freeE.map(fp).join(""))||`<div class="team-empty">${onShift.length?"Everyone is working":"Nobody marked on shift"}</div>`;
-  $("#busyList").innerHTML=[...busyE].sort(byTrade).map(e=>`<div class="person">${av(e.id)}<div><div class="nm">${esc(e.name)}${ovlTag(e)} ${tradeTag(e)}</div><div class="ds">${w[e.id].map(j=>`<b>${label(j)}</b> · ${esc(j.task.split("\n")[0].slice(0,30))}`).join("<br>")}${p[e.id]?`<br>Next: ${p[e.id].map(label).join(", ")}`:""}</div></div></div>`).join("")||`<div class="team-empty">Nobody on a started job</div>`;
+  $("#busyList").innerHTML=[...busyE].sort(byTrade).map(e=>`<div class="person">${av(e.id)}<div><div class="nm">${esc(e.name)}${ovlTag(e)} ${tradeTag(e)}</div><div class="ds">${w[e.id].map(j=>{const l=linesLeft(j,e.id);return `<b>${label(j)}</b> · ${l.length?`${l.length} left: `+esc(l.map(it=>it.t.slice(0,28)).join(", ")):esc(j.task.split("\n")[0].slice(0,30))}`}).join("<br>")}${p[e.id]?`<br>Next: ${p[e.id].map(label).join(", ")}`:""}</div></div></div>`).join("")||`<div class="team-empty">Nobody on a started job</div>`;
   const dutyE=D.engineers.filter(e=>isOn(e)&&duty(e)).sort(byTrade);
   $("#dutySec").classList.toggle("hide",!dutyE.length);$("#cDuty").textContent=dutyE.length;
   $("#dutyList").innerHTML=dutyE.map(e=>`<div class="person">${av(e.id)}<div><div class="nm">${esc(e.name)} ${tradeTag(e)}</div><div class="ds"><b>${esc(duty(e))}</b> – not available for tasking</div></div></div>`).join("");
