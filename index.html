@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125202238">
+<meta name="build" content="20261125202526">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1577,7 +1577,7 @@ let OVL_ON=!!ovlInfo();setInterval(()=>{const v=!!ovlInfo();if(v!==OVL_ON){OVL_O
 /* ---------- board ---------- */
 $("#nTail").innerHTML=TAILS.map(t=>`<option>${t}</option>`).join("");
 $("#addJob").onclick=()=>{
-  if(!canAddTask(ownerOf($("#nTail").value))&&!(engMode()&&ownerOf($("#nTail").value)==="Line")){toast(`${$("#nTail").value} is with ${ownerOf($("#nTail").value)} – ${engMode()?"you can only raise jobs on Line aircraft":"only admins can raise jobs on it"}`);return}
+  if(isMgmt()){toast("Managers can't raise jobs");return}if(!canAddTask(ownerOf($("#nTail").value))&&!(engMode()&&ownerOf($("#nTail").value)==="Line")){toast(`${$("#nTail").value} is with ${ownerOf($("#nTail").value)} – ${engMode()?"you can only raise jobs on Line aircraft":"only admins can raise jobs on it"}`);return}
   const engTag=(jj,lines)=>{if(!engMode()||!myEng())return;const me=myEng();jj.ab=jj.ab||{};items(jj).forEach(it=>{if(lines.includes(it.t)&&!it.info){jj.ab[it.t]=me;if(PICK.has(me)&&!it.who.includes(me))it.who.push(me)}})};
   const task=$("#nTask").value.trim();
   if(!task){$("#nTask").focus();return}
@@ -1813,7 +1813,7 @@ $("#mnFor").onchange=e=>{MNFOR=e.target.value;openManning()};
 $("#mnSave").onclick=()=>{const M={};document.querySelectorAll("#mnRows input").forEach(i=>{const v=i.value===""?null:Math.max(0,parseInt(i.value)||0);(M[i.dataset.mk]=M[i.dataset.mk]||{})[i.dataset.mf]=v});if(MNFOR==="N")D.manningN=M;else D.manning=M;closeManning();save();toast((MNFOR==="N"?"Night ":"")+"Manning targets saved")};
 // new tasks default to the adder's head: SLE → Cert, Line Control (and everyone else) → Line; the Line/Cert filter, if set, wins
 const defLt=()=>HEAD==="C"||HEAD==="L"?HEAD:(!engMode()&&!isAIOC()&&myPos()==="SLE"?"C":"L");
-function openNew(){$("#nj").classList.remove("hide");$("#nLt").value=defLt();renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
+function openNew(){if(isMgmt()){toast("Managers can't raise jobs");return}$("#nj").classList.remove("hide");$("#nLt").value=defLt();renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
 function closeNew(){$("#nj").classList.add("hide")}
 $("#openNew").onclick=openNew;$("#njClose").onclick=closeNew;$("#njCancel").onclick=closeNew;
 $("#nj").addEventListener("mousedown",e=>{if(e.target.id==="nj")closeNew()});
