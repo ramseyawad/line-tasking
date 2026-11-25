@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125130940">
+<meta name="build" content="20261125131259">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -821,11 +821,10 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .ns3tag{font-size:10px;font-weight:800;background:#6D28D9;color:#fff;border-radius:5px;padding:1px 6px;margin-left:6px}
 .acbar button .ns3mini{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:900;letter-spacing:.04em;background:#6D28D9;color:#fff;border-radius:4px;padding:0 4px;line-height:12px;box-shadow:0 0 0 1.5px #fff}
 .prif.ns3p input{color:#6D28D9;font-weight:800}
-.aiocchk{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;letter-spacing:.03em;color:#94A3B8;border:1px solid #E2E8F0;border-radius:6px;padding:2px 5px;cursor:pointer;white-space:nowrap;background:#fff}
-.aiocchk input{margin:0;width:11px;height:11px;accent-color:#0E7490}
+.aiocchk{display:inline-flex;align-items:center;gap:2px;font-size:8px;font-weight:800;letter-spacing:.02em;color:#94A3B8;border:1px solid #E2E8F0;border-radius:4px;padding:0 3px;line-height:13px;margin-right:6px;vertical-align:1px;cursor:pointer;white-space:nowrap;background:#fff}
+.aiocchk input{margin:0;width:9px;height:9px;accent-color:#0E7490}
 .aiocchk.on{color:#0E7490;border-color:#67E8F9;background:#ECFEFF}
 .aiocchk.ro{cursor:default}
-.ti.info .aiocchk{margin-left:6px;align-self:center}
 .aioc-n{font-size:14px;color:#334155;padding:4px 0 6px}.aioc-n b{font-size:20px;color:#0F172A;margin-right:2px}.aioc-n span{color:#94A3B8}
 .aiocrow .tstat.ro{pointer-events:none;cursor:default}
 #aiocBan{background:#ECFEFF;border-bottom:1px solid #A5F3FC;color:#155E75;font-size:13px;padding:7px 18px;display:flex;gap:10px;align-items:center}
@@ -1716,13 +1715,12 @@ function renderBoard(){
           if(!lineShown(j,it))return "";
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
           const nb=lineNew(j,it)?`<button class="lnew" data-lseen="${j.id}|${i}" title="Added by ${esc(nwOf(j,it).by||"someone")} ${fmt(nwOf(j,it).at)} – click to clear">NEW ✕</button>`:"";
-          const tbox=txt=>`<span class="tline">${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
-          if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div>${aiocTick(j,it,i,done)}</div>`;
+          const tbox=txt=>`<span class="tline">${aiocTick(j,it,i,done)}${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
+          if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
           ${(ty=>done?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
-          ${aiocTick(j,it,i,done)}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
       foot:AI?`<div class="jf"><span class="sub">${ownerOf(j.tail)}</span><div class="acts">${!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}">Collapse ▴</button>`:""}</div></div>`:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
