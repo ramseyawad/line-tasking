@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125131735">
+<meta name="build" content="20261125131914">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -839,7 +839,7 @@ body.aioc .acbar button.unseen::after{display:none}
 .flcard{border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#FBFCFE}
 .flcard-h{display:flex;align-items:center;margin-bottom:6px}.flcard-h b{font-size:13px}.flcard-h .linkbtn{margin-left:auto;color:#DC2626}
 #flList .flgrid{grid-template-columns:repeat(30,minmax(0,1fr))!important;gap:8px}
-#flList .flgrid label{grid-column:span 6!important}
+#flList .flgrid label{grid-column:span 5!important}
 #flList .flgrid label:nth-child(-n+2){grid-column:span 15!important}
 #flList .flgrid label:nth-child(n+3):nth-child(-n+5){grid-column:span 10!important}
 </style>
@@ -2077,7 +2077,7 @@ $("#ownSave").onclick=()=>{let l=[...new Set($("#ownList").value.split("\n").map
 
 /* ---------- next flight details (editable by SLE / Line Control / admin) ---------- */
 let FL_T="";
-const FLF=[["no","Flight number","e.g. RRR4401"],["role","Role required","e.g. CDS1, LS1"],["date","Date","","date"],["time","Take off","","time"],["ld","Landing (optional)","","time"],["fh","FH","hrs"],["fc","FC","cycles"],["dy","DY","days"],["lg","LG","landings"],["tg","TG","T&Gs"]];
+const FLF=[["no","Flight number","e.g. RRR4401"],["role","Role required","e.g. CDS1, LS1"],["date","Date","","date"],["time","Take off","","time"],["ld","Landing (optional)","","time"],["fh","FH","hrs"],["eh","EH","hrs"],["fc","FC","cycles"],["dy","DY","days"],["lg","LG","landings"],["tg","TG","T&Gs"]];
 const flightsOf=t=>{const a=acGet(t);return [a.flight,...(a.more||[])].filter(f=>f&&Object.keys(f).some(k=>!["at","by"].includes(k)&&f[k]))};
 let FLD=[];
 function flRender(){const ed=canNF();
@@ -2545,7 +2545,7 @@ const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t
 const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canAc(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></span>`};
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role||f.time))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   const more=(acGet(t).more||[]).length;
-  return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,more&&`+${more} more flight${more>1?"s":""}`,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
+  return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,more&&`+${more} more flight${more>1?"s":""}`,f.fh&&"FH "+f.fh,f.eh&&"EH "+f.eh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
