@@ -568,6 +568,10 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 @media(min-width:900px){#jobs.tiles .job .newrib{grid-column:1/-1}#jobs.tiles .job.unseen-new,#jobs.tiles .job.unseen-upd{grid-template-areas:"r r" "h c" "m j" "f j";grid-template-rows:auto auto auto 1fr}#jobs.tiles .newrib{grid-area:r}}
 .lnew{font-size:9.5px;font-weight:900;background:#2563EB;color:#fff;border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:2px;letter-spacing:.3px}
 .tline{min-width:0}.tline .line-edit{width:calc(100% - 4px)}
+.ti.is-new{background:#EFF6FF!important;box-shadow:inset 4px 0 0 #2563EB;border-radius:6px!important;padding-left:12px!important;animation:lnewp 2s ease-in-out infinite}
+.ti.is-new .tt{color:#1E3A8A;font-weight:700}
+.ti.is-new+.ti,.ti+.ti.is-new{border-top-color:transparent}
+@keyframes lnewp{50%{background:#DBEAFE}}
 </style>
 </head>
 <body>
@@ -1184,10 +1188,10 @@ function renderBoard(){
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
           const nb=lineNew(j,it)?`<span class="lnew" title="Added by ${esc(it.nw.by||"someone")} ${fmt(it.nw.at)}">NEW</span>`:"";
           const tbox=txt=>`<span class="tline">${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
-          if(it.info)return `<div class="ti info"><span class="ibadge">INFO</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
+          if(it.info)return `<div class="ti info${nb?" is-new":""}"><span class="ibadge">INFO</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
-          return `<div class="ti s-${it.s}">${tbox(it.t)}
+          return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
@@ -1294,7 +1298,7 @@ const lineNew=(j,it)=>!!(it&&it.nw&&it.nw.by!==myName()&&!(SEEN.__ack||{})[ackKe
 const hasNewLines=j=>(j.items||[]).some(it=>lineNew(j,it));
 const unseen=j=>{if(j.status==="done")return "";if(hasNewLines(j))return SEEN[j.id]?"upd":(SEEN.__init?"new":"upd");if(!SEEN.__init)return "";const v=SEEN[j.id];return !v?"new":v!==jsig(j)?"upd":""};
 function ackLines(j){const A=SEEN.__ack=SEEN.__ack||{};(j.items||[]).forEach(it=>{if(it.nw)A[ackKey(j,it)]=1})}
-function markSeen(id){const j=job(id);if(!j)return;SEEN[id]=jsig(j);ackLines(j);seenSave();document.querySelectorAll(`#jobs .job[data-id="${id}"] .lnew`).forEach(x=>x.remove());
+function markSeen(id){const j=job(id);if(!j)return;SEEN[id]=jsig(j);ackLines(j);seenSave();document.querySelectorAll(`#jobs .job[data-id="${id}"] .lnew`).forEach(x=>x.remove());document.querySelectorAll(`#jobs .job[data-id="${id}"] .ti.is-new`).forEach(x=>x.classList.remove("is-new"));
   document.querySelectorAll(`#jobs .job[data-id="${id}"]`).forEach(c=>{c.classList.remove("unseen-new","unseen-upd");c.querySelector(".newrib")?.remove()});renderSeenBits()}
 function markAllSeen(){D.jobs.forEach(j=>{SEEN[j.id]=jsig(j);ackLines(j)});SEEN.__init=1;seenSave();render()}
 function renderSeenBits(){
