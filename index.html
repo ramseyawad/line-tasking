@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125135212">
+<meta name="build" content="20261125135406">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -884,9 +884,8 @@ body.aioc .acbar button.unseen::after{display:none}
 body.engv nav button[data-tab]:not([data-tab=board]),
 body.engv .kpis,body.engv #tradeStrip,body.engv #headSw,body.engv #pills,body.engv #teamOpen,body.engv #layOpen,body.engv .jobs-h .search,body.engv #seenAll,
 body.engv #shareAll,body.engv #openDisplay,body.engv #notesCard,body.engv #shiftBar,body.engv .notesbtn,body.engv #team,body.engv #teamBg,body.engv #ownView,
-body.engv [data-share],body.engv #acRaise,body.engv .ct-notes,body.engv .ct-sub,body.engv .ct-crs,body.engv #aiocBtn,body.engv .aiocchk,
+body.engv [data-share],body.engv #acRaise,body.engv .ct-notes,body.engv .ct-crs,body.engv #aiocBtn,body.engv .aiocchk,
 body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,body.engv #nTag,body.engv #nLsj,body.engv #nBusy,body.engv #nj label:has(#nBusy){display:none!important}
-body.engv .ctile{cursor:default}
 .viewswrap{position:relative;cursor:pointer}
 .viewswrap select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;font-size:14px}
 .viewswrap.on{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
@@ -1577,7 +1576,7 @@ const ltype=(j,t)=>(j.lt||{})[t]||"L";
 const aiocTick=(j,it,i,done)=>{const on=aiocOn(j,it.t);if(canFlight()&&!done)return `<label class="aiocchk ${on?"on":""}" title="Highlight to AIOC – they see this line in full"><input type="checkbox" data-ha="${j.id}|${i}" ${on?"checked":""}>AIOC</label>`;
   return on?`<span class="aiocchk on ro" title="Shown to AIOC">AIOC</span>`:""};
 let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
-const lineShown=(j,it)=>(!engMode()||it.info||lineMine(j,it))&&(it.info||HEAD==="all"||ltype(j,it.t)===HEAD);
+const lineShown=(j,it)=>(!engMode()||it.info||lineMine(j,it)||!tileMine(j))&&(it.info||HEAD==="all"||ltype(j,it.t)===HEAD);
 const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
 const selHtml=(f,id,list,val,dis,blank)=>`<select class="acsel ${f==="acst"?stCls(val):""}" data-f="${f}" data-id="${id}" ${dis?"disabled":""}>${blank?`<option value="">${blank}</option>`:""}${list.map(v=>`<option ${v===val?"selected":""}>${v}</option>`).join("")}</select>`;
 const INFO_RE=/^(INFO|NOTES?)\b[\s:–-]*/i;
@@ -1786,7 +1785,7 @@ function renderBoard(){
     // runs of collapsed aircraft share one grid cell, so the order reads left-to-right without big gaps
     const parts=[...TAILS].sort((a,b)=>tPri(a)-tPri(b)||TAILS.indexOf(a)-TAILS.indexOf(b)).map(t=>{
       const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
-      if(engMode())return j&&tileMine(j)?{f:tileHtml(j)}:{c:collTile(t)};
+      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:emptyTile(t)};return{c:collTile(t)}}
       if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
       if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:emptyTile(t)};
       return{c:collTile(t)}});
@@ -1806,10 +1805,10 @@ function renderBoard(){
   $("#offList").innerHTML=offE.map(e=>`<div class="person off">${av(e.id)}<div class="nm">${esc(e.name)}</div></div>`).join("")||`<div class="team-empty">–</div>`;
 }
 $("#jobs").addEventListener("click",e=>{
-  const ex=e.target.closest("[data-expand]");if(ex&&!engMode()&&!e.target.closest("button,select,input")){EXP.add(ex.dataset.expand);render();setTimeout(()=>document.querySelector(`#jobs .job[data-tail="${ex.dataset.expand}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),30);return}
+  const ex=e.target.closest("[data-expand]");if(ex&&!e.target.closest("button,select,input")){EXP.add(ex.dataset.expand);render();setTimeout(()=>document.querySelector(`#jobs .job[data-tail="${ex.dataset.expand}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),30);return}
   const t=e.target.closest("button");if(!t)return;
   if(t.dataset.collapse){EXP.delete(t.dataset.collapse);render();return}
-  if(t.dataset.iself){const[jid,i]=t.dataset.iself.split("|"),jj=job(jid),it=items(jj)[+i];if(it&&myEng()&&(lineMine(jj,it)||!engMode()))assignItem(jid,+i,myEng());return}
+  if(t.dataset.iself){const[jid,i]=t.dataset.iself.split("|"),jj=job(jid),it=items(jj)[+i];if(it&&!it.info&&myEng()&&jj.status!=="done"){assignItem(jid,+i,myEng());EXP.delete(jj.tail);toast("You're on "+jj.tail+" – "+it.t)}return}
   if(t.dataset.un){const[j,en]=t.dataset.un.split("|");unassign(j,en)}
   else if(t.dataset.done)complete(t.dataset.done);
   else if(t.dataset.start)start(t.dataset.start);
