@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125180459">
+<meta name="build" content="20261125180526">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1270,7 +1270,7 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
     <li><b>Team</b> button (or <b>T</b>) slides out who's free, who's working and who's on line roles.</li>
     <li>The manning boxes show each trade against target/minimum – <b>Set targets</b> to change them. All A certs count together.</li>
     <li>Line walkers (LWL) are on shift but not offered for tasks.</li>
-    <li><b>22:00–02:00</b>: lates and nights overlap – the other shift's rostered people are available too, marked <b>N</b> or <b>L</b>.</li></ul></section>
+    <li><b>Shifts</b>: Earlies 06:00–18:00 · Lates 18:00–02:00 · Nights 22:00–06:00.</li><li><b>22:00–02:00</b>: lates and nights overlap – the other shift's rostered people are available too, marked <b>N</b> or <b>L</b>.</li></ul></section>
 
   <section id="g-send"><h3>10 · Send to group</h3><ul>
     <li><b>Send to group</b> (top) sends every manned tail with its engineers, e.g. <i>ZM420: Kyle J, Paul E</i>. The paper-plane on a card sends just that one.</li>
@@ -2709,8 +2709,9 @@ $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/^([
 const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
 // NSE / NSL = national standby early / late (taskable); LMMD = LMM deputy (days)
 const SHIFT_CODES={E:["E","LCE","LWE","SE","NSE","LMMD"],L:["L","LCL","LWL","SL","NSL","LMMD"],N:["N"]};
-// Earlies 06:00–18:00, Lates 18:00–06:00 (a late that runs past midnight belongs to the day it started); Nights are picked at handover
-function guessShift(d=new Date()){const h=d.getHours(),x=new Date(d);const t=h>=6&&h<18?"E":"L";if(h<6)x.setDate(x.getDate()-1);return{date:iso(x),type:t}}
+// Earlies 06:00–18:00 · Lates 18:00–02:00 · Nights 22:00–06:00 (22:00–02:00 is the overlap; Lates lead until 02:00).
+// A shift that runs past midnight belongs to the day it started.
+function guessShift(d=new Date()){const h=d.getHours(),x=new Date(d);const t=h>=6&&h<18?"E":(h>=18||h<2)?"L":"N";if(h<6)x.setDate(x.getDate()-1);return{date:iso(x),type:t}}
 function curShift(o="Line"){
   if(o&&o!=="Line"){D.shifts=D.shifts||{};if(!D.shifts[o]){const g=guessShift();D.shifts[o]={id:uid(),date:g.date,type:g.type,startedAt:now(),notes:"",crew:"A"}}return D.shifts[o]}
   if(!D.shift){const g=guessShift();D.shift={id:uid(),date:g.date,type:g.type,startedAt:now(),notes:"",crew:"A"}}if(!D.shift.crew)D.shift.crew="A";return D.shift}
@@ -2814,8 +2815,8 @@ const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role||f.ti
   const more=(acGet(t).more||[]).length;
   return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,more&&`+${more} more flight${more>1?"s":""}`,f.fh&&"FH "+f.fh,f.eh&&"EH "+f.eh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?esc(sh.crew)+" Shift":"";
-// Earlies (06–18) hand to Lates (18–06) the same day; Lates and Nights hand to the next day's Earlies
-const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type!=="E")d.setDate(d.getDate()+1);return{date:iso(d),type:sh.type==="E"?"L":"E"}};
+// Earlies → Lates (same day, 18:00) → Nights (same day, 22:00) → next day's Earlies (06:00)
+const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
 async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary();if(!$("#tab-stats").classList.contains("hide"))renderStats()}
 const tm=iso=>iso?new Date(iso).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"";
