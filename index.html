@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125004944">
+<meta name="build" content="20261125005457">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1939,7 +1939,11 @@ function renderDisplay(){
   const act=D.jobs.filter(active);
   const work=act.filter(j=>j.status==="work").sort(byTail),idle=act.filter(j=>j.status==="planned").sort(byTail); // unmanned jobs are not shown on the wall board
   const done=D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=shiftStart()).sort((a,b)=>b.completed.localeCompare(a.completed));
-  $("#kOpen").textContent=idle.length;$("#kWork").textContent=work.length;$("#kDone").textContent=done.length;
+  // header counts are individual task lines on the jobs shown, not whole aircraft jobs
+  const ss=shiftStart(),tl=j=>tasksOnly(j);let nT=0,nW=0,nD=0;
+  [...work,...idle].forEach(j=>tl(j).forEach(it=>{if(it.s==="work")nW++;else if(it.s==="done"){if(!it.at||new Date(it.at)>=ss)nD++}else nT++}));
+  done.forEach(j=>nD+=tl(j).length);
+  $("#kOpen").textContent=nT;$("#kWork").textContent=nW;$("#kDone").textContent=nD;
   const {w}=jobMaps();
   const busy=D.engineers.filter(e=>w[e.id]).sort(byTrade);
   $("#nBusyW").textContent=busy.length;
