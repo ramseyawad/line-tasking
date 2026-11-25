@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125132842">
+<meta name="build" content="20261125133028">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -860,6 +860,9 @@ body.aioc .acbar button.unseen::after{display:none}
 .rolef{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:2px;margin:0}
 .rolef>span{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748B;padding-left:2px}
 .rolef>input{width:100%!important;min-width:0}
+.nfbtn .fltimes{display:block;font-size:11.5px;font-weight:700;color:#0369A1;margin-top:1px}
+.flrow:not(.next) .fltimes{color:#475569}
+.ct-fl .fltimes{display:inline;margin-left:8px;font-size:11px}
 </style>
 </head>
 <body>
@@ -2562,7 +2565,9 @@ const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
 const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
 const fl1=f=>{const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
-  const top=[f.no,d,f.ld&&"Ldg "+f.ld].filter(Boolean).map(esc).join(" · ")||"Flight";
+  const dt=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+  const times=[dt,f.time&&"T/O "+f.time,f.ld&&"Ldg "+f.ld].filter(Boolean).map(esc).join(" · ");
+  const top=`${esc(f.no||"Flight")}</span>${times?`<span class="fltimes">${times}</span>`:""}<span style="display:none">`;
   const nums=[["FH",f.fh],["EH",f.eh],["FC",f.fc],["DY",f.dy],["LG",f.lg],["TG",f.tg]].filter(x=>x[1]).map(([k,v])=>`<span><b>${k}</b> ${esc(v)}</span>`).join("");
   return `<span class="fltop">${top}</span>${nums?`<span class="flnums">${nums}</span>`:""}`};
 // every planned flight, one per line, each with a bin to clear it once it's landed / no longer needed
