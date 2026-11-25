@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125152103">
+<meta name="build" content="20261125175415">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1757,7 +1757,9 @@ $("#mnClose").onclick=closeManning;$("#mnCancel").onclick=closeManning;
 $("#mnModal").addEventListener("mousedown",e=>{if(e.target.id==="mnModal")closeManning()});
 $("#mnFor").onchange=e=>{MNFOR=e.target.value;openManning()};
 $("#mnSave").onclick=()=>{const M={};document.querySelectorAll("#mnRows input").forEach(i=>{const v=i.value===""?null:Math.max(0,parseInt(i.value)||0);(M[i.dataset.mk]=M[i.dataset.mk]||{})[i.dataset.mf]=v});if(MNFOR==="N")D.manningN=M;else D.manning=M;closeManning();save();toast((MNFOR==="N"?"Night ":"")+"Manning targets saved")};
-function openNew(){$("#nj").classList.remove("hide");$("#nLt").value=HEAD==="C"?"C":"L";renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
+// new tasks default to the adder's head: SLE → Cert, Line Control (and everyone else) → Line; the Line/Cert filter, if set, wins
+const defLt=()=>HEAD==="C"||HEAD==="L"?HEAD:(!engMode()&&!isAIOC()&&myPos()==="SLE"?"C":"L");
+function openNew(){$("#nj").classList.remove("hide");$("#nLt").value=defLt();renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
 function closeNew(){$("#nj").classList.add("hide")}
 $("#openNew").onclick=openNew;$("#njClose").onclick=closeNew;$("#njCancel").onclick=closeNew;
 $("#nj").addEventListener("mousedown",e=>{if(e.target.id==="nj")closeNew()});
@@ -2025,7 +2027,7 @@ $("#jobs").addEventListener("keydown",e=>{const t=e.target;
     if(!canEdit(ownerOf(tl)))return;clearCRS(tl);D.jobs.push({id:uid(),tail:tl,bay:"",tag:"",lsj:"",pri:"",acst:"",area:"Line",task:v,status:"open",created:now(),started:null,completed:null,assignments:[]});
     EXP.add(tl);save();setTimeout(()=>document.querySelector(`.line-add[data-ladd]`)&&document.querySelector(`#jobs .job[data-tail="${tl}"] .line-add`)?.focus(),0)}
   else if(t.classList.contains("line-add")&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const j=job(t.dataset.ladd);const id=j.id;
-    clearCRS(j.tail);if(engMode()&&myEng()&&!isInfoLine(v)){j.ab=j.ab||{};j.ab[v]=myEng()}editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
+    clearCRS(j.tail);if(defLt()==="C"&&!isInfoLine(v)){j.lt=j.lt||{};j.lt[v]="C"}if(engMode()&&myEng()&&!isInfoLine(v)){j.ab=j.ab||{};j.ab[v]=myEng()}editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
 $("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("line-edit")&&!t.dataset.done)setTimeout(()=>{if(document.body.contains(t)&&!t.dataset.done){t.dataset.done=1;lineSave(t)}},0)});
 
 /* ---------- highlight changes made by other people until seen ---------- */
