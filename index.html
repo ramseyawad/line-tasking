@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125015247">
+<meta name="build" content="20261125021010">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2162,7 +2162,17 @@ $("#hoGo").onclick=async()=>{
   $("#hoGo").disabled=false;
   if(!ok){win?.close();$("#hoErr").textContent="Couldn't save the diary record – check connection and try again.";$("#hoErr").classList.remove("hide");return}
   // carry over unfinished work
-  D.jobs.filter(j=>active(j)&&ownJob(o)(j)).forEach(j=>{j.cf=(j.cf||0)+1});
+  // carry over: the diary now holds what was done, so the next shift starts clean –
+  // finished task lines come off, nobody stays assigned, and the job goes back to unmanned
+  const t0=now();
+  D.jobs.filter(j=>active(j)&&ownJob(o)(j)).forEach(j=>{
+    j.cf=(j.cf||0)+1;
+    const its=items(j),keep=its.filter(it=>it.info||it.s!=="done");
+    if(keep.some(it=>!it.info)){j.task=keep.map(it=>it.t).join("\n");j.items=keep}
+    (j.items||[]).forEach(it=>it.who=[]);
+    j.assignments=j.assignments.filter(a=>a.from||a.to).map(a=>a.to?a:{...a,to:t0});
+    j.status=(j.items||[]).some(it=>!it.info&&it.s==="work")?"work":"open"; // in-progress stays in progress, just with nobody on it
+  });
   const nx={date:$("#hoDate").value,type:$("#hoType").value};
   const ns={id:uid(),date:nx.date,type:nx.type,crew:$("#hoCrew").value,startedAt:now(),notes:curShift(o).notes||""}; // notes carry through every shift
   if(o==="Line")D.shift=ns;else{D.shifts=D.shifts||{};D.shifts[o]=ns}
@@ -2292,7 +2302,7 @@ function renderDisplay(){
   $("#dDate").textContent=d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
   const byTail=(a,b)=>prio(a)-prio(b)||TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail);
   const act=D.jobs.filter(j=>active(j)&&ownerOf(j.tail)==="Line"); // wall board is for Line only
-  const work=act.filter(j=>j.status==="work").sort(byTail),idle=act.filter(j=>j.status==="planned").sort(byTail); // unmanned jobs are not shown on the wall board
+  const work=act.filter(j=>j.status==="work"&&current(j).length).sort(byTail),idle=act.filter(j=>j.status==="planned").sort(byTail); // unmanned jobs are not shown on the wall board
   const done=D.jobs.filter(j=>j.status==="done"&&ownerOf(j.tail)==="Line"&&new Date(j.completed)>=shiftStart()).sort((a,b)=>b.completed.localeCompare(a.completed));
   // header counts are individual task lines on the jobs shown, not whole aircraft jobs
   const ss=shiftStart(),tl=j=>tasksOnly(j);let nT=0,nW=0,nD=0;
