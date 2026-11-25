@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125122334">
+<meta name="build" content="20261125122632">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -768,9 +768,9 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .blk-crew .crewbox{border-radius:8px;overflow:hidden;border:1px solid #EEF2F7}
 .blk-tasks .jobrow{padding:4px 4px}
 .blk-foot .jf{border-radius:8px}
-#jobs.tiles .job{display:block!important}
-#jobs.tiles .blk-crew .crewbox{border-left:1px solid #EEF2F7}
-#jobs.tiles .blk-tasks .jobrow{border-left:0}
+#jobs.tiles .job.customlay{display:block!important}
+#jobs.tiles .customlay .blk-crew .crewbox{border-left:1px solid #EEF2F7}
+#jobs.tiles .customlay .blk-tasks .jobrow{border-left:0}
 .layprev{background:#F8FAFC;border-radius:10px;padding:14px;max-height:calc(88vh - 160px);overflow:auto}
 .layprev .job{max-width:760px;margin:0 auto;box-shadow:var(--sh)!important}
 .laying .blk{position:relative;outline:1.5px dashed #93C5FD;outline-offset:-1px;border-radius:6px;min-height:34px}
@@ -1667,7 +1667,7 @@ function renderBoard(){
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
       foot:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
     const us=unseen(j);
-    return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
+    return `<div class="job st-${j.status} ${glowOf(j.tail)}${layCustom()?" customlay":""}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
     </div>`};
   // every aircraft has a tile; anything with no open tasks is collapsed into the strip below
   const openT=j=>tasksOnly(j).some(x=>x.s!=="done");
@@ -2039,7 +2039,11 @@ const LAY_NAMES={head:"Tail, bay & status",times:"Take off / landing",flight:"Ne
 const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",30],["role",30],["sent",40],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
 const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>LAY_NAMES[b.k]);
   LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
-function layoutHtml(BL,edit){return `<div class="tlay">${tileLayout().map(b=>(b.hide&&!edit)?"":`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)">${BL[b.k]||""}</div>`).join("")}</div>`}
+const layCustom=()=>{const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false]))};
+function layoutHtml(BL,edit){
+  // no custom template saved → the original tile exactly as it was
+  if(!edit&&!layCustom())return BL.head+`<div class="jmeta">${BL.times}${BL.flight}${BL.pri}${BL.state}${BL.owner}${BL.dass}${BL.role}${BL.sent}${BL.notes}${BL.lsj}</div>`+BL.crew+BL.tasks+BL.foot;
+  return `<div class="tlay">${tileLayout().map(b=>(b.hide&&!edit)?"":`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)">${BL[b.k]||""}</div>`).join("")}</div>`}
 /* ---------- collapsed tiles (aircraft with no open tasks) ---------- */
 let EXP=new Set();
 function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),off=t==="Off Aircraft",own=ownerOf(t),se=sentOf(t);
@@ -2101,7 +2105,7 @@ $("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".layr
   const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up)};
   addEventListener("pointermove",mv);addEventListener("pointerup",up)});
 $("#layClose").onclick=$("#layCancel").onclick=()=>{$("#layModal").classList.add("hide");render()};
-$("#laySave").onclick=()=>{const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{})}));$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
+$("#laySave").onclick=()=>{const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{})}));if(!layCustom())D.tileLayout=null;$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
 $("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));renderLayEditor()};
 $("#layOpen").onclick=openLayout;
 /* ---------- send as text ---------- */
