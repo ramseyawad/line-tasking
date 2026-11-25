@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125143542">
+<meta name="build" content="20261125144440">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -981,9 +981,9 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
         <span class="lbl">Put on shift from roster:</span>
         <select id="rDay"></select>
         <select id="rShift">
-          <option value="L,LCL,LWL">Lates (L, LCL, LWL)</option>
+          <option value="L,LCL,LWL,SL,NSL,LMMD">Lates (L, LCL, LWL, SL, NSL)</option>
           <option value="N">Nights (N)</option>
-          <option value="E">Earlys (E)</option>
+          <option value="E,LCE,LWE,SE,NSE,LMMD">Earlys (E, LCE, LWE, SE, NSE)</option>
         </select>
         <button class="btn pri sm" id="rApply">Apply</button>
         <span style="margin-left:auto;display:flex;gap:6px">
@@ -1002,6 +1002,7 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
       <div class="card pad">
         <h2 style="padding-bottom:4px">Import roster</h2>
         <p class="sub" style="margin-top:0">Load a roster file (.json). Names, trades and shift codes are added or updated, and today's lates are put on shift. Kept on this device only.</p>
+        <label class="chk" style="display:flex;gap:6px;align-items:center;font-size:12.5px;margin:6px 0"><input type="checkbox" id="rosterReplace" checked> Replace the whole shift list (anyone not on the roster is archived)</label>
         <label class="btn pri" style="width:100%">Choose roster file<input type="file" id="importRoster" accept=".json" hidden></label>
       </div>
       <div class="card pad">
@@ -1485,10 +1486,11 @@ const surname=n=>n.trim().split(/\s+/).pop().toLowerCase();
 const byTrade=(a,b)=>tradeIx(a)-tradeIx(b)||surname(a.name).localeCompare(surname(b.name));
 function groupByTrade(list){const g=TRADES.map(()=>[]);[...list].sort(byTrade).forEach(e=>g[tradeIx(e)].push(e));return g}
 // Roster codes that put someone on shift in a role, not available for tasking as their trade
-const DUTY={LWL:"Line walker"};
+// on shift, but in a role – shown under Line roles, not offered for tasking
+const DUTY={LWL:"Line walker",LWE:"Line walker",LCL:"Line Control",LCE:"Line Control",SL:"SLE",SE:"SLE",LMMD:"LMM deputy"};
 const duty=e=>DUTY[(e?.roster||{})[D.rosterDay||iso(new Date())]]||"";
 // 22:00–02:00 lates/nights overlap: the other shift's rostered engineers are also available
-const OVL_CODES={L:["N"],N:["L","LCL"]};
+const OVL_CODES={L:["N"],N:["L","LCL","NSL"]};
 function ovlInfo(){const d=new Date(),h=d.getHours();if(!(h>=22||h<2))return null;const t=(D.shift||{}).type;if(!OVL_CODES[t])return null;
   const day=new Date(d);if(h<2)day.setDate(day.getDate()-1);return {day:iso(day),codes:OVL_CODES[t],lbl:t==="L"?"Nights":"Lates"}}
 const ovl=e=>{if(!e||e.onShift)return "";const o=ovlInfo();if(!o)return "";const c=(e.roster||{})[o.day];return c&&o.codes.includes(c)?o.lbl:""};
@@ -2395,7 +2397,8 @@ $("#addEngs").onclick=()=>{
 };
 $("#allOn").onclick=()=>{D.engineers.forEach(e=>e.onShift=true);save()};
 $("#allOff").onclick=()=>{if(confirm("Mark everyone off shift? Anyone still on a job is taken off it.")){D.engineers.forEach(e=>setOnShift(e,false));save()}};
-const rosterDays=()=>[...new Set(D.engineers.flatMap(e=>Object.keys(e.roster||{})))].sort().slice(-7);
+const rosterDays=()=>{const all=[...new Set(D.engineers.flatMap(e=>Object.keys(e.roster||{})))].sort(),y=new Date();y.setDate(y.getDate()-1);const from=iso(y);
+  const w=all.filter(d=>d>=from).slice(0,7);return w.length?w:all.slice(-7)};
 function applyRoster(day,codes){
   D.rosterDay=day;
   let n=0;D.engineers.forEach(e=>{const c=(e.roster||{})[day];const on=!!c&&codes.includes(c);if(e.onShift!==on)setOnShift(e,on);if(on)n++});
@@ -2407,19 +2410,20 @@ $("#importRoster").onchange=async ev=>{
   const f=ev.target.files[0];ev.target.value="";if(!f)return;
   let r;try{r=JSON.parse(await f.text());if(r.type!=="wa-roster"||!Array.isArray(r.people))throw 0}catch(_){toast("That isn't a roster file");return}
   const key=n=>n.toLowerCase().replace(/^(as1\(t\)|as2|as1|sac\(t\)|sac|lac|cpl|sgt|fs|flt\s*lt|fg\s*off|sqn\s*ldr|ct|chf\s*tech|mr|mrs|ms|miss)\.?\s+/,"").replace(/\s+/g," ").trim();
-  let added=0,updated=0;
+  let added=0,updated=0,removed=0;const keep=new Set();
   r.people.forEach(pp=>{
     const full=(pp.title?pp.title+" ":"")+pp.name;
     let e=D.engineers.find(x=>key(x.name)===key(pp.name));
-    if(!e){e={id:uid(),name:full,onShift:false};D.engineers.push(e);added++}else updated++;
+    if(!e){e={id:uid(),name:full,onShift:false};D.engineers.push(e);added++}else updated++;keep.add(e.id);
     e.name=full;e.title=pp.title||"";e.cat=pp.cat||e.cat||"";
     e.roster=Object.assign(e.roster||{},pp.roster||{});
     e.marked=[...new Set([...(e.marked||[]),...(pp.marked||[])])];
   });
+  if($("#rosterReplace")?.checked){D.archived=D.archived||[];D.engineers.filter(e=>!keep.has(e.id)).forEach(e=>{setOnShift(e,false);D.archived.push({...e,archivedAt:now()});removed++});D.engineers=D.engineers.filter(e=>keep.has(e.id))}
   D.rosterWeek=r.week||"";
-  const today=iso(new Date()),days=rosterDays();
-  const n=days.includes(today)?applyRoster(today,["L","LCL","LWL"]):(save(),0);
-  toast(`${added} added, ${updated} updated${days.includes(today)?` · ${n} on shift today (lates)`:""}`);
+  const today=iso(new Date()),days=rosterDays(),st=curShift().type||guessShift().type;
+  const n=days.includes(today)?applyRoster(today,SHIFT_CODES[st]||SHIFT_CODES.L):(save(),0);
+  toast(`${added} added, ${updated} updated${removed?`, ${removed} archived`:""}${days.includes(today)?` · ${n} on shift today (${{E:"earlies",L:"lates",N:"nights"}[st]||st})`:""}`);
 };
 function renderShift(){
   const cnt={};D.jobs.filter(j=>j.status==="done").forEach(j=>new Set(j.assignments.filter(a=>a.from).map(a=>a.eng)).forEach(e=>cnt[e]=(cnt[e]||0)+1));
@@ -2635,7 +2639,8 @@ $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/^([
   download(`line-stats-${iso(S.a)}-to-${iso(S.b)}.csv`,L.join("\n"),"text/csv")};
 /* ---------- shifts, handover & diary ---------- */
 const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
-const SHIFT_CODES={E:["E"],L:["L","LCL","LWL"],N:["N"]};
+// NSE / NSL = national standby early / late (taskable); LMMD = LMM deputy (days)
+const SHIFT_CODES={E:["E","LCE","LWE","SE","NSE","LMMD"],L:["L","LCL","LWL","SL","NSL","LMMD"],N:["N"]};
 function guessShift(d=new Date()){const h=d.getHours(),x=new Date(d);let t=h<6?"N":h<14?"E":h<22?"L":"N";if(h<6)x.setDate(x.getDate()-1);return{date:iso(x),type:t}}
 function curShift(o="Line"){
   if(o&&o!=="Line"){D.shifts=D.shifts||{};if(!D.shifts[o]){const g=guessShift();D.shifts[o]={id:uid(),date:g.date,type:g.type,startedAt:now(),notes:"",crew:"A"}}return D.shifts[o]}
