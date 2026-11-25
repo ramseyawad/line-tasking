@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125093348">
+<meta name="build" content="20261125093523">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -756,6 +756,8 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .cstack{display:flex;flex-direction:column;gap:8px;align-self:start;min-width:0}
 .cstack .ctile{align-self:stretch}
 #jobs.tiles .cstack{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.ct-crs{padding:2px 10px;min-width:0;font-size:11px;margin-left:auto}
+.ct-crs+.ct-chev{margin-left:4px}
 </style>
 </head>
 <body>
@@ -1993,7 +1995,7 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   const done=j?tasksOnly(j).length:0;
   const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
-    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg?`<span class="ct-role">${esc(a.rcfg)}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}<span class="ct-chev">▾</span></div>
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg?`<span class="ct-role">${esc(a.rcfg)}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightLine(t)?`<div class="ct-fl">✈ ${flightLine(t)}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
