@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125135650">
+<meta name="build" content="20261125135832">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -890,6 +890,7 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .viewswrap select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;font-size:14px}
 .viewswrap.on{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
 .meb.tko{color:#B45309;background:#FFFBEB;border-color:#FCD34D;margin-left:4px}
+.crsbtn:disabled{background:#F1F5F9!important;color:#94A3B8!important;border-color:#E2E8F0!important;cursor:not-allowed}.crsbtn small{font-weight:600;font-size:10px;margin-left:3px}
 </style>
 </head>
 <body>
@@ -1740,7 +1741,7 @@ function renderBoard(){
       :j.status==="planned"?`<span class="status">Not started</span>`
       :`<span class="status">Unmanned</span>`;
     const acts=(!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}" title="Fold back into the collapsed strip">Collapse ▴</button>`:"")+(done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
-      :off||(EV&&!canCRS(j.tail))?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`);
+      :off||(EV&&!canCRS(j.tail))?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:crsBtn(j.tail));
     const BL={
       head:`<div class="jh">
         <button type="button" class="tailname ${off?"off":""}" data-actile="${esc(j.tail)}" title="Aircraft details">${esc(off?"Off Aircraft":j.tail)}</button>
@@ -2108,7 +2109,7 @@ function openAc(t){
    <div class="acp-grid" style="margin-top:10px">
      <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canAc(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
      <div class="mv-f"><span>Role config</span>${roleBoxes(t,false)}</div></div>
-   <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canEdit(own)?`<button class="btn sm ${techReady(t)?"":"ok"}" data-crs="${t}">${techReady(t)?"Undo":"CRS – Tech ready"}</button>`:""}</div>
+   <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canCRS(t)?(techReady(t)?`<button class="btn sm" data-crs="${t}">Undo</button>`:openTasks(t)?`<button class="btn sm" disabled>CRS – ${openTasks(t)} task${openTasks(t)>1?"s":""} still open</button>`:`<button class="btn sm ok" data-crs="${t}">CRS – Tech ready</button>`):""}</div>
    <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${se?` · ${esc(se.c)} for ${ago(se.at)}`:""}</p>
    ${isAIOC()?`<h4 class="mv-h">Jobs</h4>${js.length?js.map(aiocTasks).join(""):'<p class="sub">No open jobs.</p>'}`:""}<h4 class="mv-h ${isAIOC()?"hide":""}">Open jobs</h4>${isAIOC()?"":js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
@@ -2190,7 +2191,7 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   const done=j?tasksOnly(j).length:0;
   const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
-    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${(own!=="Line"||isAIOC())&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${(own!=="Line"||isAIOC())&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:crsBtn(t,"ct-crs")):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightsOf(t).some(flReal)?`<div class="ct-fl">${flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join("")}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
@@ -2607,7 +2608,10 @@ const aiocTasks=j=>{const ts=tasksOnly(j),open=ts.filter(x=>x.s!=="done").length
 const acRec=t=>{D.ac=D.ac||{};return D.ac[t]=D.ac[t]||{}};
 const acGet=t=>(D.ac||{})[t]||{};
 const techReady=t=>acGet(t).crs||null;
-function setCRS(t,on){if(!canCRS(t)){toast("View only – "+ownerOf(t)+" aircraft");return}const a=acRec(t);
+// CRS only once every task on the aircraft is done (NOTE / INFO lines don't count)
+const openTasks=t=>D.jobs.filter(j=>active(j)&&j.tail===t).reduce((n,j)=>n+tasksOnly(j).filter(x=>x.s!=="done").length,0);
+const crsBtn=(t,cls="")=>{const n=openTasks(t);return n?`<button class="btn sm crsbtn ${cls}" disabled title="${n} task${n>1?"s":""} still open – CRS when every task is done">CRS <small>${n} open</small></button>`:`<button class="btn ok sm crsbtn ${cls}" data-crs="${esc(t)}" title="Certify – marks ${esc(t)} Tech ready">CRS</button>`};
+function setCRS(t,on){if(!canCRS(t)){toast("View only – "+ownerOf(t)+" aircraft");return}if(on&&openTasks(t)){toast(`${t}: ${openTasks(t)} task${openTasks(t)>1?"s":""} still open – complete them before CRS`);return}const a=acRec(t);
   if(on)a.crs={at:now(),by:(typeof myName==="function"&&myName())||""};else delete a.crs;save();toast(on?`${t} CRS – Tech ready`:`${t} no longer tech ready`)}
 const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentOf(t)?.c==="AOG";
 const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";if(tailAOG(t))return "g-aog";const o=ownerOf(t);return o==="Deployed"?"g-dep":o==="Retrofit"?"g-ret":"g-o"};
