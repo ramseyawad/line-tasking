@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125093839">
+<meta name="build" content="20261125122334">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -760,6 +760,31 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .ct-crs+.ct-chev{margin-left:4px}
 .acbar button.nm{background:#E2E8F0!important;color:#94A3B8!important;border-color:#CBD5E1!important;box-shadow:none}
 .acbar button.nm.aog{box-shadow:0 0 0 2px #FCA5A5}
+.tlay{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;padding:4px 10px 10px}
+.blk{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.blk>select,.blk>input,.blk>.prif,.blk>.nfbtn,.blk>.tags,.blk>.jtimes{flex:1 1 auto;width:100%;max-width:none!important}
+.blk-head,.blk-crew,.blk-tasks,.blk-foot{display:block}
+.blk-head .jh{padding:8px 4px 2px}
+.blk-crew .crewbox{border-radius:8px;overflow:hidden;border:1px solid #EEF2F7}
+.blk-tasks .jobrow{padding:4px 4px}
+.blk-foot .jf{border-radius:8px}
+#jobs.tiles .job{display:block!important}
+#jobs.tiles .blk-crew .crewbox{border-left:1px solid #EEF2F7}
+#jobs.tiles .blk-tasks .jobrow{border-left:0}
+.layprev{background:#F8FAFC;border-radius:10px;padding:14px;max-height:calc(88vh - 160px);overflow:auto}
+.layprev .job{max-width:760px;margin:0 auto;box-shadow:var(--sh)!important}
+.laying .blk{position:relative;outline:1.5px dashed #93C5FD;outline-offset:-1px;border-radius:6px;min-height:34px}
+.laying .blk>*:not(.layov){pointer-events:none}
+.laying .blk.bhid{opacity:.45;outline-color:#CBD5E1}
+.layov{position:absolute;inset:0;display:flex;align-items:flex-start;gap:6px;padding:3px 5px;cursor:grab;z-index:2}
+.layov:hover{background:rgba(59,130,246,.06)}
+.layname{font-size:10.5px;font-weight:800;background:#1D4ED8;color:#fff;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.layw{font-size:10.5px;font-weight:800;background:#fff;color:#1D4ED8;border:1px solid #93C5FD;border-radius:4px;padding:0 5px}
+.layeye{margin-left:auto;font:inherit;font-size:10.5px;font-weight:700;border:1px solid #CBD5E1;background:#fff;border-radius:4px;padding:0 6px;cursor:pointer}
+.layrs{position:absolute;right:-4px;top:0;bottom:0;width:10px;cursor:ew-resize;background:linear-gradient(90deg,transparent 3px,#3B82F6 3px,#3B82F6 6px,transparent 6px);opacity:.6}
+.layrs:hover{opacity:1}
+.laydrag{opacity:.4}
+.laydummy{font-size:12px;color:var(--mute);padding:8px}
 </style>
 </head>
 <body>
@@ -821,6 +846,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
             <button data-f="done">Done this shift <i id="pcDone">0</i></button>
           </div>
           <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search tail, bay, task, name"></div>
+          <button class="btn icon" id="layOpen" title="Edit tile layout – move and resize what's on each aircraft tile"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/></svg></button>
           <div class="viewsw" id="viewSw" title="Change layout"><button data-v="grid" title="Squares"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button data-v="tiles" title="Stretched tiles"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg></button></div>
           <button class="btn seenall hide" id="seenAll" title="Clear all the new / updated highlights"><i>0</i> new or changed · mark all seen</button>
           <button class="btn teambtn" id="teamOpen" title="Show the team (T)"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team <i id="teamBadge">0 free</i></button>
@@ -1085,7 +1111,8 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
     <li>The <b>aircraft buttons</b> (400–421, Off A/C) float at the top on every tab – tap one to jump to its card. Colours: orange in work, purple not started, amber unmanned, red ring AOG.</li>
     <li><b>Notes</b> at the end of that row jumps to the shift notes.</li>
     <li>Filters next to Jobs: Open / In work / Not started / Unmanned / Done this shift. Search box finds tail, bay, task or name.</li>
-    <li>Switch between <b>squares</b> and <b>stretched</b> layouts with the two icons.</li></ul></section>
+    <li>Switch between <b>squares</b> and <b>stretched</b> layouts with the two icons.</li>
+    <li><b>Edit tile layout</b> (the four-box icon next to them – Line Control, SLE or admin): drag the boxes on a sample tile to move them, drag a box's right edge to resize, <b>Hide</b> what you don't need, then <b>Save for all tiles</b>. <b>Reset to default</b> puts it back.</li></ul></section>
 
   <section id="g-own"><h3>Aircraft owners</h3><ul>
     <li>Every aircraft has an <b>owner</b> – Line (us), Line Support, AAG, Retrofit, Deployed, Casualty Bay (admins can edit the list). Change it on the card or by tapping the aircraft in the top row.</li>
@@ -1194,6 +1221,11 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
     <label class="mv-f"><span title="Touch and go's">TG</span><input id="flTG" inputmode="numeric" placeholder="T&amp;Gs"></label>
   </div><p class="sub" id="flWho" style="margin:10px 0 0"></p></div>
   <div class="mv-foot"><div class="mvbtns"><button class="linkbtn" id="flClear">Clear</button><button class="btn" id="flCancel">Close</button><button class="btn pri" id="flSave">Save</button></div></div>
+</div></div>
+<div id="layModal" class="modal hide"><div class="mcard card" style="width:min(1100px,100%)">
+  <div class="mhead"><h2>Edit tile layout</h2><span class="sub">Drag boxes to move them · drag the right edge to resize · applies to every aircraft</span><button class="btn icon" id="layClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><div id="layPrev" class="layprev"></div></div>
+  <div class="mv-foot"><div class="mvbtns"><button class="linkbtn" id="layReset">Reset to default</button><button class="btn" id="layCancel">Cancel</button><button class="btn pri" id="laySave">Save for all tiles</button></div></div>
 </div></div>
 <div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
   <div class="mhead"><h2>Manning targets</h2><span class="sub">per shift</span><button class="btn icon" id="mnClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -1603,16 +1635,24 @@ function renderBoard(){
       :`<span class="status">Unmanned</span>`;
     const acts=(!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}" title="Fold back into the collapsed strip">Collapse ▴</button>`:"")+(done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
       :off?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`);
-    const us=unseen(j);
-    return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
-      <div class="jh">
+    const BL={
+      head:`<div class="jh">
         <button type="button" class="tailname ${off?"off":""}" data-actile="${esc(j.tail)}" title="Aircraft details">${esc(off?"Off Aircraft":j.tail)}</button>
         ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
-      </div>
-      <div class="jmeta">${timesHtml(j.tail)?`<div class="jtimes">${timesHtml(j.tail)}</div>`:""}${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(j.tail)}" value="${esc(acGet(j.tail).rcfg||"")}" placeholder="+ role config" title="Current role config" ${done||!canEdit(ownerOf(j.tail))?"disabled":""}>`:""}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
-      <div class="crewbox">${rows}</div>
-      <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
+      </div>`,
+      times:`${timesHtml(j.tail)?`<div class="jtimes">${timesHtml(j.tail)}</div>`:""}`,
+      flight:`${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}`,
+      pri:`<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>`,
+      state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}`,
+      owner:`${ownSel(j.tail,done)}`,
+      dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
+      role:`${j.tail!=="Off Aircraft"?`<input class="tagf rcfgin" data-rcfg="${esc(j.tail)}" value="${esc(acGet(j.tail).rcfg||"")}" placeholder="+ role config" title="Current role config" ${done||!canEdit(ownerOf(j.tail))?"disabled":""}>`:""}`,
+      sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}`,
+      notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
+      lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">`,
+      crew:`<div class="crewbox">${rows}</div>`,
+      tasks:`<div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
           if(!lineShown(j,it))return "";
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
@@ -1624,8 +1664,10 @@ function renderBoard(){
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
           ${(ty=>done?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
-          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>
-      <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div></fieldset>
+          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
+      foot:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
+    const us=unseen(j);
+    return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
     </div>`};
   // every aircraft has a tile; anything with no open tasks is collapsed into the strip below
   const openT=j=>tasksOnly(j).some(x=>x.s!=="done");
@@ -1991,6 +2033,13 @@ $("#flSave").onclick=()=>{if(!canFlight())return;const f={};FLF.forEach(([id,k])
   acRec(FL_T).flight=f;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T);toast(FL_T+" next flight saved")};
 $("#flClear").onclick=()=>{if(!canFlight())return;delete acRec(FL_T).flight;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
 
+
+/* ---------- tile layout template (shared, editable) ---------- */
+const LAY_NAMES={head:"Tail, bay & status",times:"Take off / landing",flight:"Next flight",pri:"Priority",state:"State",owner:"Owner",dass:"DASS config",role:"Role config",sent:"Sentence",notes:"Status notes",lsj:"LSJ set",crew:"Manning (B1/B2/Mechs)",tasks:"Tasks",foot:"Footer (CRS, send)"};
+const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",30],["role",30],["sent",40],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
+const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>LAY_NAMES[b.k]);
+  LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
+function layoutHtml(BL,edit){return `<div class="tlay">${tileLayout().map(b=>(b.hide&&!edit)?"":`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)">${BL[b.k]||""}</div>`).join("")}</div>`}
 /* ---------- collapsed tiles (aircraft with no open tasks) ---------- */
 let EXP=new Set();
 function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),off=t==="Off Aircraft",own=ownerOf(t),se=sentOf(t);
@@ -2008,6 +2057,53 @@ function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf
   return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
     <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ed?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(t)}" value="${esc(a.rcfg||"")}" placeholder="+ role config" ${ed?"":"disabled"}>${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
     <div class="jr jobrow"><div class="jl">Job</div><div class="jtask"><div class="sx-empty" style="padding:4px 0">No open tasks.</div>${ed?`<input class="line-add" data-newtile="${esc(t)}" placeholder="+ Add a task – or NOTE …, take off 18:00, landing 22:00">`:""}</div></div></div>`}
+
+/* ---------- tile layout editor ---------- */
+let LAYDRAFT=null,LAYCUR=null;
+function openLayout(){
+  if(!canFlight()){toast("Only Line Control, SLE or admins can change the tile layout");return}
+  LAYDRAFT=tileLayout().map(b=>({...b}));
+  const sample=D.jobs.find(j=>active(j)&&j.tail!=="Off Aircraft"&&tasksOnly(j).length)||D.jobs.find(j=>active(j));
+  LAYCUR=sample;renderLayEditor();$("#layModal").classList.remove("hide");
+}
+function renderLayEditor(){
+  const saved=D.tileLayout;D.tileLayout=LAYDRAFT;
+  let html="";
+  if(LAYCUR){const had=EXP.has(LAYCUR.tail);EXP.add(LAYCUR.tail);
+    // render the real tile for the sample aircraft, then turn its blocks into editable boxes
+    renderBoard();const el=document.querySelector(`#jobs .job[data-tail="${LAYCUR.tail}"]`);html=el?el.outerHTML:"";if(!had)EXP.delete(LAYCUR.tail)}
+  D.tileLayout=saved;
+  $("#layPrev").innerHTML=html||`<div class="job"><fieldset class="rofs">${layoutHtml(Object.fromEntries(Object.keys(LAY_NAMES).map(k=>[k,`<div class="laydummy">${LAY_NAMES[k]}</div>`])),true)}</fieldset></div>`;
+  const tile=$("#layPrev .job");if(!tile)return;
+  tile.classList.add("laying");tile.querySelectorAll(".newrib").forEach(x=>x.remove());
+  // add hidden blocks so they can be shown again
+  const lay=tile.querySelector(".tlay");
+  LAYDRAFT.forEach(b=>{let el=lay.querySelector(`[data-blk="${b.k}"]`);if(!el){el=document.createElement("div");el.className=`blk blk-${b.k}`;el.dataset.blk=b.k;el.innerHTML=`<div class="laydummy">${LAY_NAMES[b.k]}</div>`;lay.append(el)}
+    el.style.flex=`0 0 calc(${b.w}% - 6px)`;el.style.maxWidth=`calc(${b.w}% - 6px)`;el.classList.toggle("bhid",!!b.hide);
+    const ov=document.createElement("div");ov.className="layov";ov.draggable=true;
+    ov.innerHTML=`<span class="layname">${LAY_NAMES[b.k]}</span><span class="layw">${b.w}%</span><button class="layeye" title="${b.hide?"Show":"Hide"} this">${b.hide?"Show":"Hide"}</button><i class="layrs" title="Drag to resize"></i>`;el.append(ov)});
+  // keep DOM order = draft order
+  LAYDRAFT.forEach(b=>lay.append(lay.querySelector(`[data-blk="${b.k}"]`)));
+}
+const layOrder=()=>[...document.querySelectorAll("#layPrev .tlay > .blk")].map(x=>x.dataset.blk);
+$("#layPrev").addEventListener("click",e=>{const b=e.target.closest(".layeye");if(!b)return;const k=b.closest(".blk").dataset.blk,d=LAYDRAFT.find(x=>x.k===k);d.hide=!d.hide;if(!d.hide)delete d.hide;renderLayEditor()});
+let DRAGK=null;
+$("#layPrev").addEventListener("dragstart",e=>{const ov=e.target.closest?.(".layov");if(!ov)return;DRAGK=ov.closest(".blk").dataset.blk;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",DRAGK)}catch(_){}ov.closest(".blk").classList.add("laydrag")});
+$("#layPrev").addEventListener("dragover",e=>{if(!DRAGK)return;const t=e.target.closest(".blk");if(!t||t.dataset.blk===DRAGK)return;e.preventDefault();
+  const r=t.getBoundingClientRect(),before=(e.clientX-r.left)<r.width/2,src=document.querySelector(`#layPrev [data-blk="${DRAGK}"]`);
+  t.parentNode.insertBefore(src,before?t:t.nextSibling)});
+$("#layPrev").addEventListener("dragend",()=>{if(!DRAGK)return;document.querySelectorAll("#layPrev .laydrag").forEach(x=>x.classList.remove("laydrag"));
+  const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));DRAGK=null});
+// resize by dragging the right edge (snaps to 5%)
+$("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".layrs");if(!h)return;e.preventDefault();e.stopPropagation();
+  const blk=h.closest(".blk"),lay=blk.parentNode,k=blk.dataset.blk,d=LAYDRAFT.find(x=>x.k===k),L=blk.getBoundingClientRect().left,W=lay.getBoundingClientRect().width;
+  const mv=ev=>{let w=Math.round(((ev.clientX-L)/W*100)/5)*5;w=Math.max(10,Math.min(100,w));d.w=w;blk.style.flex=`0 0 calc(${w}% - 6px)`;blk.style.maxWidth=`calc(${w}% - 6px)`;blk.querySelector(".layw").textContent=w+"%"};
+  const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up)};
+  addEventListener("pointermove",mv);addEventListener("pointerup",up)});
+$("#layClose").onclick=$("#layCancel").onclick=()=>{$("#layModal").classList.add("hide");render()};
+$("#laySave").onclick=()=>{const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{})}));$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
+$("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));renderLayEditor()};
+$("#layOpen").onclick=openLayout;
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
