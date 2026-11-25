@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125133028">
+<meta name="build" content="20261125133153">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -863,6 +863,7 @@ body.aioc .acbar button.unseen::after{display:none}
 .nfbtn .fltimes{display:block;font-size:11.5px;font-weight:700;color:#0369A1;margin-top:1px}
 .flrow:not(.next) .fltimes{color:#475569}
 .ct-fl .fltimes{display:inline;margin-left:8px;font-size:11px}
+.nfbtn .flt{white-space:nowrap;color:inherit}.flico{width:14px;height:14px;fill:currentColor;vertical-align:-2px;margin-right:3px}
 </style>
 </head>
 <body>
@@ -2566,7 +2567,9 @@ const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t
 const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
 const fl1=f=>{const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   const dt=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
-  const times=[dt,f.time&&"T/O "+f.time,f.ld&&"Ldg "+f.ld].filter(Boolean).map(esc).join(" · ");
+  const TO=`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/></svg>`,
+    LD=`<svg class="flico" viewBox="0 0 24 24" aria-label="Landing"><path d="M2.5 19h19v2h-19v-2zm7.18-5.73l4.35 1.16 5.31 1.42c.8.21 1.62-.26 1.84-1.06.21-.8-.26-1.62-1.06-1.84l-5.31-1.42-2.76-9.02L10.12 2v8.28L5.15 8.95l-.93-2.32-1.45-.39v5.17l1.6.43 5.31 1.43z"/></svg>`;
+  const times=[dt&&esc(dt),f.time&&`<span class="flt" title="Take off">${TO}${esc(f.time)}</span>`,f.ld&&`<span class="flt" title="Landing">${LD}${esc(f.ld)}</span>`].filter(Boolean).join(" · ");
   const top=`${esc(f.no||"Flight")}</span>${times?`<span class="fltimes">${times}</span>`:""}<span style="display:none">`;
   const nums=[["FH",f.fh],["EH",f.eh],["FC",f.fc],["DY",f.dy],["LG",f.lg],["TG",f.tg]].filter(x=>x[1]).map(([k,v])=>`<span><b>${k}</b> ${esc(v)}</span>`).join("");
   return `<span class="fltop">${top}</span>${nums?`<span class="flnums">${nums}</span>`:""}`};
