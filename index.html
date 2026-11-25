@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125123948">
+<meta name="build" content="20261125124723">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -802,6 +802,13 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .laying .blk:hover .laytag{z-index:4}
 .layname{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .laying .blk.bhid .laytag .layeye{display:inline-block}
+.rcfgin,.rreqin{width:110px}
+.rcfgin.rok,.rreqin.rok,.ct-role.rok{background:#DCFCE7!important;border-color:#22C55E!important;color:#15803D!important;font-weight:700}
+.rcfgin.rbad,.rreqin.rbad,.ct-role.rbad{background:#FEE2E2!important;border-color:#EF4444!important;color:#B91C1C!important;font-weight:700}
+.laycolrs{position:absolute;top:0;bottom:0;width:12px;margin-left:-6px;cursor:col-resize;z-index:5;background:linear-gradient(90deg,transparent 4px,#3B82F6 4px,#3B82F6 8px,transparent 8px);opacity:.7}
+.laycolrs:hover{opacity:1}
+.lmeta .blk-role{flex-wrap:nowrap}
+.lmeta .blk-role>input{flex:1 1 0!important;width:auto!important;min-width:50px}
 </style>
 </head>
 <body>
@@ -1664,7 +1671,7 @@ function renderBoard(){
       state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}`,
       owner:`${ownSel(j.tail,done)}`,
       dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
-      role:`${j.tail!=="Off Aircraft"?`<input class="tagf rcfgin" data-rcfg="${esc(j.tail)}" value="${esc(acGet(j.tail).rcfg||"")}" placeholder="+ role config" title="Current role config" ${done||!canEdit(ownerOf(j.tail))?"disabled":""}>`:""}`,
+      role:`${j.tail!=="Off Aircraft"?roleBoxes(j.tail,done):""}`,
       sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}`,
       notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
       lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">`,
@@ -1745,6 +1752,7 @@ $("#jobs").addEventListener("change",e=>{
   else if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value);
   else if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save()}
   else if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save()}
+  else if(t.dataset.rreq!=null){if(!canFlight())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save()}
   else if(t.dataset.owner!=null)setOwner(t.dataset.owner,t.value);
   else if(t.dataset.lt){const[id,i]=t.dataset.lt.split("|"),j=job(id),it=items(j)[+i];if(it){j.lt=j.lt||{};if(t.value==="C")j.lt[it.t]="C";else delete j.lt[it.t];save()}}
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
@@ -2010,7 +2018,7 @@ function openAc(t){
      <label class="mv-f"><span>Sentence</span>${sentSel(t,false)}</label></div>
    <div class="acp-grid" style="margin-top:10px">
      <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canEdit(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
-     <label class="mv-f"><span>Current role config</span><input data-rcfg="${t}" value="${esc(acGet(t).rcfg||"")}" placeholder="e.g. AAR, Cargo, Troops…" ${canEdit(own)?"":"disabled"} style="height:38px"></label></div>
+     <label class="mv-f"><span>Role config – current / required</span><span style="display:flex;gap:6px">${roleBoxes(t,false)}</span></label></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canEdit(own)?`<button class="btn sm ${techReady(t)?"":"ok"}" data-crs="${t}">${techReady(t)?"Undo":"CRS – Tech ready"}</button>`:""}</div>
    <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightLine(t)||'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canFlight()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${se?` · ${esc(se.c)} for ${ago(se.at)}`:""}</p>
@@ -2024,7 +2032,8 @@ $("#acModal").addEventListener("click",e=>{if(e.target.id==="acModal"){$("#acMod
   const g=e.target.closest("[data-gojob]");if(g){const j=job(g.dataset.gojob);$("#acModal").classList.add("hide");if(j){OWNV="All";try{localStorage.setItem("wa-ownv","All")}catch(_){}HEAD="all";markHead();$("#q").value="";setFilter("active");setTimeout(()=>{const el=document.querySelector(`#jobs .job[data-id="${j.id}"]`);el?.scrollIntoView({behavior:"smooth",block:"start"});el?.classList.add("flash")},50)}}});
 $("#acModal").addEventListener("change",e=>{const t=e.target;
   if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save();return}
-  if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save();return}
+  if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save();openAc(t.dataset.rcfg);return}
+  if(t.dataset.rreq!=null){if(!canFlight())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save();openAc(t.dataset.rreq);return}
   if(t.dataset.owner!=null){setOwner(t.dataset.owner,t.value);openAc(t.dataset.owner)}else if(t.dataset.sent!=null){setSent(t.dataset.sent,t.value);openAc(t.dataset.sent)}});
 $("#acRaise").onclick=()=>{const t=$("#acRaise").dataset.tail;$("#acModal").classList.add("hide");openNew();$("#nTail").value=t};
 function openOwners(){$("#ownList").value=owners().join("\n");$("#ownErr").textContent="";$("#ownModal").classList.remove("hide");setTimeout(()=>$("#ownList").focus(),30)}
@@ -2053,13 +2062,14 @@ $("#flClear").onclick=()=>{if(!canFlight())return;delete acRec(FL_T).flight;save
 
 /* ---------- tile layout template (shared, editable) ---------- */
 const LAY_NAMES={head:"Tail, bay & status",times:"Take off / landing",flight:"Next flight",pri:"Priority",state:"State",owner:"Owner",dass:"DASS config",role:"Role config",sent:"Sentence",notes:"Status notes",lsj:"LSJ set",crew:"Manning (B1/B2/Mechs)",tasks:"Tasks",foot:"Footer (CRS, send)"};
-const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",30],["role",30],["sent",40],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
+const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",30],["role",40],["sent",30],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
 const defCol=k=>(k==="crew"||k==="tasks")?"R":"L";
 const colOf=b=>b.c||defCol(b.k);
 const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>LAY_NAMES[b.k]);
   LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
-let LAY_FORCE=false;
-const layCustom=()=>{if(LAY_FORCE)return true;const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide,colOf(b)]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false,colOf(b)]))};
+let LAY_FORCE=false,LAYCOL=null;
+const colW=()=>(LAY_FORCE&&LAYCOL)||D.tileCol||290;
+const layCustom=()=>{if(LAY_FORCE)return true;if(D.tileCol&&D.tileCol!==290)return true;const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide,colOf(b)]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false,colOf(b)]))};
 function layoutHtml(BL,edit){edit=edit||LAY_FORCE;
   // no custom template saved → the original tile exactly as it was
   if(!edit&&!layCustom())return BL.head+`<div class="jmeta">${BL.times}${BL.flight}${BL.pri}${BL.state}${BL.owner}${BL.dass}${BL.role}${BL.sent}${BL.notes}${BL.lsj}</div>`+BL.crew+BL.tasks+BL.foot;
@@ -2068,7 +2078,7 @@ function layoutHtml(BL,edit){edit=edit||LAY_FORCE;
     return rows.map(r=>{const full=r.length===1&&BIG[r[0].k]&&r[0].w===100;
       return `<div class="lrow ${full?"lfull":"lmeta"}${r.some(b=>b.k==="foot")?" hasfoot":""}">${r.map(b=>`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="${full?"":`flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)`}">${BL[b.k]||""}</div>`).join("")}</div>`}).join("")};
   const L=tileLayout();
-  if(VIEW==="tiles")return `<div class="tlay tlay2"><div class="lcol" data-col="L">${rowsOf(L.filter(b=>colOf(b)==="L"))}</div><div class="rcol" data-col="R">${rowsOf(L.filter(b=>colOf(b)==="R"))}</div></div>`;
+  if(VIEW==="tiles")return `<div class="tlay tlay2" style="grid-template-columns:${colW()}px minmax(0,1fr)"><div class="lcol" data-col="L">${rowsOf(L.filter(b=>colOf(b)==="L"))}</div><div class="rcol" data-col="R">${rowsOf(L.filter(b=>colOf(b)==="R"))}</div></div>`;
   return `<div class="tlay">${rowsOf(L)}</div>`}
 /* ---------- collapsed tiles (aircraft with no open tasks) ---------- */
 let EXP=new Set();
@@ -2077,7 +2087,7 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   const done=j?tasksOnly(j).length:0;
   const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
-    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg?`<span class="ct-role">${esc(a.rcfg)}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightLine(t)?`<div class="ct-fl">✈ ${flightLine(t)}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
@@ -2085,14 +2095,14 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   </div>`}
 function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t));
   return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
-    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ed?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(t)}" value="${esc(a.rcfg||"")}" placeholder="+ role config" ${ed?"":"disabled"}>${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
+    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ed?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select>${roleBoxes(t,false)}${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
     <div class="jr jobrow"><div class="jl">Job</div><div class="jtask"><div class="sx-empty" style="padding:4px 0">No open tasks.</div>${ed?`<input class="line-add" data-newtile="${esc(t)}" placeholder="+ Add a task – or NOTE …, take off 18:00, landing 22:00">`:""}</div></div></div>`}
 
 /* ---------- tile layout editor ---------- */
 let LAYDRAFT=null,LAYCUR=null;
 function openLayout(){
   if(!canFlight()){toast("Only Line Control, SLE or admins can change the tile layout");return}
-  LAYDRAFT=tileLayout().map(b=>({...b}));
+  LAYDRAFT=tileLayout().map(b=>({...b}));LAYCOL=D.tileCol||290;
   const sample=D.jobs.find(j=>active(j)&&j.tail!=="Off Aircraft"&&tasksOnly(j).length)||D.jobs.find(j=>active(j));
   LAYCUR=sample;renderLayEditor();$("#layModal").classList.remove("hide");
 }
@@ -2106,6 +2116,7 @@ function renderLayEditor(){
   $("#layPrev").innerHTML=html||`<div class="job"><fieldset class="rofs">${layoutHtml(Object.fromEntries(Object.keys(LAY_NAMES).map(k=>[k,`<div class="laydummy">${LAY_NAMES[k]}</div>`])),true)}</fieldset></div>`;
   const tile=$("#layPrev .job");if(!tile)return;
   const real=document.querySelector("#jobs > .job");tile.style.width=(real?real.offsetWidth:466)+"px";tile.style.maxWidth="none";
+  const two=tile.querySelector(".tlay2");if(two){const h=document.createElement("i");h.className="laycolrs";h.title="Drag to make the left column wider or narrower";h.style.left=(LAYCOL||290)+"px";two.style.position="relative";two.append(h)}
   $("#laySub").textContent=(VIEW==="tiles"?"Stretched view – drag boxes between the left and right columns":"Squares view")+" · drag the right edge to resize · applies to every aircraft";
   tile.classList.add("laying");tile.querySelectorAll(".newrib").forEach(x=>x.remove());
   // add hidden blocks so they can be shown again
@@ -2138,6 +2149,12 @@ function layApplyDom(){
   const slots=LAYDRAFT.map(b=>colOf(b)),byK=Object.fromEntries(LAYDRAFT.map(b=>[b.k,b])),idx={L:0,R:0};
   LAYDRAFT=slots.map(c=>byK[seq[c][idx[c]++]]).filter(Boolean);
 }
+// drag the divider between the columns (stretched view)
+$("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".laycolrs");if(!h)return;e.preventDefault();e.stopPropagation();
+  const two=h.parentNode,L0=two.getBoundingClientRect().left,W=two.getBoundingClientRect().width;
+  const mv=ev=>{let w=Math.round((ev.clientX-L0)/10)*10;w=Math.max(220,Math.min(Math.round(W*0.7),w));LAYCOL=w;two.style.gridTemplateColumns=`${w}px minmax(0,1fr)`;h.style.left=w+"px"};
+  const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);renderLayEditor()};
+  addEventListener("pointermove",mv);addEventListener("pointerup",up)},true);
 // resize by dragging the right edge (snaps to 5%)
 $("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".layrs");if(!h)return;e.preventDefault();e.stopPropagation();
   const blk=h.closest(".blk"),lay=blk.closest("[data-col]")||blk.closest(".tlay"),k=blk.dataset.blk,d=LAYDRAFT.find(x=>x.k===k),L=blk.getBoundingClientRect().left,W=lay.getBoundingClientRect().width-28;
@@ -2145,8 +2162,8 @@ $("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".layr
   const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);renderLayEditor()};
   addEventListener("pointermove",mv);addEventListener("pointerup",up)});
 $("#layClose").onclick=$("#layCancel").onclick=()=>{$("#layModal").classList.add("hide");render()};
-$("#laySave").onclick=()=>{layApplyDom();D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{}),...(b.c&&b.c!==defCol(b.k)?{c:b.c}:{})}));if(!layCustom())D.tileLayout=null;$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
-$("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));renderLayEditor()};
+$("#laySave").onclick=()=>{layApplyDom();D.tileCol=LAYCOL&&LAYCOL!==290?LAYCOL:null;D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{}),...(b.c&&b.c!==defCol(b.k)?{c:b.c}:{})}));if(!layCustom())D.tileLayout=null;$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
+$("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));LAYCOL=290;renderLayEditor()};
 $("#layOpen").onclick=openLayout;
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -2449,6 +2466,10 @@ const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentOf(t
 const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";if(tailAOG(t))return "g-aog";const o=ownerOf(t);return o==="Deployed"?"g-dep":o==="Retrofit"?"g-ret":"g-o"};
 const clearCRS=t=>{const a=(D.ac||{})[t];if(a&&a.crs){delete a.crs}};
 const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
+// role config: current (what's fitted) vs required (the next flight's role). Green when they match, red when they don't.
+const roleReq=t=>(acGet(t).flight||{}).role||"";
+const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canFlight()?"":"disabled"}>`};
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
