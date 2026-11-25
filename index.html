@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125012050">
+<meta name="build" content="20261125012951">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -664,6 +664,20 @@ nav button{white-space:nowrap}
 .sent-tbl td{vertical-align:middle}
 .sent-tbl .sentsel{max-width:210px}
 .sent-top{font-size:12px;color:var(--ink2);white-space:nowrap}
+.sixbtn i{font-style:normal;font-size:11px;font-weight:800;background:#FEF3C7;color:#92400E;border-radius:99px;padding:0 6px;margin-left:4px}
+.sixbtn.ok i{background:#DCFCE7;color:#15803D}
+.sixlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sixrow{display:flex;align-items:center;gap:12px;padding:10px 12px}
+.sixrow+.sixrow{border-top:1px solid var(--line)}
+.sixrow.done{background:#F0FDF4}
+.sixtick{width:28px;height:28px;border-radius:7px;border:2px solid #CBD5E1;background:#fff;color:#fff;font-weight:900;cursor:pointer;flex:none;font-size:15px;line-height:1}
+.sixtick:hover{border-color:var(--green,#16A34A)}
+.sixrow.done .sixtick{background:#16A34A;border-color:#16A34A}
+.sixn{flex:1;display:flex;flex-direction:column}
+.sixn b{font-size:14px}.sixn small{font-size:11.5px;color:var(--mute)}
+.sixrow.done .sixn small{color:#15803D;font-weight:600}
+.sixrow a.btn{text-decoration:none}
+.six-ok{color:#15803D;font-weight:700}.six-warn{color:#B45309;font-weight:700}
 </style>
 </head>
 <body>
@@ -1016,6 +1030,7 @@ nav button{white-space:nowrap}
   <section id="g-hand"><h3>12 · Shift notes &amp; handover</h3><ul>
     <li><b>Shift notes</b> (bottom of the board) carry through every shift and save to each diary. <b>Useful info</b> tab is for standing info (contacts, reminders).</li>
     <li><b>Export so far</b> previews the diary at any time.</li>
+    <li><b>6S reset</b> (shift bar, top) – open each area's form (Line Controller, Flight Line, Office, Crew Room &amp; Kitchen, In Use POL), complete it, then tick it off. Ticks are shared, show on the handover and in the diary, and reset for the next shift.</li>
     <li><b>Hand over shift</b>: enter the off-going and on-coming names and sign (or tick <i>not available</i> with a reason), pick the <b>crew coming on</b>, then hand over. The diary is saved permanently and opens to print or save as PDF.</li>
     <li>Unfinished jobs carry over to the next shift automatically.</li></ul></section>
 
@@ -1062,6 +1077,10 @@ nav button{white-space:nowrap}
     <div class="err" id="mvErr"></div>
     <div class="mvbtns"><button class="linkbtn" id="mvPrev">Preview</button><button class="btn" id="mvEml" title="Downloads a draft that opens fully formatted in Outlook desktop">Outlook draft</button><button class="btn pri" id="mvGo">Submit</button></div>
   </div>
+</div></div>
+<div id="sixModal" class="modal hide"><div class="mcard card" style="width:min(560px,100%)">
+  <div class="mhead"><h2>6S reset</h2><span class="sub" id="sixSub">End of shift</span><button class="btn icon" id="sixClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><p class="sub" style="margin:0 0 10px">Open each area's form, complete it, then tick it off. Ticks are shared with everyone and reset at handover.</p><div id="sixList" class="sixlist"></div></div>
 </div></div>
 <div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
   <div class="mhead"><h2>Manning targets</h2><span class="sub">per shift</span><button class="btn icon" id="mnClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -1702,6 +1721,26 @@ $("#mvEml").onclick=()=>{const m=mvReady();if(!m)return;mvRemember(m);
   const b64=s=>btoa(unescape(encodeURIComponent(s))).replace(/.{76}/g,"$&\r\n");
   const eml=["X-Unsent: 1",`To: ${MV_TO.join(", ")}`,`Subject: Aircraft move ${m.tail}`,"MIME-Version: 1.0","Content-Type: text/html; charset=utf-8","Content-Transfer-Encoding: base64","",b64(`<html><body>${mvHtml(m)}</body></html>`)].join("\r\n");
   download(`Aircraft move ${m.tail}.eml`,eml,"message/rfc822");toast("Draft downloaded – open it and it appears as a new Outlook email ready to send")};
+
+/* ---------- 6S reset (end-of-shift area check forms) ---------- */
+const SIXS=[["lc","Line Controller","https://docs.google.com/forms/d/e/1FAIpQLScTg54UC7bdo7h41riQLxomr6CMsrs-uBHJCdgcfqh8FmY4dw/viewform"],
+ ["fl","Flight Line","https://docs.google.com/forms/d/e/1FAIpQLSeRKFYhq9TNPys0TkaXVMESizBAGQVgcEUQxa2F_kYlmAfgRA/viewform"],
+ ["of","Office","https://docs.google.com/forms/d/e/1FAIpQLSdNI8m70iGe2foKjsglMrm6g30123tk_4VU5i_Wv6YPJb8GrA/viewform"],
+ ["cr","Crew Room & Kitchen","https://docs.google.com/forms/d/e/1FAIpQLSeZRPDDK7LBmbOGnwHxrXyE6KroUN196oRV0026WFG4lkfznA/viewform"],
+ ["pol","In Use POL","https://forms.gle/zSSbq4jZxQZ6GTLS8"]];
+const sixState=()=>(curShift().sixs=curShift().sixs||{});
+const sixDone=()=>SIXS.filter(([k])=>sixState()[k]).length;
+function renderSix(){const st=sixState();
+  $("#sixSub").textContent=`${crewLbl(curShift())} · ${SHIFT[curShift().type]} · ${sixDone()}/${SIXS.length} done`;
+  $("#sixList").innerHTML=SIXS.map(([k,n,u])=>{const d=st[k];return `<div class="sixrow ${d?"done":""}"><button class="sixtick" data-six="${k}" title="${d?"Untick":"Tick off when the form is submitted"}">${d?"✓":""}</button>
+    <div class="sixn"><b>${esc(n)}</b>${d?`<small>Done ${tm(d.at)}${d.by?" · "+esc(d.by):""}</small>`:`<small>Not done</small>`}</div>
+    <a class="btn sm ${d?"":"pri"}" href="${u}" target="_blank" rel="noopener" data-sixopen="${k}">Open form ↗</a></div>`}).join("");
+}
+$("#sixList").addEventListener("click",e=>{const t=e.target.closest("[data-six]");if(!t)return;const st=sixState(),k=t.dataset.six;
+  if(st[k])delete st[k];else st[k]={at:now(),by:(typeof myName==="function"&&myName())||""};save();renderSix()});
+document.addEventListener("click",e=>{if(e.target.closest("#sixOpen")){renderSix();$("#sixModal").classList.remove("hide")}});
+$("#sixClose").onclick=()=>$("#sixModal").classList.add("hide");
+$("#sixModal").addEventListener("click",e=>{if(e.target.id==="sixModal")$("#sixModal").classList.add("hide")});
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
@@ -1980,7 +2019,7 @@ function renderShiftBar(){
   const done=t=>DIARY.find(r=>r.date===sh.date&&r.type===t);
   $("#shiftBar").innerHTML=`<div class="stabs">${["E","L","N"].map(t=>{const r=done(t);return t===sh.type?`<button class="stab live" disabled>${SHIFT[t]}</button>`:r?`<button class="stab past" data-rec="${r.id}" title="Handed over ${tm(r.endedAt)} – view diary">✓ ${SHIFT[t]}</button>`:`<button class="stab" disabled>${SHIFT[t]}</button>`}).join("")}</div>
     <span class="crewbadge">${sh.crew}</span><span class="shiftinfo"><b>${crewLbl(sh)} · ${SHIFT[sh.type]} · ${dlong(sh.date)}</b> – started ${tm(sh.startedAt)} <button class="linkbtn" id="csOpen">Correct</button></span>${(()=>{const o=ovlInfo();if(!o)return "";const n=D.engineers.filter(e=>ovl(e)).length;return n?`<span class="ovlbar" title="Between 22:00 and 02:00 lates and nights overlap">⇄ Overlap – ${n} on ${o.lbl.toLowerCase()} also available till 02:00</span>`:""})()}
-    <span style="margin-left:auto;display:flex;gap:8px"><button class="btn sm" id="exportNow" title="Preview this shift's diary so far">Export so far</button><button class="btn pri sm" id="hoOpen">Hand over shift</button></span>`;
+    <span style="margin-left:auto;display:flex;gap:8px">${(n=>`<button class="btn sm sixbtn ${n===SIXS.length?"ok":""}" id="sixOpen" title="End-of-shift 6S reset checks">6S reset <i>${n}/${SIXS.length}</i></button>`)(sixDone())}<button class="btn sm" id="exportNow" title="Preview this shift's diary so far">Export so far</button><button class="btn pri sm" id="hoOpen">Hand over shift</button></span>`;
 }
 $("#shiftBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.rec){const r=DIARY.find(x=>x.id===b.dataset.rec);if(r)exportRecord(r)}
@@ -2014,7 +2053,7 @@ function openHandover(){
   const sh=curShift(),nx=nextShift(sh),ss=shiftStart();
   const doneJ=D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss),open=D.jobs.filter(active);
   $("#hoSub").textContent=`${SHIFT[sh.type]} · ${dlong(sh.date)}`;
-  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
+  $("#hoSummary").innerHTML=`<b>${doneJ.length}</b> job${doneJ.length===1?"":"s"} completed this shift · <b>${open.length}</b> unfinished will carry over to the next shift${open.length?": "+open.map(j=>esc(j.tail)).join(", "):""}.<br>${(n=>n===SIXS.length?`<span class="six-ok">✓ 6S reset complete</span>`:`<span class="six-warn">⚠ 6S reset ${n}/${SIXS.length} – outstanding: ${SIXS.filter(([k])=>!sixState()[k]).map(x=>x[1]).join(", ")}</span>`)(sixDone())}<br><span class="sub">Once signed, this shift's diary is locked as a record and the export opens. Shift notes carry over.</span>`;
   $("#hoCrew").value="";
   SIG.sigOff.clear();SIG.sigOn.clear();["hoOffNA","hoOnNA"].forEach(i=>{$("#"+i).checked=false;$("#"+i).onchange({target:$("#"+i)})});
   $("#hoOffName").value=window.__waCloud?.me?.()?.full_name||"";$("#hoOnName").value="";$("#hoOffWhy").value="";$("#hoOnWhy").value="";
@@ -2063,6 +2102,7 @@ function buildRecord(handover,closeIds=[]){
     onShift:onS.sort(byTrade).map(e=>({n:e.name,t:catShort(e),duty:duty(e)})),
     done:D.jobs.filter(j=>j.status==="done"&&new Date(j.completed)>=ss).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
     open:D.jobs.filter(active).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
+    sixs:SIXS.map(([k,n])=>({n,done:!!sixState()[k],at:sixState()[k]?.at||null,by:sixState()[k]?.by||""})),
     handover:handover||null};
 }
 function exportRecord(r,draft,win){
@@ -2093,6 +2133,7 @@ function exportRecord(r,draft,win){
   ${r.closed?.length?`<h2>Closed at handover – not carried forward (${r.closed.length})</h2>${r.closed.map(block).join("")}`:""}
   <h2>Shift notes</h2><div class="pre">${esc(r.notes)||"–"}</div>
   <h2>Useful information</h2><div class="pre">${esc(r.info)||"–"}</div>
+  ${r.sixs?`<h2>6S reset</h2><p>${r.sixs.map(x=>`${x.done?"☑":"☐"} ${esc(x.n)}${x.done?` (${tm(x.at)}${x.by?" "+esc(x.by):""})`:""}`).join(" &nbsp; ")}</p>`:""}
   <h2>Handover</h2><div class="sgs">${sig("Going off shift",r.handover?.off)}${sig("Coming on shift",r.handover?.on)}</div>
   <div class="foot">${r.handover?.nextCrew?"Handed over to "+r.handover.nextCrew+" Shift · ":""}Record ${r.id} · Generated ${fmt(new Date().toISOString())}${r.handover?.by?" · Handed over by "+esc(r.handover.by):""} · Key: ☐ not started ▶ in progress ☑ done</div>
   <script>setTimeout(()=>print(),400)<\/script></body></html>`;
