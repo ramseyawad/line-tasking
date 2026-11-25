@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125122656">
+<meta name="build" content="20261125123234">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -760,27 +760,27 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .ct-crs+.ct-chev{margin-left:4px}
 .acbar button.nm{background:#E2E8F0!important;color:#94A3B8!important;border-color:#CBD5E1!important;box-shadow:none}
 .acbar button.nm.aog{box-shadow:0 0 0 2px #FCA5A5}
-.tlay{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;padding:4px 10px 10px}
+.tlay{display:block}
+.lrow.lmeta{display:flex;flex-wrap:wrap;gap:6px;padding:2px 14px 8px;align-items:center}
+.lrow.lfull>.blk{display:block}
 .blk{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
-.blk>select,.blk>input,.blk>.prif,.blk>.nfbtn,.blk>.tags,.blk>.jtimes{flex:1 1 auto;width:100%;max-width:none!important}
-.blk-head,.blk-crew,.blk-tasks,.blk-foot{display:block}
-.blk-head .jh{padding:8px 4px 2px}
-.blk-crew .crewbox{border-radius:8px;overflow:hidden;border:1px solid #EEF2F7}
-.blk-tasks .jobrow{padding:4px 4px}
-.blk-foot .jf{border-radius:8px}
+.lmeta .blk>select,.lmeta .blk>input,.lmeta .blk>.prif,.lmeta .blk>.nfbtn,.lmeta .blk>.tags,.lmeta .blk>.jtimes{flex:1 1 auto;width:100%;max-width:none!important}
+.lmeta .blk-head,.lmeta .blk-crew,.lmeta .blk-tasks,.lmeta .blk-foot{display:block}
 #jobs.tiles .job.customlay{display:block!important}
 #jobs.tiles .customlay .blk-crew .crewbox{border-left:1px solid #EEF2F7}
 #jobs.tiles .customlay .blk-tasks .jobrow{border-left:0}
 .layprev{background:#F8FAFC;border-radius:10px;padding:14px;max-height:calc(88vh - 160px);overflow:auto}
-.layprev .job{max-width:760px;margin:0 auto;box-shadow:var(--sh)!important}
-.laying .blk{position:relative;outline:1.5px dashed #93C5FD;outline-offset:-1px;border-radius:6px;min-height:34px}
+.layprev .job{margin:0 auto;box-shadow:var(--sh)!important}
+.laying .blk{position:relative;outline:1.5px dashed #93C5FD;outline-offset:-1px;border-radius:6px;min-height:30px}
+.laying .lrow{padding-top:10px}
 .laying .blk>*:not(.layov){pointer-events:none}
 .laying .blk.bhid{opacity:.45;outline-color:#CBD5E1}
-.layov{position:absolute;inset:0;display:flex;align-items:flex-start;gap:6px;padding:3px 5px;cursor:grab;z-index:2}
+.layov{position:absolute;inset:0;cursor:grab;z-index:2}
+.laytag{position:absolute;top:-8px;left:4px;display:flex;gap:3px;align-items:center;opacity:.9}
 .layov:hover{background:rgba(59,130,246,.06)}
 .layname{font-size:10.5px;font-weight:800;background:#1D4ED8;color:#fff;border-radius:4px;padding:1px 6px;white-space:nowrap}
 .layw{font-size:10.5px;font-weight:800;background:#fff;color:#1D4ED8;border:1px solid #93C5FD;border-radius:4px;padding:0 5px}
-.layeye{margin-left:auto;font:inherit;font-size:10.5px;font-weight:700;border:1px solid #CBD5E1;background:#fff;border-radius:4px;padding:0 6px;cursor:pointer}
+.layeye{font:inherit;font-size:10.5px;font-weight:700;border:1px solid #CBD5E1;background:#fff;border-radius:4px;padding:0 6px;cursor:pointer}
 .layrs{position:absolute;right:-4px;top:0;bottom:0;width:10px;cursor:ew-resize;background:linear-gradient(90deg,transparent 3px,#3B82F6 3px,#3B82F6 6px,transparent 6px);opacity:.6}
 .layrs:hover{opacity:1}
 .laydrag{opacity:.4}
@@ -1441,7 +1441,7 @@ function del(jobId){
   const i=D.jobs.findIndex(x=>x.id===jobId);const [gone]=D.jobs.splice(i,1);save();
   toast("Job deleted",()=>{D.jobs.splice(i,0,gone);save()});
 }
-function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&!val){render();return}if(field==="acst"&&(j.acst||"")!==val)(j.acstLog=j.acstLog||[]).push({v:val,at:now()});if(j[field]!==val){j[field]=val;j.edited=now()}if(field==="task"){items(j);EDIT.delete(jobId)}save()}
+function editField(jobId,field,val){const j=job(jobId);if(field==="task"&&val==null){render();return}if(field==="acst"&&(j.acst||"")!==val)(j.acstLog=j.acstLog||[]).push({v:val,at:now()});if(j[field]!==val){j[field]=val;j.edited=now()}if(field==="task"){items(j);EDIT.delete(jobId)}save()}
 // Each line of a job's task box is its own task with a status: todo → work → done
 const EDIT=new Set();
 const ACSTATE=["Serviceable","AOG","Shed Maint"],ACAREA=["Line","Line Support","Deployed"];
@@ -1759,7 +1759,7 @@ let LEDIT=null,LDRAFT=null;
 function lineSave(inp,keep){const j=job(inp.dataset.lj);if(!j){LEDIT=null;LDRAFT=null;return}const i=+inp.dataset.li,v=inp.value.trim();
   const lines=items(j).map(x=>x.t);LEDIT=null;LDRAFT=null;
   if(v===lines[i]){render();return}
-  if(!v){if(lines.length<=1){toast("A job needs at least one task – delete the job instead");render();return}lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}lines[i]=v}
+  if(!v){lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}lines[i]=v}
   editField(j.id,"task",lines.join("\n"))}
 $("#jobs").addEventListener("click",e=>{const t=e.target.closest("[data-tedit]");if(!t||t.closest("fieldset[disabled]"))return;
   const a=document.querySelector(".line-edit");if(a)lineSave(a);
@@ -2041,10 +2041,13 @@ const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LA
   LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
 let LAY_FORCE=false;
 const layCustom=()=>{if(LAY_FORCE)return true;const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false]))};
-function layoutHtml(BL,edit){
+function layoutHtml(BL,edit){edit=edit||LAY_FORCE;
   // no custom template saved → the original tile exactly as it was
   if(!edit&&!layCustom())return BL.head+`<div class="jmeta">${BL.times}${BL.flight}${BL.pri}${BL.state}${BL.owner}${BL.dass}${BL.role}${BL.sent}${BL.notes}${BL.lsj}</div>`+BL.crew+BL.tasks+BL.foot;
-  return `<div class="tlay">${tileLayout().map(b=>(b.hide&&!edit)?"":`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)">${BL[b.k]||""}</div>`).join("")}</div>`}
+  const BIG={head:1,crew:1,tasks:1,foot:1},rows=[];let row=[],sum=0;
+  tileLayout().forEach(b=>{if(b.hide&&!edit)return;if(row.length&&sum+b.w>100){rows.push(row);row=[];sum=0}row.push(b);sum+=b.w});if(row.length)rows.push(row);
+  return `<div class="tlay">${rows.map(r=>{const full=r.length===1&&BIG[r[0].k]&&r[0].w===100;
+    return `<div class="lrow ${full?"lfull":"lmeta"}">${r.map(b=>`<div class="blk blk-${b.k}${b.hide?" bhid":""}" data-blk="${b.k}" style="${full?"":`flex:0 0 calc(${b.w}% - 6px);max-width:calc(${b.w}% - 6px)`}">${BL[b.k]||""}</div>`).join("")}</div>`}).join("")}</div>`}
 /* ---------- collapsed tiles (aircraft with no open tasks) ---------- */
 let EXP=new Set();
 function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),off=t==="Off Aircraft",own=ownerOf(t),se=sentOf(t);
@@ -2080,30 +2083,30 @@ function renderLayEditor(){
   D.tileLayout=saved;LAY_FORCE=false;renderBoard();
   $("#layPrev").innerHTML=html||`<div class="job"><fieldset class="rofs">${layoutHtml(Object.fromEntries(Object.keys(LAY_NAMES).map(k=>[k,`<div class="laydummy">${LAY_NAMES[k]}</div>`])),true)}</fieldset></div>`;
   const tile=$("#layPrev .job");if(!tile)return;
+  const real=document.querySelector("#jobs > .job");tile.style.width=(real?real.offsetWidth:466)+"px";tile.style.maxWidth="none";
   tile.classList.add("laying");tile.querySelectorAll(".newrib").forEach(x=>x.remove());
   // add hidden blocks so they can be shown again
   const lay=tile.querySelector(".tlay");
-  LAYDRAFT.forEach(b=>{let el=lay.querySelector(`[data-blk="${b.k}"]`);if(!el){el=document.createElement("div");el.className=`blk blk-${b.k}`;el.dataset.blk=b.k;el.innerHTML=`<div class="laydummy">${LAY_NAMES[b.k]}</div>`;lay.append(el)}
-    el.style.flex=`0 0 calc(${b.w}% - 6px)`;el.style.maxWidth=`calc(${b.w}% - 6px)`;el.classList.toggle("bhid",!!b.hide);
+  LAYDRAFT.forEach(b=>{let el=lay.querySelector(`[data-blk="${b.k}"]`);if(!el)return;el.classList.toggle("bhid",!!b.hide);
     const ov=document.createElement("div");ov.className="layov";ov.draggable=true;
-    ov.innerHTML=`<span class="layname">${LAY_NAMES[b.k]}</span><span class="layw">${b.w}%</span><button class="layeye" title="${b.hide?"Show":"Hide"} this">${b.hide?"Show":"Hide"}</button><i class="layrs" title="Drag to resize"></i>`;el.append(ov)});
-  // keep DOM order = draft order
-  LAYDRAFT.forEach(b=>lay.append(lay.querySelector(`[data-blk="${b.k}"]`)));
+    ov.innerHTML=`<span class="laytag"><span class="layname">${LAY_NAMES[b.k]}</span><span class="layw">${b.w}%</span><button class="layeye" title="${b.hide?"Show":"Hide"} this">${b.hide?"Show":"Hide"}</button></span><i class="layrs" title="Drag to resize"></i>`;el.append(ov)});
+
 }
-const layOrder=()=>[...document.querySelectorAll("#layPrev .tlay > .blk")].map(x=>x.dataset.blk);
+const layOrder=()=>[...document.querySelectorAll("#layPrev .tlay .blk")].map(x=>x.dataset.blk);
 $("#layPrev").addEventListener("click",e=>{const b=e.target.closest(".layeye");if(!b)return;const k=b.closest(".blk").dataset.blk,d=LAYDRAFT.find(x=>x.k===k);d.hide=!d.hide;if(!d.hide)delete d.hide;renderLayEditor()});
 let DRAGK=null;
 $("#layPrev").addEventListener("dragstart",e=>{const ov=e.target.closest?.(".layov");if(!ov)return;DRAGK=ov.closest(".blk").dataset.blk;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",DRAGK)}catch(_){}ov.closest(".blk").classList.add("laydrag")});
 $("#layPrev").addEventListener("dragover",e=>{if(!DRAGK)return;const t=e.target.closest(".blk");if(!t||t.dataset.blk===DRAGK)return;e.preventDefault();
   const r=t.getBoundingClientRect(),before=(e.clientX-r.left)<r.width/2,src=document.querySelector(`#layPrev [data-blk="${DRAGK}"]`);
   t.parentNode.insertBefore(src,before?t:t.nextSibling)});
+$("#layPrev").addEventListener("drop",e=>{if(DRAGK)e.preventDefault()});
 $("#layPrev").addEventListener("dragend",()=>{if(!DRAGK)return;document.querySelectorAll("#layPrev .laydrag").forEach(x=>x.classList.remove("laydrag"));
-  const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));DRAGK=null});
+  const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));DRAGK=null;renderLayEditor()});
 // resize by dragging the right edge (snaps to 5%)
 $("#layPrev").addEventListener("pointerdown",e=>{const h=e.target.closest(".layrs");if(!h)return;e.preventDefault();e.stopPropagation();
-  const blk=h.closest(".blk"),lay=blk.parentNode,k=blk.dataset.blk,d=LAYDRAFT.find(x=>x.k===k),L=blk.getBoundingClientRect().left,W=lay.getBoundingClientRect().width;
+  const blk=h.closest(".blk"),lay=blk.closest(".tlay"),k=blk.dataset.blk,d=LAYDRAFT.find(x=>x.k===k),L=blk.getBoundingClientRect().left,W=lay.getBoundingClientRect().width-28;
   const mv=ev=>{let w=Math.round(((ev.clientX-L)/W*100)/5)*5;w=Math.max(10,Math.min(100,w));d.w=w;blk.style.flex=`0 0 calc(${w}% - 6px)`;blk.style.maxWidth=`calc(${w}% - 6px)`;blk.querySelector(".layw").textContent=w+"%"};
-  const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up)};
+  const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);renderLayEditor()};
   addEventListener("pointermove",mv);addEventListener("pointerup",up)});
 $("#layClose").onclick=$("#layCancel").onclick=()=>{$("#layModal").classList.add("hide");render()};
 $("#laySave").onclick=()=>{const o=layOrder();LAYDRAFT.sort((a,b)=>o.indexOf(a.k)-o.indexOf(b.k));D.tileLayout=LAYDRAFT.map(b=>({k:b.k,w:b.w,...(b.hide?{hide:true}:{})}));if(!layCustom())D.tileLayout=null;$("#layModal").classList.add("hide");save();toast("Tile layout saved for every aircraft")};
