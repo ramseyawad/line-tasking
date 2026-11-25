@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125133530">
+<meta name="build" content="20261125133725">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2832,7 +2832,7 @@ function renderDisplay(){
   // header counts are individual task lines on the jobs shown, not whole aircraft jobs
   const ss=shiftStart(),tl=j=>tasksOnly(j);let nT=0,nW=0,nD=0;
   [...work,...idle].forEach(j=>tl(j).forEach(it=>{if(it.s==="work")nW++;else if(it.s==="done"){if(!it.at||new Date(it.at)>=ss)nD++}else nT++}));
-  done.forEach(j=>nD+=tl(j).length);
+
   $("#kOpen").textContent=nT;$("#kWork").textContent=nW;$("#kDone").textContent=nD;
   const {w}=jobMaps();
   const busy=D.engineers.filter(e=>w[e.id]).sort(byTrade);
@@ -2841,7 +2841,8 @@ function renderDisplay(){
   // coming up: the next take offs / landings on Line aircraft, with tail and bay
   const up=upcomingFlights(6);$("#dbFlights").classList.toggle("hide",!up.length);
   (h=>{if($("#dbFlights").innerHTML!==h)$("#dbFlights").innerHTML=h})(up.length?`<div class="dbf-h">Coming up</div>`+up.map(x=>`<div class="dbf ${x.soon?"soon":""}"><div class="dbf-tail">${esc(x.t.slice(2))}<small>${x.bay?"BAY "+esc(x.bay):"No bay"}</small></div><div class="dbf-b"><div class="dbf-no">${esc(x.f.no||"")}${x.f.date&&x.f.date!==todayISO()?` <span>${esc(new Date(x.f.date+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric"}))}</span>`:""}</div><div class="dbf-t">${x.f.time?`<span class="${x.next==="to"?"nx":""}">${FL_ICO.to}${esc(x.f.time)}</span>`:""}${x.f.ld?`<span class="${x.next==="ld"?"nx":""}">${FL_ICO.ld}${esc(x.f.ld)}</span>`:""}</div><div class="dbf-in">${x.next==="ld"?"Lands":"Takes off"} ${x.inTxt}</div></div></div>`).join(""):"");
-  fillHtml("#dbGrid",[...idle,...work,...done].map(card).join("")||`<div class="empty-lane">No jobs assigned yet</div>`);
+  // completed whole jobs are not shown – the board is for who's on what right now
+  fillHtml("#dbGrid",[...idle,...work].map(card).join("")||`<div class="empty-lane">No jobs assigned yet</div>`);
 }
 function openDisplay(){$("#display").classList.remove("hide");document.querySelectorAll("#display .cards").forEach(b=>b.dataset.h="");if(location.hash!=="#display")history.replaceState(null,"","#display");
   document.documentElement.requestFullscreen?.().catch(()=>{});renderDisplay()}
