@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125002412">
+<meta name="build" content="20261125002815">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -577,6 +577,16 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .lnew:hover{background:#1D4ED8}
 .seenbtn{margin-left:auto;border:0;background:rgba(255,255,255,.22);color:#fff;font:inherit;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;cursor:pointer}
 .seenbtn:hover{background:rgba(255,255,255,.35)}
+.ti{grid-template-columns:minmax(0,1fr) 62px 128px minmax(150px,30%)!important}
+.ti.info{grid-template-columns:auto 1fr!important}
+.ltsel{appearance:none;-webkit-appearance:none;font:inherit;font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;border-radius:6px;padding:3px 8px;border:1px solid #CBD5E1;background:#F8FAFC;color:#475569;cursor:pointer;text-align:center;justify-self:start;width:56px}
+.ltsel.lt-C{background:#FEF3C7;border-color:#F59E0B;color:#92400E}
+.ltsel.ro{cursor:default;display:inline-block}
+.headsw{display:flex;background:#F1F4F8;border-radius:8px;padding:3px;gap:2px}
+.headsw button{border:0;background:transparent;font:inherit;font-size:13px;font-weight:700;color:var(--mute);padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.headsw button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+.headsw button[data-h=C].on{background:#FEF3C7;color:#92400E}
+@media(max-width:640px){.ti{grid-template-columns:minmax(0,1fr) auto auto!important}}
 </style>
 </head>
 <body>
@@ -628,6 +638,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
         <div class="jobs-h">
           <button class="btn pri" id="openNew" title="Raise a new job (N)"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Raise a job</button>
           <h2>Jobs</h2>
+          <div class="headsw" id="headSw" title="Show line tasks, certifier jobs or everything"><button data-h="all">All</button><button data-h="L">Line tasks</button><button data-h="C">Certifier</button></div>
           <div class="pills" id="pills">
             <button data-f="active" class="on">Open <i id="pcActive">0</i></button>
             <button data-f="work">In work <i id="pcWork">0</i></button>
@@ -833,6 +844,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
       <select id="nTail" class="tailsel"></select>
       <label class="bayf">(<span>BAY</span><input id="nBay" placeholder="–">)</label>
       <label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" id="nPri" placeholder="–"></label>
+      <select id="nLt" class="acsel" title="Line task or certifier job"><option value="L">Line task</option><option value="C">Certifier</option></select>
       <select id="nSt" class="acsel"><option value="">State…</option><option>Serviceable</option><option>AOG</option><option>Shed Maint</option></select>
       <select id="nArea" class="acsel"><option>Line</option><option>Line Support</option><option>Deployed</option></select>
       <input id="nTag" class="tagf" placeholder="Status notes (comma separated)">
@@ -965,7 +977,8 @@ $("#addJob").onclick=()=>{
   if(!task){$("#nTask").focus();return}
   const engs=[...PICK].filter(id=>isOn(eng(id)));
   D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),pri:$("#nPri").value.trim(),acst:$("#nSt").value,acstLog:$("#nSt").value?[{v:$("#nSt").value,at:now()}]:[],area:$("#nArea").value,task,status:engs.length?"planned":"open",
-    created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null}))});
+    created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null})),
+    lt:$("#nLt").value==="C"?Object.fromEntries(task.split("\n").map(t=>t.trim()).filter(t=>t&&!INFO_RE.test(t)).map(t=>[t,"C"])):undefined});
   $("#nTask").value="";$("#nBay").value="";$("#nTag").value="";$("#nLsj").value="";$("#nPri").value="";$("#nSt").value="";$("#nArea").value="Line";
   PICK.clear();closeNew();
   save();toast("Job added – "+D.jobs[D.jobs.length-1].tail);$("#nTask").focus();
@@ -1036,6 +1049,9 @@ const EDIT=new Set();
 const ACSTATE=["Serviceable","AOG","Shed Maint"],ACAREA=["Line","Line Support","Deployed"];
 const stCls=v=>({Serviceable:"sv",AOG:"aog","Shed Maint":"shed"}[v]||"");
 const prio=j=>{const p=parseInt(j.pri);return p>0?p:999};
+const ltype=(j,t)=>(j.lt||{})[t]||"L";
+let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
+const lineShown=(j,it)=>it.info||HEAD==="all"||ltype(j,it.t)===HEAD;
 const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
 const selHtml=(f,id,list,val,dis,blank)=>`<select class="acsel ${f==="acst"?stCls(val):""}" data-f="${f}" data-id="${id}" ${dis?"disabled":""}>${blank?`<option value="">${blank}</option>`:""}${list.map(v=>`<option ${v===val?"selected":""}>${v}</option>`).join("")}</select>`;
 const INFO_RE=/^INFO\b[\s:–-]*/i;
@@ -1078,7 +1094,7 @@ const closeManning=()=>$("#mnModal").classList.add("hide");
 $("#mnClose").onclick=closeManning;$("#mnCancel").onclick=closeManning;
 $("#mnModal").addEventListener("mousedown",e=>{if(e.target.id==="mnModal")closeManning()});
 $("#mnSave").onclick=()=>{const M={};document.querySelectorAll("#mnRows input").forEach(i=>{const v=i.value===""?null:Math.max(0,parseInt(i.value)||0);(M[i.dataset.mk]=M[i.dataset.mk]||{})[i.dataset.mf]=v});D.manning=M;closeManning();save();toast("Manning targets saved")};
-function openNew(){$("#nj").classList.remove("hide");renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
+function openNew(){$("#nj").classList.remove("hide");$("#nLt").value=HEAD==="C"?"C":"L";renderPicker();setTimeout(()=>$("#nTail").focus(),30)}
 function closeNew(){$("#nj").classList.add("hide")}
 $("#openNew").onclick=openNew;$("#njClose").onclick=closeNew;$("#njCancel").onclick=closeNew;
 $("#nj").addEventListener("mousedown",e=>{if(e.target.id==="nj")closeNew()});
@@ -1140,6 +1156,7 @@ function renderBoard(){
   document.querySelectorAll(".kpi").forEach(k=>k.classList.toggle("on",k.dataset.k===FILTER));
   // jobs list
   let jobs=FILTER==="done"?doneShift:FILTER==="active"?act:act.filter(j=>j.status===FILTER);
+  if(HEAD!=="all")jobs=jobs.filter(j=>tasksOnly(j).some(it=>ltype(j,it.t)===HEAD));
   const q=$("#q").value.trim().toLowerCase();
   if(q)jobs=jobs.filter(j=>(j.tail+" "+j.bay+" "+j.task+" "+j.assignments.map(a=>engName(a.eng)).join(" ")).toLowerCase().includes(q));
   const s=$("#sortBy").value, rank={work:0,planned:1,open:2,done:3};
@@ -1190,6 +1207,7 @@ function renderBoard(){
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
+          if(!lineShown(j,it))return "";
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
           const nb=lineNew(j,it)?`<button class="lnew" data-lseen="${j.id}|${i}" title="Added by ${esc(nwOf(j,it).by||"someone")} ${fmt(nwOf(j,it).at)} – click to clear">NEW ✕</button>`:"";
           const tbox=txt=>`<span class="tline">${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
@@ -1197,6 +1215,7 @@ function renderBoard(){
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
+          ${(ty=>done?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div>
@@ -1234,6 +1253,7 @@ $("#jobs").addEventListener("change",e=>{
   if(t.dataset.add)assign(t.dataset.add,t.value);
   else if(t.dataset.iadd){const[j,i]=t.dataset.iadd.split("|");assignItem(j,+i,t.value)}
   else if(t.dataset.tagadd)addTag(t);
+  else if(t.dataset.lt){const[id,i]=t.dataset.lt.split("|"),j=job(id),it=items(j)[+i];if(it){j.lt=j.lt||{};if(t.value==="C")j.lt[it.t]="C";else delete j.lt[it.t];save()}}
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
 });
 function addTag(t){const v=t.value.trim();if(!v)return;const id=t.dataset.tagadd,l=tagList(job(id));v.split(",").map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!l.some(y=>y.toLowerCase()===x.toLowerCase()))l.push(x.toUpperCase())});t.value="";editField(id,"tag",l.join(", "));setTimeout(()=>document.querySelector(`.tagadd[data-tagadd="${id}"]`)?.focus(),0)}
@@ -1263,7 +1283,7 @@ let LEDIT=null,LDRAFT=null;
 function lineSave(inp,keep){const j=job(inp.dataset.lj);if(!j){LEDIT=null;LDRAFT=null;return}const i=+inp.dataset.li,v=inp.value.trim();
   const lines=items(j).map(x=>x.t);LEDIT=null;LDRAFT=null;
   if(v===lines[i]){render();return}
-  if(!v){if(lines.length<=1){toast("A job needs at least one task – delete the job instead");render();return}lines.splice(i,1)}else lines[i]=v;
+  if(!v){if(lines.length<=1){toast("A job needs at least one task – delete the job instead");render();return}lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}lines[i]=v}
   editField(j.id,"task",lines.join("\n"))}
 $("#jobs").addEventListener("click",e=>{const t=e.target.closest("[data-tedit]");if(!t)return;
   const a=document.querySelector(".line-edit");if(a)lineSave(a);
@@ -1330,6 +1350,9 @@ seenStart();BASE=sigs();BASEL=lineMap();
   function waitReload(){toast("Updating to the latest version…");const go=()=>{if(busy()){setTimeout(go,5000);return}location.reload()};setTimeout(go,4000)}
   setInterval(check,120000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});setTimeout(check,15000);
 })();
+
+const markHead=()=>document.querySelectorAll("#headSw button").forEach(b=>b.classList.toggle("on",b.dataset.h===HEAD));
+$("#headSw").onclick=e=>{const b=e.target.closest("button");if(!b)return;HEAD=b.dataset.h;try{localStorage.setItem("wa-head",HEAD)}catch(_){}markHead();render()};markHead();
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
