@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125085903">
+<meta name="build" content="20261125090058">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2165,7 +2165,9 @@ const canEdit=o=>o==="Line"||isAdmin();
 // user positions (set by an admin in Users) – SLE and Line Control can edit next-flight details
 const POSITIONS=["Line Control","SLE","B1","B2","A cert","AIOC"];
 const myUser=()=>window.__waCloud?.me?.()?.username||"";
-const myPos=()=>(D.pos||{})[myUser()]||"";
+const POS_DEF={ramsey:"Line Control",kev:"SLE"}; // starting positions until an admin changes them in Users
+const posOf=u=>(D.pos||{})[u]??POS_DEF[u]??"";
+const myPos=()=>posOf(myUser());
 const canFlight=()=>isAdmin()||["SLE","Line Control"].includes(myPos());
 const acRec=t=>{D.ac=D.ac||{};return D.ac[t]=D.ac[t]||{}};
 const acGet=t=>(D.ac||{})[t]||{};
@@ -2508,13 +2510,13 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const mem=PROFILES.filter(p=>p.role!=="pending");
     $("#userList").innerHTML=mem.map(p=>`<tr><td><b>${esc(p.full_name||"–")}</b>${p.id===ME.id?' <span class="sub">(you)</span>':""}</td><td>@${esc(p.username)}</td>
       <td><select class="rolesel" data-u="${p.id}" ${p.id===ME.id?"disabled":""}>${[["user","User"],["admin","Admin"],["rejected","No access"]].map(([v,l])=>`<option value="${v}" ${p.role===v?"selected":""}>${l}</option>`).join("")}</select></td>
-      <td><select class="possel" data-pu="${esc(p.username)}"><option value="">–</option>${POSITIONS.map(x=>`<option ${(D.pos||{})[p.username]===x?"selected":""}>${x}</option>`).join("")}</select></td>
+      <td><select class="possel" data-pu="${esc(p.username)}"><option value="">–</option>${POSITIONS.map(x=>`<option ${posOf(p.username)===x?"selected":""}>${x}</option>`).join("")}</select></td>
       <td class="sub">${fmt(p.created_at)}</td></tr>`).join("");
   }
   const setRole=async(id,role)=>{const {error}=await sb.from("wa_profiles").update({role}).eq("id",id);toast(error?error.message:"Updated");loadUsers()};
   $("#reqList").onclick=e=>{const b=e.target.closest("[data-u]");if(b)setRole(b.dataset.u,b.dataset.role)};
   $("#userList").onchange=e=>{const t=e.target.closest(".rolesel");if(t)setRole(t.dataset.u,t.value);
-    const ps=e.target.closest(".possel");if(ps){D.pos=D.pos||{};if(ps.value)D.pos[ps.dataset.pu]=ps.value;else delete D.pos[ps.dataset.pu];save();toast("Position updated")}};
+    const ps=e.target.closest(".possel");if(ps){D.pos=D.pos||{};D.pos[ps.dataset.pu]=ps.value;save();toast("Position updated")}};
   $("#auAdd").onclick=async()=>{
     const u=uname($("#auUser").value),pw=$("#auPass").value,name=$("#auName").value.trim(),role=$("#auRole").value;
     if(!name||!okUser(u)){toast("Enter a name and a username (3–30 letters/numbers)");return}
