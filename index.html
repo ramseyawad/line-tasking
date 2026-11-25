@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125133453">
+<meta name="build" content="20261125133530">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2912,6 +2912,10 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#navUsers").classList.toggle("hide",prof.role!=="admin");
     await pull(true);loadDiary();
     if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){VER=p.new.version;D=fix(p.new.data);window.__waRemote?.();cache();render()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
+    // safety net for screens left running (wall board): realtime can drop silently after sleep / network blips,
+    // so re-check the server every minute and whenever the screen wakes or the network comes back
+    if(!window.__waPoll){window.__waPoll=setInterval(()=>{if(!pushing)pullIfNewer()},60000);
+      document.addEventListener("visibilitychange",()=>{if(!document.hidden)pullIfNewer()});addEventListener("online",()=>pullIfNewer());addEventListener("focus",()=>pullIfNewer())}
     if(prof.role==="admin"){loadUsers();sb.channel("wa-p").on("postgres_changes",{event:"*",schema:"public",table:"wa_profiles"},loadUsers).subscribe()}
   }
   const fix=d=>{d=d||{};d.engineers=d.engineers||[];d.jobs=d.jobs||[];return d};
@@ -2924,6 +2928,9 @@ if(SB_URL&&SB_KEY&&window.supabase){
     if(first&&empty&&(D.engineers.length||D.jobs.length)&&ME.role==="admin"){toast("Uploading this device's board to the cloud…");push();return}
     D=remote;window.__waRemote?.(first);cache();render();
   }
+  async function pullIfNewer(){if(!ME)return;try{const {data,error}=await sb.from("wa_state").select("version").eq("id",1).single();
+    if(!error&&data&&data.version>VER){await pull(false)}
+    if(chan&&chan.state&&!["joined","joining"].includes(chan.state)){try{chan.subscribe()}catch(e){}}}catch(e){}}
   async function push(){
     if(!ME)return;if(pushing){again=true;return}pushing=true;
     const {data,error}=await sb.rpc("wa_save",{new_data:D,expected:VER});
