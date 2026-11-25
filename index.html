@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125135050">
+<meta name="build" content="20261125135212">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -887,6 +887,9 @@ body.engv #shareAll,body.engv #openDisplay,body.engv #notesCard,body.engv #shift
 body.engv [data-share],body.engv #acRaise,body.engv .ct-notes,body.engv .ct-sub,body.engv .ct-crs,body.engv #aiocBtn,body.engv .aiocchk,
 body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,body.engv #nTag,body.engv #nLsj,body.engv #nBusy,body.engv #nj label:has(#nBusy){display:none!important}
 body.engv .ctile{cursor:default}
+.viewswrap{position:relative;cursor:pointer}
+.viewswrap select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;font-size:14px}
+.viewswrap.on{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
 </style>
 </head>
 <body>
@@ -908,7 +911,7 @@ body.engv .ctile{cursor:default}
     <button class="hbtn" id="guideOpen" title="How to use Line Tasking (?)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="l">How to</span></button>
     <button class="hbtn" id="shareAll" title="Send the whole board as a text"><svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg><span class="l">Send to group</span></button>
     <button class="hbtn solid" id="openDisplay" title="Full-screen board for the hangar screen"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="l">Wall board</span></button>
-    <select class="hbtn engvsel hide" id="engvSel" title="See the board as a particular engineer sees it"></select>
+    <label class="hbtn viewswrap hide" id="viewsWrap" title="See the board as the AIOC or a particular engineer sees it"><svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="l">Views</span><select id="engvSel"></select></label>
     <button class="hbtn hide" id="aiocBtn" title="See the board exactly as the AIOC see it"><svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="l">AIOC view</span></button>
     <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
   </div>
@@ -2889,17 +2892,19 @@ if(location.hash==="#display"){$("#display").classList.remove("hide")}
 /* ---------- render ---------- */
 function applyAIOC(){const a=isAIOC();document.body.classList.toggle("aioc",a);
   const ev=engMode();document.body.classList.toggle("engv",ev);
-  const es=$("#engvSel");if(es){es.classList.toggle("hide",!realFlight());const list=D.engineers.filter(e=>isOn(e)||e.id===ENGV).sort(byTrade);
-    const h=`<option value="">Engineer view…</option>`+list.map(e=>`<option value="${e.id}" ${e.id===ENGV?"selected":""}>${esc(e.name)}</option>`).join("");if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=ENGV&&!AIOCV?ENGV:"";es.classList.toggle("on",!!ENGV&&!AIOCV)}
+  const es=$("#engvSel");if(es){$("#viewsWrap").classList.toggle("hide",!realFlight());const list=D.engineers.filter(e=>isOn(e)||e.id===ENGV).sort(byTrade);
+    const h=`<option value="">My normal view</option><option value="__aioc">AIOC view</option><optgroup label="Engineer views (on shift)">`+list.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")+`</optgroup>`;
+    if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=AIOCV?"__aioc":ENGV||"";
+    $("#viewsWrap").classList.toggle("on",AIOCV||!!ENGV);$("#viewsWrap .l").textContent=AIOCV?"AIOC view":ENGV?engName(ENGV):"Views"}
   let eb=$("#engBan");if(ev&&!eb){eb=document.createElement("div");eb.id="engBan";$("#acWrap").prepend(eb)}
   if(eb){eb.classList.toggle("hide",!ev);if(ev){const me=myEng(),nm=me?engName(me):"";eb.innerHTML=ENGV&&realFlight()?`<b>Engineer view</b> – what <b>${esc(nm)}</b> sees: just the aircraft and tasks they're on. <button class="btn sm" id="engExit">Exit engineer view</button>`
     :me?`<b>${esc(nm)}</b> – your tasks. Tap a task's status to start or finish it.`:`<b>We couldn't match your login to the shift list.</b> Ask Line Control to check your name on the shift list matches your account name.`}}
-  const b=$("#aiocBtn");if(b){b.classList.toggle("hide",!realFlight()||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
+  const b=$("#aiocBtn");if(b){b.classList.toggle("hide",true||!realFlight()||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
   let bn=$("#aiocBan");if(a&&!bn){bn=document.createElement("div");bn.id="aiocBan";$("#acWrap").prepend(bn)}if(bn){bn.classList.toggle("hide",!a);bn.innerHTML=AIOCV?`<b>AIOC view</b> – this is what the AIOC see. You can try their edits here. <button class="btn sm" id="aiocExit">Exit AIOC view</button>`:`<b>AIOC</b> – all aircraft and who they belong to. Tasks show as a count; lines Line Control highlight to you appear in full.`}
   if(ev){const on=document.querySelector("nav button.on");if(on&&on.dataset.tab!=="board")document.querySelector('nav button[data-tab="board"]').click()}
   if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
 function setENGV(id){ENGV=id||"";try{localStorage.setItem("wa-engv",ENGV)}catch(e){}if(ENGV&&AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(e){}}EXP.clear();render();window.scrollTo(0,0);toast(ENGV?"Engineer view – "+engName(ENGV):"Back to the normal view")}
-document.addEventListener("change",e=>{if(e.target.id==="engvSel")setENGV(e.target.value)});
+document.addEventListener("change",e=>{if(e.target.id!=="engvSel")return;const v=e.target.value;if(v==="__aioc")setAIOCV(true);else if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}setENGV(v)}else{if(AIOCV)setAIOCV(false);else setENGV("")}});
 document.addEventListener("click",e=>{if(e.target.closest("#engExit"))setENGV("")});
 function setAIOCV(v){if(v&&ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(e){}}AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
 document.addEventListener("click",e=>{if(e.target.closest("#aiocBtn"))setAIOCV(!AIOCV);else if(e.target.closest("#aiocExit"))setAIOCV(false)});
