@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125134138">
+<meta name="build" content="20261125135050">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -876,6 +876,17 @@ body.aioc .acbar button.unseen::after{display:none}
 .dbf-t .flico{width:1.2vw;height:1.2vw;vertical-align:-.15vw;margin-right:.25vw}
 .dbf-t .nx{color:#38BDF8}
 .dbf-in{font-size:.8vw;font-weight:700;color:#7DD3FC}
+#engBan{background:#EEF2FF;border-bottom:1px solid #C7D2FE;color:#3730A3;font-size:13px;padding:7px 18px;display:flex;gap:10px;align-items:center}
+#engBan .btn{margin-left:auto}
+.engvsel{font:inherit;font-size:12.5px;font-weight:700;max-width:170px;cursor:pointer}
+.engvsel.on{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
+.meb{font:inherit;font-size:11px;font-weight:800;color:#4F46E5;background:#EEF2FF;border:1px dashed #A5B4FC;border-radius:99px;padding:2px 9px;cursor:pointer}
+body.engv nav button[data-tab]:not([data-tab=board]),
+body.engv .kpis,body.engv #tradeStrip,body.engv #headSw,body.engv #pills,body.engv #teamOpen,body.engv #layOpen,body.engv .jobs-h .search,body.engv #seenAll,
+body.engv #shareAll,body.engv #openDisplay,body.engv #notesCard,body.engv #shiftBar,body.engv .notesbtn,body.engv #team,body.engv #teamBg,body.engv #ownView,
+body.engv [data-share],body.engv #acRaise,body.engv .ct-notes,body.engv .ct-sub,body.engv .ct-crs,body.engv #aiocBtn,body.engv .aiocchk,
+body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,body.engv #nTag,body.engv #nLsj,body.engv #nBusy,body.engv #nj label:has(#nBusy){display:none!important}
+body.engv .ctile{cursor:default}
 </style>
 </head>
 <body>
@@ -897,6 +908,7 @@ body.aioc .acbar button.unseen::after{display:none}
     <button class="hbtn" id="guideOpen" title="How to use Line Tasking (?)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="l">How to</span></button>
     <button class="hbtn" id="shareAll" title="Send the whole board as a text"><svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg><span class="l">Send to group</span></button>
     <button class="hbtn solid" id="openDisplay" title="Full-screen board for the hangar screen"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="l">Wall board</span></button>
+    <select class="hbtn engvsel hide" id="engvSel" title="See the board as a particular engineer sees it"></select>
     <button class="hbtn hide" id="aiocBtn" title="See the board exactly as the AIOC see it"><svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="l">AIOC view</span></button>
     <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
   </div>
@@ -1137,7 +1149,7 @@ body.aioc .acbar button.unseen::after{display:none}
       <svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
     <div class="jh">
       <select id="nTail" class="tailsel"></select>
-      <label class="bayf">(<span>BAY</span><input id="nBay" placeholder="–">)</label>${ns3Btn(j.tail)}
+      <label class="bayf">(<span>BAY</span><input id="nBay" placeholder="–">)</label>
       <label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" id="nPri" placeholder="–"></label>
       <select id="nLt" class="acsel" title="Line task or certifier job"><option value="L">Line task</option><option value="C">Certifier</option></select>
       <select id="nSt" class="acsel"><option value="">State…</option><option>Serviceable</option><option>AOG</option><option>Shed Maint</option></select>
@@ -1426,7 +1438,8 @@ let OVL_ON=!!ovlInfo();setInterval(()=>{const v=!!ovlInfo();if(v!==OVL_ON){OVL_O
 /* ---------- board ---------- */
 $("#nTail").innerHTML=TAILS.map(t=>`<option>${t}</option>`).join("");
 $("#addJob").onclick=()=>{
-  if(!canEdit(ownerOf($("#nTail").value))){toast(`${$("#nTail").value} is with ${ownerOf($("#nTail").value)} – only admins can raise jobs on it`);return}
+  if(!canEdit(ownerOf($("#nTail").value))&&!(engMode()&&ownerOf($("#nTail").value)==="Line")){toast(`${$("#nTail").value} is with ${ownerOf($("#nTail").value)} – ${engMode()?"you can only raise jobs on Line aircraft":"only admins can raise jobs on it"}`);return}
+  const engTag=(jj,lines)=>{if(!engMode()||!myEng())return;const me=myEng();jj.ab=jj.ab||{};items(jj).forEach(it=>{if(lines.includes(it.t)&&!it.info){jj.ab[it.t]=me;if(PICK.has(me)&&!it.who.includes(me))it.who.push(me)}})};
   const task=$("#nTask").value.trim();
   if(!task){$("#nTask").focus();return}
   const engs=[...PICK].filter(id=>isOn(eng(id)));clearCRS($("#nTail").value);
@@ -1438,10 +1451,11 @@ $("#addJob").onclick=()=>{
     const tg=$("#nTag").value.trim();if(tg)ex.tag=[...new Set([...tagList(ex),...tg.split(",").map(x=>x.trim()).filter(Boolean)])].join(", ");
     if($("#nSt").value)ex.acst=$("#nSt").value;
     $("#nTask").value="";$("#nBay").value="";$("#nTag").value="";$("#nLsj").value="";$("#nPri").value="";$("#nSt").value="";
-    PICK.clear();closeNew();save();toast(`${nw.length} task${nw.length===1?"":"s"} added to ${ex.tail}`);return}
+    engTag(ex,nw);PICK.clear();closeNew();save();toast(`${nw.length} task${nw.length===1?"":"s"} added to ${ex.tail}`);return}
   D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),pri:$("#nPri").value.trim(),acst:$("#nSt").value,acstLog:$("#nSt").value?[{v:$("#nSt").value,at:now()}]:[],area:$("#nArea").value,task,status:engs.length?"planned":"open",
     created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null})),
     lt:$("#nLt").value==="C"?Object.fromEntries(task.split("\n").map(t=>t.trim()).filter(t=>t&&!INFO_RE.test(t)).map(t=>[t,"C"])):undefined});
+  engTag(D.jobs[D.jobs.length-1],task.split("\n").map(x=>x.trim()).filter(Boolean));
   $("#nTask").value="";$("#nBay").value="";$("#nTag").value="";$("#nLsj").value="";$("#nPri").value="";$("#nSt").value="";$("#nArea").value="Line";
   PICK.clear();closeNew();
   save();toast("Job added – "+D.jobs[D.jobs.length-1].tail);$("#nTask").focus();
@@ -1475,7 +1489,7 @@ function mergeTiles(){ // fold any second job on the same tail into the first, s
     m.task=m.items.map(i=>i.t).join("\n");
     j.assignments.forEach(a=>m.assignments.push(a));
     const tg=[...new Set([...tagList(m),...tagList(j)])];m.tag=tg.join(", ");
-    m.lt={...(j.lt||{}),...(m.lt||{})};m.ha={...(j.ha||{}),...(m.ha||{})};if(j.nl)m.nl=[...(m.nl||[]),...j.nl];
+    m.lt={...(j.lt||{}),...(m.lt||{})};m.ha={...(j.ha||{}),...(m.ha||{})};m.ab={...(j.ab||{}),...(m.ab||{})};if(j.nl)m.nl=[...(m.nl||[]),...j.nl];
     m.bay=m.bay||j.bay;m.lsj=m.lsj||j.lsj;m.cf=Math.max(m.cf||0,j.cf||0);
     if(j.pri&&(!m.pri||+j.pri<+m.pri))m.pri=j.pri;if(j.acst==="AOG"||!m.acst)m.acst=j.acst||m.acst;
     if(j.started&&(!m.started||j.started<m.started))m.started=j.started;
@@ -1560,7 +1574,7 @@ const ltype=(j,t)=>(j.lt||{})[t]||"L";
 const aiocTick=(j,it,i,done)=>{const on=aiocOn(j,it.t);if(canFlight()&&!done)return `<label class="aiocchk ${on?"on":""}" title="Highlight to AIOC – they see this line in full"><input type="checkbox" data-ha="${j.id}|${i}" ${on?"checked":""}>AIOC</label>`;
   return on?`<span class="aiocchk on ro" title="Shown to AIOC">AIOC</span>`:""};
 let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
-const lineShown=(j,it)=>it.info||HEAD==="all"||ltype(j,it.t)===HEAD;
+const lineShown=(j,it)=>(!engMode()||it.info||lineMine(j,it))&&(it.info||HEAD==="all"||ltype(j,it.t)===HEAD);
 const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
 const selHtml=(f,id,list,val,dis,blank)=>`<select class="acsel ${f==="acst"?stCls(val):""}" data-f="${f}" data-id="${id}" ${dis?"disabled":""}>${blank?`<option value="">${blank}</option>`:""}${list.map(v=>`<option ${v===val?"selected":""}>${v}</option>`).join("")}</select>`;
 const INFO_RE=/^(INFO|NOTES?)\b[\s:–-]*/i;
@@ -1626,9 +1640,9 @@ document.addEventListener("keydown",e=>{
 });
 function renderPicker(){
   const {w,p}=jobMaps();
-  const onShift=D.engineers.filter(e=>isOn(e)&&!duty(e)).sort(byTrade);
+  const onShift=D.engineers.filter(e=>(isOn(e)&&!duty(e)&&!engMode())||(engMode()&&e.id===myEng())).sort(byTrade);
   [...PICK].forEach(id=>{if(!isOn(eng(id)))PICK.delete(id)});
-  const busyOK=$("#nBusy").checked;
+  const busyOK=$("#nBusy").checked||engMode();
   let saved="";try{saved=localStorage.getItem("wa-pick-trade2")||""}catch(e){}
   const cur=$("#nTrade").options.length?$("#nTrade").value:saved;
   const g=groupByTrade(onShift);
@@ -1699,16 +1713,16 @@ function renderBoard(){
   const ROLES=[["B1",[1],"Cert"],["B2",[2],"Cert"],["Mechs",[3,4,5,6],"A+ / A Cat"],["Other",[0],""]];
   const roleOf=e=>{const t=tradeIx(e);return t===1?0:t===2?1:t===0?3:2};
   const tileHtml=j=>{
-    const cur=current(j),done=j.status==="done",off=j.tail==="Off Aircraft",ro=!canAc(ownerOf(j.tail)),AI=isAIOC();
+    const cur=current(j),done=j.status==="done",off=j.tail==="Off Aircraft",ro=!canAc(ownerOf(j.tail))&&!engMode(),AI=isAIOC(),EV=engMode(),lk=done||EV;
     const did=done?whoDid(j):[];
     const people=done?did.map(x=>x.id):cur;
     const chip=e=>{
       if(done){const x=did.find(d=>d.id===e);return `<span class="chip plain">${av(e)}${esc(engName(e))} <small>${x.mins<60?x.mins+"m":Math.floor(x.mins/60)+"h"+String(x.mins%60).padStart(2,"0")}</small></span>`}
       const other=(w[e]||[]).filter(o=>o.id!==j.id),fin=j.status==="work"&&finishedOn(j,e),left=j.status==="work"?linesLeft(j,e).length:0;
-      return `<span class="chip${fin?" fin":""}" title="${fin?"Finished their tasks here – available":left?left+" task"+(left>1?"s":"")+" left here":""}">${av(e)}${esc(engName(e))}${fin?` <small class="fin">✓ done – free</small>`:left?` <small>${left} left</small>`:""}${other.length?` <small>on ${label(other[0])}</small>`:""}<button data-un="${j.id}|${e}" title="Take ${esc(engName(e))} off this job">${IC.x}</button></span>`};
+      return `<span class="chip${fin?" fin":""}" title="${fin?"Finished their tasks here – available":left?left+" task"+(left>1?"s":"")+" left here":""}">${av(e)}${esc(engName(e))}${fin?` <small class="fin">✓ done – free</small>`:left?` <small>${left} left</small>`:""}${other.length?` <small>on ${label(other[0])}</small>`:""}${engMode()?"":`<button data-un="${j.id}|${e}" title="Take ${esc(engName(e))} off this job">${IC.x}</button>`}</span>`};
     const addFor=ri=>{
       const pool=onShift.filter(e=>!cur.includes(e.id)&&ROLES[ri][1].includes(tradeIx(e)));
-      if(done||!pool.length)return "";
+      if(done||engMode()||!pool.length)return "";
       const opts=ri===2?groupByTrade(pool).map((g,i)=>g.length?`<optgroup label="${TRADES[i]}">${g.map(e=>`<option value="${e.id}">${esc(e.name)}${ovl(e)?" ("+ovl(e)+")":""}${where(e.id)?" – "+where(e.id):""}</option>`).join("")}</optgroup>`:"").join("")
         :pool.map(e=>`<option value="${e.id}">${esc(e.name)}${ovl(e)?" ("+ovl(e)+")":""}${where(e.id)?" – "+where(e.id):""}</option>`).join("");
       return `<select class="addeng" data-add="${j.id}"><option value="">Add</option>${opts}</select>`};
@@ -1723,37 +1737,37 @@ function renderBoard(){
       :j.status==="planned"?`<span class="status">Not started</span>`
       :`<span class="status">Unmanned</span>`;
     const acts=(!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}" title="Fold back into the collapsed strip">Collapse ▴</button>`:"")+(done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
-      :off?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`);
+      :off||(EV&&!canCRS(j.tail))?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`);
     const BL={
       head:`<div class="jh">
         <button type="button" class="tailname ${off?"off":""}" data-actile="${esc(j.tail)}" title="Aircraft details">${esc(off?"Off Aircraft":j.tail)}</button>
-        ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>${ns3Btn(j.tail)}
+        ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${lk?"disabled":""} placeholder="–">)</label>${ns3Btn(j.tail)}
         <div class="jst">${st}</div>
       </div>`,
       times:`${timesHtml(j.tail)?`<div class="jtimes">${timesHtml(j.tail)}</div>`:""}`,
       flight:`${off?"":flightsHtml(j.tail,done)}`,
-      pri:isNS3(j.tail)?`<label class="prif ns3p" title="NS3 aircraft are always P1">P<input value="1" disabled></label>`:`<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>`,
-      state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}`,
-      owner:`${ownSel(j.tail,done)}`,
+      pri:isNS3(j.tail)?`<label class="prif ns3p" title="NS3 aircraft are always P1">P<input value="1" disabled></label>`:`<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${lk?"disabled":""} placeholder="–"></label>`,
+      state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",lk,"State…")}`,
+      owner:`${ownSel(j.tail,lk)}`,
       dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canAc(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
       role:`${j.tail!=="Off Aircraft"?roleBoxes(j.tail,done):""}`,
       sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}`,
-      notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
-      lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">`,
+      notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${lk?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${lk?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
+      lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${lk?"disabled":""} placeholder="+ LSJ set">`,
       crew:AI?"":`<div class="crewbox">${rows}</div>`,
       tasks:AI?aiocTasks(j):`<div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
           if(!lineShown(j,it))return "";
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
           const nb=lineNew(j,it)?`<button class="lnew" data-lseen="${j.id}|${i}" title="Added by ${esc(nwOf(j,it).by||"someone")} ${fmt(nwOf(j,it).at)} – click to clear">NEW ✕</button>`:"";
-          const tbox=txt=>`<span class="tline">${aiocTick(j,it,i,done)}${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
+          const tbox=txt=>`<span class="tline">${aiocTick(j,it,i,done)}${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done||EV?"":"tedit"}" ${done||EV?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
           if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
-          ${(ty=>done?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
-          <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
-          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
+          ${(ty=>done||EV?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
+          <button class="tstat" data-item="${j.id}|${i}" ${done||(EV&&!lineMine(j,it))?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
+          <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done||(EV&&e!==myEng())?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${EV?(done||it.who.includes(myEng())?"":`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Assign yourself to this task">+ me</button>`):done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
       foot:AI?`<div class="jf"><span class="sub">${ownerOf(j.tail)}</span><div class="acts">${!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}">Collapse ▴</button>`:""}</div></div>`:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
     const us=AI?"":unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${layCustom()?" customlay":""}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
@@ -1769,6 +1783,7 @@ function renderBoard(){
     // runs of collapsed aircraft share one grid cell, so the order reads left-to-right without big gaps
     const parts=[...TAILS].sort((a,b)=>tPri(a)-tPri(b)||TAILS.indexOf(a)-TAILS.indexOf(b)).map(t=>{
       const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
+      if(engMode())return j&&tileMine(j)?{f:tileHtml(j)}:{c:collTile(t)};
       if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
       if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:emptyTile(t)};
       return{c:collTile(t)}});
@@ -1788,9 +1803,10 @@ function renderBoard(){
   $("#offList").innerHTML=offE.map(e=>`<div class="person off">${av(e.id)}<div class="nm">${esc(e.name)}</div></div>`).join("")||`<div class="team-empty">–</div>`;
 }
 $("#jobs").addEventListener("click",e=>{
-  const ex=e.target.closest("[data-expand]");if(ex&&!e.target.closest("button,select,input")){EXP.add(ex.dataset.expand);render();setTimeout(()=>document.querySelector(`#jobs .job[data-tail="${ex.dataset.expand}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),30);return}
+  const ex=e.target.closest("[data-expand]");if(ex&&!engMode()&&!e.target.closest("button,select,input")){EXP.add(ex.dataset.expand);render();setTimeout(()=>document.querySelector(`#jobs .job[data-tail="${ex.dataset.expand}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),30);return}
   const t=e.target.closest("button");if(!t)return;
   if(t.dataset.collapse){EXP.delete(t.dataset.collapse);render();return}
+  if(t.dataset.iself){const[jid,i]=t.dataset.iself.split("|"),jj=job(jid),it=items(jj)[+i];if(it&&myEng()&&(lineMine(jj,it)||!engMode()))assignItem(jid,+i,myEng());return}
   if(t.dataset.un){const[j,en]=t.dataset.un.split("|");unassign(j,en)}
   else if(t.dataset.done)complete(t.dataset.done);
   else if(t.dataset.start)start(t.dataset.start);
@@ -1850,7 +1866,7 @@ let LEDIT=null,LDRAFT=null;
 function lineSave(inp,keep){const j=job(inp.dataset.lj);if(!j){LEDIT=null;LDRAFT=null;return}const i=+inp.dataset.li,v=inp.value.trim();
   const lines=items(j).map(x=>x.t);LEDIT=null;LDRAFT=null;
   if(v===lines[i]){render();return}
-  if(!v){lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}if(j.ha&&j.ha[lines[i]]){j.ha[v]=j.ha[lines[i]];delete j.ha[lines[i]]}lines[i]=v}
+  if(!v){lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}if(j.ha&&j.ha[lines[i]]){j.ha[v]=j.ha[lines[i]];delete j.ha[lines[i]]}if(j.ab&&j.ab[lines[i]]){j.ab[v]=j.ab[lines[i]];delete j.ab[lines[i]]}lines[i]=v}
   editField(j.id,"task",lines.join("\n"))}
 $("#jobs").addEventListener("click",e=>{const t=e.target.closest("[data-tedit]");if(!t||t.closest("fieldset[disabled]"))return;
   const a=document.querySelector(".line-edit");if(a)lineSave(a);
@@ -1862,7 +1878,7 @@ $("#jobs").addEventListener("keydown",e=>{const t=e.target;
     if(!canEdit(ownerOf(tl)))return;clearCRS(tl);D.jobs.push({id:uid(),tail:tl,bay:"",tag:"",lsj:"",pri:"",acst:"",area:"Line",task:v,status:"open",created:now(),started:null,completed:null,assignments:[]});
     EXP.add(tl);save();setTimeout(()=>document.querySelector(`.line-add[data-ladd]`)&&document.querySelector(`#jobs .job[data-tail="${tl}"] .line-add`)?.focus(),0)}
   else if(t.classList.contains("line-add")&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const j=job(t.dataset.ladd);const id=j.id;
-    clearCRS(j.tail);editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
+    clearCRS(j.tail);if(engMode()&&myEng()&&!isInfoLine(v)){j.ab=j.ab||{};j.ab[v]=myEng()}editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
 $("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("line-edit")&&!t.dataset.done)setTimeout(()=>{if(document.body.contains(t)&&!t.dataset.done){t.dataset.done=1;lineSave(t)}},0)});
 
 /* ---------- highlight changes made by other people until seen ---------- */
@@ -2549,7 +2565,22 @@ const mySec=()=>window.__waCloud?secOf(window.__waCloud.me?.()?.username||""):"L
 let AIOCV=false;try{AIOCV=localStorage.getItem("wa-aiocv")==="1"}catch(e){}
 // AIOC is a section (not an aircraft owner) – anyone in it gets the AIOC view
 const isAIOC=()=>AIOCV||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC");
-const canEdit=o=>!isAIOC()&&(isAdmin()||o===mySec());
+// Engineer view: anyone signed in who isn't admin / Line Control / SLE / AIOC. They see the tiles they're tasked on,
+// only their own lines (plus NOTE/INFO), can start/finish their lines, add jobs on Line aircraft, assign themselves,
+// change current role, and B1/B2s can CRS aircraft they're on. Line Control / SLE can preview it as any engineer.
+let ENGV="";try{ENGV=localStorage.getItem("wa-engv")||""}catch(e){}
+const RANKRE=/^(AS1\(T\)|AS2|AS1|SAC\(T\)|SAC|LAC|Cpl|Sgt|FS|Flt\s*Lt|Fg\s*Off|Sqn\s*Ldr|CT|Chf\s*Tech|Mr|Mrs|Ms|Miss)\.?\s+/i;
+const normN=n=>String(n||"").trim().replace(RANKRE,"").toLowerCase().replace(/[^a-z\s'-]/g," ").trim().split(/\s+/).filter(Boolean);
+function matchEng(full){const a=normN(full);if(!a.length)return null;
+  const ex=D.engineers.filter(e=>normN(e.name).join(" ")===a.join(" "));if(ex.length===1)return ex[0].id;
+  const L=a[a.length-1],F=a[0][0];const m=D.engineers.filter(e=>{const b=normN(e.name);return b.length&&b[b.length-1]===L&&(a.length<2||b.length<2||b[0][0]===F)});return m.length===1?m[0].id:null}
+const realEngMode=()=>!!window.__waCloud&&!isAdmin()&&!isAIOC()&&!realFlight();
+const engMode=()=>!AIOCV&&((!!ENGV&&realFlight())||realEngMode());
+const myEng=()=>{if(ENGV&&realFlight())return ENGV;if(!realEngMode())return null;const p=window.__waCloud.me?.()||{};return matchEng(p.full_name)||matchEng(p.username)};
+const lineMine=(j,it)=>{const me=myEng();return !!me&&(it.who.includes(me)||(!it.who.length&&(j.ab||{})[it.t]===me))};
+const tileMine=j=>{const me=myEng();return !!me&&(current(j).includes(me)||items(j).some(it=>!it.info&&lineMine(j,it)))};
+const canCRS=t=>{if(!engMode())return canEdit(ownerOf(t));const e=eng(myEng()),j=D.jobs.find(x=>active(x)&&x.tail===t);return !!e&&[1,2].includes(tradeIx(e))&&!!j&&tileMine(j)&&ownerOf(t)==="Line"};
+const canEdit=o=>!isAIOC()&&!engMode()&&(isAdmin()||o===mySec());
 const canAc=o=>isAIOC()||canEdit(o); // left-panel aircraft info (bay, state, priority, NS3, DASS, role, notes, LSJ, sentence)
 // user positions (set by an admin in Users) – SLE and Line Control can edit next-flight details
 const POSITIONS=["Line Control","SLE","B1","B2","A cert"];
@@ -2558,7 +2589,7 @@ const POS_DEF={ramsey:"Line Control",kev:"SLE"}; // starting positions until an 
 const posOf=u=>(D.pos||{})[u]??POS_DEF[u]??"";
 const myPos=()=>posOf(myUser());
 const realFlight=()=>isAdmin()||["SLE","Line Control"].includes(myPos());
-const canFlight=()=>!isAIOC()&&realFlight();
+const canFlight=()=>!isAIOC()&&!engMode()&&realFlight();
 const canNF=()=>canFlight()||isAIOC(); // next flight / required role
 const aiocOn=(j,t)=>!!(j.ha||{})[t];
 // what AIOC sees in place of the task list: how many are outstanding, plus any line Line Control / SLE ticked "Highlight to AIOC"
@@ -2569,7 +2600,7 @@ const aiocTasks=j=>{const ts=tasksOnly(j),open=ts.filter(x=>x.s!=="done").length
 const acRec=t=>{D.ac=D.ac||{};return D.ac[t]=D.ac[t]||{}};
 const acGet=t=>(D.ac||{})[t]||{};
 const techReady=t=>acGet(t).crs||null;
-function setCRS(t,on){if(!canEdit(ownerOf(t))){toast("View only – "+ownerOf(t)+" aircraft");return}const a=acRec(t);
+function setCRS(t,on){if(!canCRS(t)){toast("View only – "+ownerOf(t)+" aircraft");return}const a=acRec(t);
   if(on)a.crs={at:now(),by:(typeof myName==="function"&&myName())||""};else delete a.crs;save();toast(on?`${t} CRS – Tech ready`:`${t} no longer tech ready`)}
 const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentOf(t)?.c==="AOG";
 const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";if(tailAOG(t))return "g-aog";const o=ownerOf(t);return o==="Deployed"?"g-dep":o==="Retrofit"?"g-ret":"g-o"};
@@ -2578,7 +2609,7 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 // role config: current (what's fitted) vs required (the next flight's role). Green when they match, red when they don't.
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
-const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&(canEdit(ownerOf(t))||(engMode()&&D.jobs.some(j=>active(j)&&j.tail===t&&tileMine(j))));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
 const FL_ICO={to:`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/></svg>`,
   ld:`<svg class="flico" viewBox="0 0 24 24" aria-label="Landing"><path d="M2.5 19h19v2h-19v-2zm7.18-5.73l4.35 1.16 5.31 1.42c.8.21 1.62-.26 1.84-1.06.21-.8-.26-1.62-1.06-1.84l-5.31-1.42-2.76-9.02L10.12 2v8.28L5.15 8.95l-.93-2.32-1.45-.39v5.17l1.6.43 5.31 1.43z"/></svg>`};
 const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -2857,10 +2888,20 @@ if(location.hash==="#display"){$("#display").classList.remove("hide")}
 
 /* ---------- render ---------- */
 function applyAIOC(){const a=isAIOC();document.body.classList.toggle("aioc",a);
+  const ev=engMode();document.body.classList.toggle("engv",ev);
+  const es=$("#engvSel");if(es){es.classList.toggle("hide",!realFlight());const list=D.engineers.filter(e=>isOn(e)||e.id===ENGV).sort(byTrade);
+    const h=`<option value="">Engineer view…</option>`+list.map(e=>`<option value="${e.id}" ${e.id===ENGV?"selected":""}>${esc(e.name)}</option>`).join("");if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=ENGV&&!AIOCV?ENGV:"";es.classList.toggle("on",!!ENGV&&!AIOCV)}
+  let eb=$("#engBan");if(ev&&!eb){eb=document.createElement("div");eb.id="engBan";$("#acWrap").prepend(eb)}
+  if(eb){eb.classList.toggle("hide",!ev);if(ev){const me=myEng(),nm=me?engName(me):"";eb.innerHTML=ENGV&&realFlight()?`<b>Engineer view</b> – what <b>${esc(nm)}</b> sees: just the aircraft and tasks they're on. <button class="btn sm" id="engExit">Exit engineer view</button>`
+    :me?`<b>${esc(nm)}</b> – your tasks. Tap a task's status to start or finish it.`:`<b>We couldn't match your login to the shift list.</b> Ask Line Control to check your name on the shift list matches your account name.`}}
   const b=$("#aiocBtn");if(b){b.classList.toggle("hide",!realFlight()||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
   let bn=$("#aiocBan");if(a&&!bn){bn=document.createElement("div");bn.id="aiocBan";$("#acWrap").prepend(bn)}if(bn){bn.classList.toggle("hide",!a);bn.innerHTML=AIOCV?`<b>AIOC view</b> – this is what the AIOC see. You can try their edits here. <button class="btn sm" id="aiocExit">Exit AIOC view</button>`:`<b>AIOC</b> – all aircraft and who they belong to. Tasks show as a count; lines Line Control highlight to you appear in full.`}
+  if(ev){const on=document.querySelector("nav button.on");if(on&&on.dataset.tab!=="board")document.querySelector('nav button[data-tab="board"]').click()}
   if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
-function setAIOCV(v){AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
+function setENGV(id){ENGV=id||"";try{localStorage.setItem("wa-engv",ENGV)}catch(e){}if(ENGV&&AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(e){}}EXP.clear();render();window.scrollTo(0,0);toast(ENGV?"Engineer view – "+engName(ENGV):"Back to the normal view")}
+document.addEventListener("change",e=>{if(e.target.id==="engvSel")setENGV(e.target.value)});
+document.addEventListener("click",e=>{if(e.target.closest("#engExit"))setENGV("")});
+function setAIOCV(v){if(v&&ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(e){}}AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
 document.addEventListener("click",e=>{if(e.target.closest("#aiocBtn"))setAIOCV(!AIOCV);else if(e.target.closest("#aiocExit"))setAIOCV(false)});
 function render(){applyAIOC();curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();
   if(!$("#tab-diary").classList.contains("hide"))renderDiary();
