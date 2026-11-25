@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125150704">
+<meta name="build" content="20261125151129">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1565,7 +1565,9 @@ const setFilter=f=>{FILTER=f;document.querySelectorAll("#pills button").forEach(
 $("#pills").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setFilter(b.dataset.f)});
 document.querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{if(k.dataset.k==="team"){toggleTeam(true);return}setFilter(FILTER===k.dataset.k?"active":k.dataset.k)});
 
-const job=id=>D.jobs.find(x=>x.id===id);
+// an aircraft with no jobs still gets a full tile; its (empty) job is only created when something on it is changed
+const blankJob=t=>({id:"v-"+t,tail:t,bay:"",tag:"",lsj:"",pri:"",acst:"",area:"Line",task:"",status:"open",created:new Date().toISOString(),started:null,completed:null,assignments:[],items:[]});
+const job=id=>{let j=D.jobs.find(x=>x.id===id);if(!j&&typeof id==="string"&&id.startsWith("v-")){const t=id.slice(2);if(TAILS.includes(t)&&!D.jobs.some(x=>active(x)&&x.tail===t)){j=blankJob(t);D.jobs.push(j)}}return j};
 // ---- one tile per aircraft: tasks (lines) start/stop, the tile just reflects them ----
 const allDone=j=>{const t=tasksOnly(j);return t.length>0&&t.every(x=>x.s==="done")};
 function deriveStatus(j){const t=tasksOnly(j);if(t.some(x=>x.s==="work"||x.s==="done"))return "work"; // under way (or all done – stays on the board until handover)
@@ -1887,9 +1889,9 @@ function renderBoard(){
     // runs of collapsed aircraft share one grid cell, so the order reads left-to-right without big gaps
     const parts=[...TAILS].sort((a,b)=>tPri(a)-tPri(b)||TAILS.indexOf(a)-TAILS.indexOf(b)).map(t=>{
       const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
-      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:emptyTile(t)};return{c:collTile(t)}}
+      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};return{c:collTile(t)}}
       if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
-      if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:emptyTile(t)};
+      if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};
       return{c:collTile(t)}});
     let run=[];const flush=()=>{if(run.length){html+=`<div class="cstack">${run.join("")}</div>`;run=[]}};
     parts.forEach(x=>{if(x.c)run.push(x.c);else{flush();html+=x.f}});flush();
