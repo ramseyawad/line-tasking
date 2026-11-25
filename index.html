@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125125755">
+<meta name="build" content="20261125130742">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -821,6 +821,22 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .ns3tag{font-size:10px;font-weight:800;background:#6D28D9;color:#fff;border-radius:5px;padding:1px 6px;margin-left:6px}
 .acbar button .ns3mini{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:900;letter-spacing:.04em;background:#6D28D9;color:#fff;border-radius:4px;padding:0 4px;line-height:12px;box-shadow:0 0 0 1.5px #fff}
 .prif.ns3p input{color:#6D28D9;font-weight:800}
+.aiocchk{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:800;letter-spacing:.03em;color:#94A3B8;border:1px solid #E2E8F0;border-radius:6px;padding:2px 5px;cursor:pointer;white-space:nowrap;background:#fff}
+.aiocchk input{margin:0;width:11px;height:11px;accent-color:#0E7490}
+.aiocchk.on{color:#0E7490;border-color:#67E8F9;background:#ECFEFF}
+.aiocchk.ro{cursor:default}
+.ti.info .aiocchk{margin-left:6px;align-self:center}
+.aioc-n{font-size:14px;color:#334155;padding:4px 0 6px}.aioc-n b{font-size:20px;color:#0F172A;margin-right:2px}.aioc-n span{color:#94A3B8}
+.aiocrow .tstat.ro{pointer-events:none;cursor:default}
+#aiocBan{background:#ECFEFF;border-bottom:1px solid #A5F3FC;color:#155E75;font-size:13px;padding:7px 18px;display:flex;gap:10px;align-items:center}
+#aiocBan .btn{margin-left:auto}
+#aiocBtn.on{background:#0E7490;color:#fff;border-color:#0E7490}
+body.aioc nav button[data-tab]:not([data-tab=board]):not([data-tab=stats]),
+body.aioc .kpis,body.aioc #tradeStrip,body.aioc #headSw,body.aioc #pills,body.aioc #openNew,body.aioc #teamOpen,body.aioc #layOpen,body.aioc #seenAll,
+body.aioc #shareAll,body.aioc .jobs-h .search,body.aioc #openDisplay,body.aioc #notesCard,body.aioc #shiftBar,body.aioc .notesbtn,body.aioc .newrib,body.aioc #team,body.aioc #teamBg,
+body.aioc .ct-crs,body.aioc .crsbtn,body.aioc [data-share],body.aioc #acRaise,body.aioc #sxKpis,body.aioc .sx-note,body.aioc #sxCsv,
+body.aioc #tab-stats .sx-grid>.card:not(:has(#sxSent)):not(:has(#sxAc)){display:none!important}
+body.aioc .acbar button.unseen::after{display:none}
 </style>
 </head>
 <body>
@@ -842,6 +858,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
     <button class="hbtn" id="guideOpen" title="How to use Line Tasking (?)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="l">How to</span></button>
     <button class="hbtn" id="shareAll" title="Send the whole board as a text"><svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg><span class="l">Send to group</span></button>
     <button class="hbtn solid" id="openDisplay" title="Full-screen board for the hangar screen"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="l">Wall board</span></button>
+    <button class="hbtn hide" id="aiocBtn" title="See the board exactly as the AIOC see it"><svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="l">AIOC view</span></button>
     <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
   </div>
 </header>
@@ -1429,7 +1446,7 @@ function mergeTiles(){ // fold any second job on the same tail into the first, s
     m.task=m.items.map(i=>i.t).join("\n");
     j.assignments.forEach(a=>m.assignments.push(a));
     const tg=[...new Set([...tagList(m),...tagList(j)])];m.tag=tg.join(", ");
-    m.lt={...(j.lt||{}),...(m.lt||{})};if(j.nl)m.nl=[...(m.nl||[]),...j.nl];
+    m.lt={...(j.lt||{}),...(m.lt||{})};m.ha={...(j.ha||{}),...(m.ha||{})};if(j.nl)m.nl=[...(m.nl||[]),...j.nl];
     m.bay=m.bay||j.bay;m.lsj=m.lsj||j.lsj;m.cf=Math.max(m.cf||0,j.cf||0);
     if(j.pri&&(!m.pri||+j.pri<+m.pri))m.pri=j.pri;if(j.acst==="AOG"||!m.acst)m.acst=j.acst||m.acst;
     if(j.started&&(!m.started||j.started<m.started))m.started=j.started;
@@ -1492,8 +1509,8 @@ let OWNV="";try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){}
 const stCls=v=>({Serviceable:"sv",AOG:"aog","Shed Maint":"shed"}[v]||"");
 const isNS3=t=>!!t&&D.ns3===t;
 const prio=j=>{if(isNS3(j.tail))return 0;const p=parseInt(j.pri);return p>0?p:999};
-const ns3Btn=t=>t==="Off Aircraft"?"":`<button type="button" class="ns3btn ${isNS3(t)?"on":""}" data-ns3="${esc(t)}" ${canEdit(ownerOf(t))?"":"disabled"} title="${isNS3(t)?"National standby – click to clear":"Make this aircraft NS3 (national standby). Only one at a time; it's always P1"}">NS3</button>`;
-function toggleNS3(t){if(!canEdit(ownerOf(t)))return;const prev=D.ns3||null;
+const ns3Btn=t=>t==="Off Aircraft"?"":`<button type="button" class="ns3btn ${isNS3(t)?"on":""}" data-ns3="${esc(t)}" ${canAc(ownerOf(t))?"":"disabled"} title="${isNS3(t)?"National standby – click to clear":"Make this aircraft NS3 (national standby). Only one at a time; it's always P1"}">NS3</button>`;
+function toggleNS3(t){if(!canAc(ownerOf(t)))return;const prev=D.ns3||null;
   D.ns3=isNS3(t)?null:t;save();
   toast(D.ns3?`${t} is NS3 (national standby) – P1${prev&&prev!==t?" · "+prev+" no longer NS3":""}`:`${t} no longer NS3`,()=>{D.ns3=prev;save()})}
 // Airbus aircraft sentencing – one code per tail, hours tracked from every change
@@ -1506,11 +1523,13 @@ const SENT_G=[["Cargo damage","#D946EF",[["CAR","Damage to cargo area"]]],
  ["Shortfalls","#DC2626",[["MAT","Material"],["MDS","MDS"],["WOF","Line Workforce"],["TOO","Tooling"],["AGE","AGE"],["INF","Infrastructure"],["SWF","Specialist Workforce"],["COU","Courier"],["RDE","MDS RDE"],["TQN","TQN In Progress"],["DOC","Documentation"]]]];
 const SENT={};SENT_G.forEach(([g,col,l])=>l.forEach(([c,d])=>SENT[c]={c,d,g,col}));
 const sentOf=t=>(D.sent||{})[t]||null;
-function setSent(tail,code){if(!canEdit(ownerOf(tail))){toast("View only – "+ownerOf(tail)+" aircraft");render();return}D.sent=D.sent||{};D.sentLog=D.sentLog||[];const cur=sentOf(tail);if((cur?.c||"")===code)return;
+function setSent(tail,code){if(!canAc(ownerOf(tail))){toast("View only – "+ownerOf(tail)+" aircraft");render();return}D.sent=D.sent||{};D.sentLog=D.sentLog||[];const cur=sentOf(tail);if((cur?.c||"")===code)return;
   const at=now(),by=(typeof myName==="function"&&myName())||"";
   if(code)D.sent[tail]={c:code,at,by};else delete D.sent[tail];D.sentLog.push({t:tail,c:code,at,by});save()}
-const sentSel=(tail,dis)=>{const cur=sentOf(tail),c=cur?.c||"";return `<select class="acsel sentsel" data-sent="${esc(tail)}" ${dis||!canEdit(ownerOf(tail))?"disabled":""} title="${c?esc(c+" – "+SENT[c].d)+(cur.at?" · since "+fmt(cur.at):""):"Aircraft sentencing (Airbus)"}" style="${c?`--sc:${SENT[c].col}`:""}"><option value="">Sentence…</option>${SENT_G.map(([g,col,l])=>`<optgroup label="${g}">${l.map(([k,d])=>`<option value="${k}" ${k===c?"selected":""}>${k} – ${esc(d)}</option>`).join("")}</optgroup>`).join("")}</select>`};
+const sentSel=(tail,dis)=>{const cur=sentOf(tail),c=cur?.c||"";return `<select class="acsel sentsel" data-sent="${esc(tail)}" ${dis||!canAc(ownerOf(tail))?"disabled":""} title="${c?esc(c+" – "+SENT[c].d)+(cur.at?" · since "+fmt(cur.at):""):"Aircraft sentencing (Airbus)"}" style="${c?`--sc:${SENT[c].col}`:""}"><option value="">Sentence…</option>${SENT_G.map(([g,col,l])=>`<optgroup label="${g}">${l.map(([k,d])=>`<option value="${k}" ${k===c?"selected":""}>${k} – ${esc(d)}</option>`).join("")}</optgroup>`).join("")}</select>`};
 const ltype=(j,t)=>(j.lt||{})[t]||"L";
+const aiocTick=(j,it,i,done)=>{const on=aiocOn(j,it.t);if(canFlight()&&!done)return `<label class="aiocchk ${on?"on":""}" title="Highlight to AIOC – they see this line in full"><input type="checkbox" data-ha="${j.id}|${i}" ${on?"checked":""}>AIOC</label>`;
+  return on?`<span class="aiocchk on ro" title="Shown to AIOC">AIOC</span>`:""};
 let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
 const lineShown=(j,it)=>it.info||HEAD==="all"||ltype(j,it.t)===HEAD;
 const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
@@ -1574,7 +1593,7 @@ $("#openNew").onclick=openNew;$("#njClose").onclick=closeNew;$("#njCancel").oncl
 $("#nj").addEventListener("mousedown",e=>{if(e.target.id==="nj")closeNew()});
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&!$("#nj").classList.contains("hide")){closeNew();return}
-  if((e.key==="n"||e.key==="N")&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)&&$("#display").classList.contains("hide")&&!$("#tab-board").classList.contains("hide")){e.preventDefault();openNew()}
+  if((e.key==="n"||e.key==="N")&&!isAIOC()&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)&&$("#display").classList.contains("hide")&&!$("#tab-board").classList.contains("hide")){e.preventDefault();openNew()}
 });
 function renderPicker(){
   const {w,p}=jobMaps();
@@ -1638,7 +1657,7 @@ function renderBoard(){
   const s=$("#sortBy").value, rank={work:0,planned:1,open:2,done:3};
   jobs=[...jobs].sort((a,b)=>prio(a)-prio(b)||(s==="new"?b.created.localeCompare(a.created):s==="bay"?String(a.bay).localeCompare(String(b.bay),undefined,{numeric:true}):s==="status"?rank[a.status]-rank[b.status]||TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail):TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail)));
   // aircraft jump bar
-  if(!OWNV)OWNV=mySec();
+  if(isAIOC())OWNV="All";else if(!OWNV)OWNV=mySec();
   if(OWNV!=="All"&&!owners().includes(OWNV))OWNV="Line";
   const ownCount=o=>TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)===o).length;
   const vis=TAILS;
@@ -1651,7 +1670,7 @@ function renderBoard(){
   const ROLES=[["B1",[1],"Cert"],["B2",[2],"Cert"],["Mechs",[3,4,5,6],"A+ / A Cat"],["Other",[0],""]];
   const roleOf=e=>{const t=tradeIx(e);return t===1?0:t===2?1:t===0?3:2};
   const tileHtml=j=>{
-    const cur=current(j),done=j.status==="done",off=j.tail==="Off Aircraft",ro=!canEdit(ownerOf(j.tail));
+    const cur=current(j),done=j.status==="done",off=j.tail==="Off Aircraft",ro=!canAc(ownerOf(j.tail)),AI=isAIOC();
     const did=done?whoDid(j):[];
     const people=done?did.map(x=>x.id):cur;
     const chip=e=>{
@@ -1669,7 +1688,7 @@ function renderBoard(){
       if(ri===3&&!list.length)return "";
       const add=addFor(ri);
       return `<div class="jr"><div class="jl">${r[0]}<small>${r[2]}</small></div><div class="chips">${list.map(chip).join("")||(done?'<span class="sub">–</span>':`<span class="none">${["No B1","No B2","No mechs"][ri]}</span>`)}${add}</div></div>`}).join("");
-    const st=done?`<span class="status">Complete</span><span class="sub">${fmt(j.completed)}</span>`
+    const st=AI?(n=>`<span class="status">${n?n+" outstanding":"No open tasks"}</span>`)(tasksOnly(j).filter(x=>x.s!=="done").length):done?`<span class="status">Complete</span><span class="sub">${fmt(j.completed)}</span>`
       :tasksOnly(j).length&&tasksOnly(j).every(x=>x.s==="done")?`<span class="status">All tasks done</span>`
       :j.status==="work"?`<span class="status">In work</span><span class="sub">${IC.clock} ${ago(j.started)}</span>`
       :j.status==="planned"?`<span class="status">Not started</span>`
@@ -1687,27 +1706,28 @@ function renderBoard(){
       pri:isNS3(j.tail)?`<label class="prif ns3p" title="NS3 aircraft are always P1">P<input value="1" disabled></label>`:`<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>`,
       state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}`,
       owner:`${ownSel(j.tail,done)}`,
-      dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
+      dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canAc(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
       role:`${j.tail!=="Off Aircraft"?roleBoxes(j.tail,done):""}`,
       sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}`,
       notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
       lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set">`,
-      crew:`<div class="crewbox">${rows}</div>`,
-      tasks:`<div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
+      crew:AI?"":`<div class="crewbox">${rows}</div>`,
+      tasks:AI?aiocTasks(j):`<div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
           if(!lineShown(j,it))return "";
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
           const nb=lineNew(j,it)?`<button class="lnew" data-lseen="${j.id}|${i}" title="Added by ${esc(nwOf(j,it).by||"someone")} ${fmt(nwOf(j,it).at)} – click to clear">NEW ✕</button>`:"";
           const tbox=txt=>`<span class="tline">${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
-          if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
+          if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div>${aiocTick(j,it,i,done)}</div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
           ${(ty=>done?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
+          ${aiocTick(j,it,i,done)}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
-      foot:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
-    const us=unseen(j);
+      foot:AI?`<div class="jf"><span class="sub">${ownerOf(j.tail)}</span><div class="acts">${!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}">Collapse ▴</button>`:""}</div></div>`:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
+    const us=AI?"":unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${layCustom()?" customlay":""}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
     </div>`};
   // every aircraft has a tile; anything with no open tasks is collapsed into the strip below
@@ -1769,8 +1789,9 @@ $("#jobs").addEventListener("change",e=>{
   else if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value);
   else if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save()}
   else if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save()}
-  else if(t.dataset.rreq!=null){if(!canFlight())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save()}
+  else if(t.dataset.rreq!=null){if(!canNF())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save()}
   else if(t.dataset.owner!=null)setOwner(t.dataset.owner,t.value);
+  else if(t.dataset.ha){if(!canFlight())return;const[id,i]=t.dataset.ha.split("|"),j=job(id),it=items(j)[+i];if(it){j.ha=j.ha||{};if(t.checked)j.ha[it.t]=1;else delete j.ha[it.t];save()}}
   else if(t.dataset.lt){const[id,i]=t.dataset.lt.split("|"),j=job(id),it=items(j)[+i];if(it){j.lt=j.lt||{};if(t.value==="C")j.lt[it.t]="C";else delete j.lt[it.t];save()}}
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
 });
@@ -1795,13 +1816,13 @@ $("#acBar").addEventListener("click",e=>{
 function toggleTeam(on){on=on??!document.body.classList.contains("team-open");document.body.classList.toggle("team-open",on);$("#team").setAttribute("aria-hidden",!on)}
 $("#teamOpen").onclick=()=>toggleTeam();$("#teamClose").onclick=()=>toggleTeam(false);$("#teamBg").onclick=()=>toggleTeam(false);
 addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("team-open"))toggleTeam(false);
-  if((e.key==="t"||e.key==="T")&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))toggleTeam()});
+  if((e.key==="t"||e.key==="T")&&!isAIOC()&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))toggleTeam()});
 
 let LEDIT=null,LDRAFT=null;
 function lineSave(inp,keep){const j=job(inp.dataset.lj);if(!j){LEDIT=null;LDRAFT=null;return}const i=+inp.dataset.li,v=inp.value.trim();
   const lines=items(j).map(x=>x.t);LEDIT=null;LDRAFT=null;
   if(v===lines[i]){render();return}
-  if(!v){lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}lines[i]=v}
+  if(!v){lines.splice(i,1)}else{if(j.lt&&j.lt[lines[i]]){j.lt[v]=j.lt[lines[i]];delete j.lt[lines[i]]}if(j.ha&&j.ha[lines[i]]){j.ha[v]=j.ha[lines[i]];delete j.ha[lines[i]]}lines[i]=v}
   editField(j.id,"task",lines.join("\n"))}
 $("#jobs").addEventListener("click",e=>{const t=e.target.closest("[data-tedit]");if(!t||t.closest("fieldset[disabled]"))return;
   const a=document.querySelector(".line-edit");if(a)lineSave(a);
@@ -2034,13 +2055,13 @@ function openAc(t){
      <label class="mv-f"><span>Current owner</span>${ownSel(t,false,"big")}</label>
      <label class="mv-f"><span>Sentence</span>${sentSel(t,false)}</label></div>
    <div class="acp-grid" style="margin-top:10px">
-     <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canEdit(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
+     <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canAc(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
      <label class="mv-f"><span>Role config – current / required</span><span style="display:flex;gap:6px">${roleBoxes(t,false)}</span></label></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canEdit(own)?`<button class="btn sm ${techReady(t)?"":"ok"}" data-crs="${t}">${techReady(t)?"Undo":"CRS – Tech ready"}</button>`:""}</div>
-   <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightLine(t)||'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canFlight()?"Edit":"View"}</button></div>
+   <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightLine(t)||'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${se?` · ${esc(se.c)} for ${ago(se.at)}`:""}</p>
-   <h4 class="mv-h">Open jobs</h4>${js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
-  $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canEdit(own));$("#acModal").classList.remove("hide");
+   ${isAIOC()?`<h4 class="mv-h">Jobs</h4>${js.length?js.map(aiocTasks).join(""):'<p class="sub">No open jobs.</p>'}`:""}<h4 class="mv-h ${isAIOC()?"hide":""}">Open jobs</h4>${isAIOC()?"":js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
+  $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canEdit(own));$("#acBody .acp-jobs")?.classList.toggle("hide",isAIOC());$("#acModal").classList.remove("hide");
 }
 $("#acClose").onclick=()=>$("#acModal").classList.add("hide");
 $("#acModal").addEventListener("click",e=>{if(e.target.id==="acModal"){$("#acModal").classList.add("hide");return}
@@ -2050,7 +2071,7 @@ $("#acModal").addEventListener("click",e=>{if(e.target.id==="acModal"){$("#acMod
 $("#acModal").addEventListener("change",e=>{const t=e.target;
   if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save();return}
   if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save();openAc(t.dataset.rcfg);return}
-  if(t.dataset.rreq!=null){if(!canFlight())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save();openAc(t.dataset.rreq);return}
+  if(t.dataset.rreq!=null){if(!canNF())return;const a=acRec(t.dataset.rreq);a.flight={...(a.flight||{}),role:t.value.trim(),at:now(),by:(typeof myName==="function"&&myName())||""};save();openAc(t.dataset.rreq);return}
   if(t.dataset.owner!=null){setOwner(t.dataset.owner,t.value);openAc(t.dataset.owner)}else if(t.dataset.sent!=null){setSent(t.dataset.sent,t.value);openAc(t.dataset.sent)}});
 $("#acRaise").onclick=()=>{const t=$("#acRaise").dataset.tail;$("#acModal").classList.add("hide");openNew();$("#nTail").value=t};
 function openOwners(){$("#ownList").value=owners().join("\n");$("#ownErr").textContent="";$("#ownModal").classList.remove("hide");setTimeout(()=>$("#ownList").focus(),30)}
@@ -2064,7 +2085,7 @@ $("#ownSave").onclick=()=>{let l=[...new Set($("#ownList").value.split("\n").map
 /* ---------- next flight details (editable by SLE / Line Control / admin) ---------- */
 let FL_T="";
 const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flTime","time"],["flFH","fh"],["flFC","fc"],["flDY","dy"],["flLG","lg"],["flTG","tg"]];
-function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canFlight();
+function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canNF();
   $("#flTitle").textContent=t+" – next flight";$("#flSub").textContent=ed?"":"View only – SLE / Line Control can edit";
   FLF.forEach(([id,k])=>{$("#"+id).value=f[k]||"";$("#"+id).disabled=!ed});
   ["flSave","flClear"].forEach(id=>$("#"+id).classList.toggle("hide",!ed));
@@ -2072,9 +2093,9 @@ function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canFlight();
   $("#flModal").classList.remove("hide");if(ed)setTimeout(()=>$("#flNo").focus(),30)}
 const closeFl=()=>$("#flModal").classList.add("hide");
 $("#flClose").onclick=closeFl;$("#flCancel").onclick=closeFl;
-$("#flSave").onclick=()=>{if(!canFlight())return;const f={};FLF.forEach(([id,k])=>{const v=$("#"+id).value.trim();if(v)f[k]=v});f.at=now();f.by=(typeof myName==="function"&&myName())||"";
+$("#flSave").onclick=()=>{if(!canNF())return;const f={};FLF.forEach(([id,k])=>{const v=$("#"+id).value.trim();if(v)f[k]=v});f.at=now();f.by=(typeof myName==="function"&&myName())||"";
   acRec(FL_T).flight=f;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T);toast(FL_T+" next flight saved")};
-$("#flClear").onclick=()=>{if(!canFlight())return;delete acRec(FL_T).flight;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
+$("#flClear").onclick=()=>{if(!canNF())return;delete acRec(FL_T).flight;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
 
 
 /* ---------- tile layout template (shared, editable) ---------- */
@@ -2104,19 +2125,19 @@ function layoutHtml(BL,edit){edit=edit||LAY_FORCE;
 /* ---------- collapsed tiles (aircraft with no open tasks) ---------- */
 let EXP=new Set();
 function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),off=t==="Off Aircraft",own=ownerOf(t),se=sentOf(t);
-  const notes=j?[...tagList(j).map(x=>`<span class="tagc">${esc(x)}</span>`),...items(j).filter(it=>it.info&&!timingOf(it.t)).map(it=>`<span class="cnote">${esc(itxt(it))}</span>`)]:[];
+  const notes=j?[...tagList(j).map(x=>`<span class="tagc">${esc(x)}</span>`),...items(j).filter(it=>it.info&&!timingOf(it.t)&&(!isAIOC()||aiocOn(j,it.t))).map(it=>`<span class="cnote">${esc(itxt(it))}</span>`)]:[];
   const done=j?tasksOnly(j).length:0;
   const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
-    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${(own!=="Line"||isAIOC())&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightLine(t)?`<div class="ct-fl">✈ ${flightLine(t)}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
     ${open?`<div class="ct-sub"><b>${open} open task${open>1?"s":""}</b> – tap to see</div>`:done?`<div class="ct-sub">${done} task${done>1?"s":""} done this shift</div>`:""}
   </div>`}
-function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t));
+function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t)),ea=canAc(ownerOf(t));
   return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${ns3Btn(t)}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
-    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ed?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select>${roleBoxes(t,false)}${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
+    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ea?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select>${roleBoxes(t,false)}${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
     <div class="jr jobrow"><div class="jl">Job</div><div class="jtask"><div class="sx-empty" style="padding:4px 0">No open tasks.</div>${ed?`<input class="line-add" data-newtile="${esc(t)}" placeholder="+ Add a task – or NOTE …, take off 18:00, landing 22:00">`:""}</div></div></div>`}
 
 /* ---------- tile layout editor ---------- */
@@ -2486,14 +2507,26 @@ const isAdmin=()=>!window.__waCloud||window.__waCloud.me?.()?.role==="admin";
 // each user belongs to a section (an owner – Line, AAG, …); they can edit that section's aircraft, admins can edit all
 const secOf=u=>(D.sec||{})[u]||"Line";
 const mySec=()=>window.__waCloud?secOf(window.__waCloud.me?.()?.username||""):"Line";
-const canEdit=o=>isAdmin()||o===mySec();
+// AIOC: a point of contact for every section. Real AIOC users get it from their position; Line Control / SLE / admins can preview it.
+let AIOCV=false;try{AIOCV=localStorage.getItem("wa-aiocv")==="1"}catch(e){}
+const isAIOC=()=>AIOCV||(!!window.__waCloud&&!isAdmin()&&myPos()==="AIOC");
+const canEdit=o=>!isAIOC()&&(isAdmin()||o===mySec());
+const canAc=o=>isAIOC()||canEdit(o); // left-panel aircraft info (bay, state, priority, NS3, DASS, role, notes, LSJ, sentence)
 // user positions (set by an admin in Users) – SLE and Line Control can edit next-flight details
 const POSITIONS=["Line Control","SLE","B1","B2","A cert","AIOC"];
 const myUser=()=>window.__waCloud?.me?.()?.username||"";
 const POS_DEF={ramsey:"Line Control",kev:"SLE"}; // starting positions until an admin changes them in Users
 const posOf=u=>(D.pos||{})[u]??POS_DEF[u]??"";
 const myPos=()=>posOf(myUser());
-const canFlight=()=>isAdmin()||["SLE","Line Control"].includes(myPos());
+const realFlight=()=>isAdmin()||["SLE","Line Control"].includes(myPos());
+const canFlight=()=>!isAIOC()&&realFlight();
+const canNF=()=>canFlight()||isAIOC(); // next flight / required role
+const aiocOn=(j,t)=>!!(j.ha||{})[t];
+// what AIOC sees in place of the task list: how many are outstanding, plus any line Line Control / SLE ticked "Highlight to AIOC"
+const aiocTasks=j=>{const ts=tasksOnly(j),open=ts.filter(x=>x.s!=="done").length,dn=ts.length-open,hl=items(j).filter(it=>aiocOn(j,it.t));
+  return `<div class="jr jobrow aiocrow"><div class="jl">Jobs</div><div class="jtask"><div class="aioc-n"><b>${open}</b> outstanding task${open===1?"":"s"}${dn?`<span> · ${dn} done</span>`:""}</div>${hl.length?`<div class="tlist">${hl.map(it=>it.info
+    ?`<div class="ti info nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody"><span class="tline"><span class="tt">${esc(itxt(it))}</span></span></div></div>`
+    :`<div class="ti s-${it.s}"><span class="tline"><span class="tt">${esc(it.t)}</span></span><span class="tstat ro"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></span></div>`).join("")}</div>`:""}</div></div>`};
 const acRec=t=>{D.ac=D.ac||{};return D.ac[t]=D.ac[t]||{}};
 const acGet=t=>(D.ac||{})[t]||{};
 const techReady=t=>acGet(t).crs||null;
@@ -2506,7 +2539,7 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 // role config: current (what's fitted) vs required (the next flight's role). Green when they match, red when they don't.
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
-const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canFlight()?"":"disabled"}></span>`};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canAc(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></span>`};
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
@@ -2749,7 +2782,13 @@ setInterval(()=>{if(!$("#tab-board").classList.contains("hide")&&!document.activ
 if(location.hash==="#display"){$("#display").classList.remove("hide")}
 
 /* ---------- render ---------- */
-function render(){curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();
+function applyAIOC(){const a=isAIOC();document.body.classList.toggle("aioc",a);
+  const b=$("#aiocBtn");if(b){b.classList.toggle("hide",!realFlight()||(!!window.__waCloud&&!isAdmin()&&myPos()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
+  let bn=$("#aiocBan");if(a&&!bn){bn=document.createElement("div");bn.id="aiocBan";$("#acWrap").prepend(bn)}if(bn){bn.classList.toggle("hide",!a);bn.innerHTML=AIOCV?`<b>AIOC view</b> – this is what the AIOC see. You can try their edits here. <button class="btn sm" id="aiocExit">Exit AIOC view</button>`:`<b>AIOC</b> – all aircraft and who they belong to. Tasks show as a count; lines Line Control highlight to you appear in full.`}
+  if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
+function setAIOCV(v){AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
+document.addEventListener("click",e=>{if(e.target.closest("#aiocBtn"))setAIOCV(!AIOCV);else if(e.target.closest("#aiocExit"))setAIOCV(false)});
+function render(){applyAIOC();curShift();renderBoard();renderShiftBar();renderNotes();renderDisplay();tick();
   if(!$("#tab-diary").classList.contains("hide"))renderDiary();
   if(!$("#tab-shift").classList.contains("hide"))renderShift();
   if(!$("#tab-history").classList.contains("hide"))renderHistory();
