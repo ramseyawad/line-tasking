@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125091506">
+<meta name="build" content="20261125092341">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -725,6 +725,30 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .dasssel.set{background:#1E293B;color:#fff;border-color:#1E293B}
 .dasssel option{background:#fff;color:#0F172A}
 .rcfgin{width:110px}
+.collhdr{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-top:6px}
+.colls{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.ctile{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;display:flex;flex-direction:column;gap:5px;min-width:0}
+.ctile:hover{transform:translateY(-1px)}
+.ctile.g-tr{box-shadow:0 0 0 2px #22C55E,0 0 12px rgba(34,197,94,.35)}.ctile.g-aog{box-shadow:0 0 0 2px #EF4444,0 0 12px rgba(239,68,68,.35)}
+.ctile.g-dep{box-shadow:0 0 0 2px #3B82F6}.ctile.g-ret{box-shadow:0 0 0 2px #94A3B8}.ctile.g-o{box-shadow:0 0 0 1px #FCD34D}
+.ct-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ct-tail{font-size:17px;font-weight:900;letter-spacing:-.2px;margin-right:2px}
+.ct-dass{font-size:10.5px;font-weight:800;background:#1E293B;color:#fff;border-radius:4px;padding:1px 6px}
+.ct-role{font-size:10.5px;font-weight:800;background:#E0F2FE;color:#075985;border-radius:4px;padding:1px 6px}
+.ct-own{font-size:10.5px;font-weight:800;background:#EEF2FF;color:#3730A3;border-radius:4px;padding:1px 6px}
+.ct-chev{margin-left:auto;color:var(--mute);font-size:12px}
+.ct-fl{font-size:11.5px;font-weight:700;color:#075985}
+.ct-notes{display:flex;flex-wrap:wrap;gap:4px}
+.ct-notes .tagc{padding:1px 6px;font-size:11px}
+.cnote{font-size:11.5px;color:var(--ink2);background:#F1F5F9;border-radius:4px;padding:1px 6px}
+.ct-sub{font-size:11px;color:var(--mute)}
+.ttimes{display:inline-flex;gap:5px;flex-wrap:wrap}
+.ttimes>span{font-size:11.5px;font-weight:900;border-radius:5px;padding:2px 7px;white-space:nowrap}
+.ttimes small{font-weight:700;opacity:.85}
+.tt-to{background:#E0F2FE;color:#075985}.tt-ld{background:#FEF3C7;color:#92400E;box-shadow:0 0 0 1px #F59E0B}
+.jtimes{flex:1 1 100%;order:-1}
+.ti.nk-TO .ibadge{background:#E0F2FE;color:#075985}.ti.nk-LAND .ibadge{background:#FEF3C7;color:#92400E}.ti.nk-NOTE .ibadge{background:#F1F5F9;color:#334155}
+.etile .jh{display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
@@ -1407,14 +1431,24 @@ let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
 const lineShown=(j,it)=>it.info||HEAD==="all"||ltype(j,it.t)===HEAD;
 const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
 const selHtml=(f,id,list,val,dis,blank)=>`<select class="acsel ${f==="acst"?stCls(val):""}" data-f="${f}" data-id="${id}" ${dis?"disabled":""}>${blank?`<option value="">${blank}</option>`:""}${list.map(v=>`<option ${v===val?"selected":""}>${v}</option>`).join("")}</select>`;
-const INFO_RE=/^INFO\b[\s:–-]*/i;
+const INFO_RE=/^(INFO|NOTES?)\b[\s:–-]*/i;
+// "take off ... 18:00" / "landing ... 22:00" lines are timings, not tasks
+const TO_RE=/^(take[\s-]*off|takeoff|t\/o)\b.*?\b(\d{1,2})[:.h]?(\d{2})\b/i,LD_RE=/^(landing|lands?)\b.*?\b(\d{1,2})[:.h]?(\d{2})\b/i;
+const timingOf=t=>{let m=String(t).match(TO_RE);if(m)return{k:"to",time:m[2].padStart(2,"0")+":"+m[3]};m=String(t).match(LD_RE);if(m)return{k:"ld",time:m[m.length-2].padStart(2,"0")+":"+m[m.length-1]};return null};
+const isInfoLine=t=>INFO_RE.test(t)||!!timingOf(t);
 const itxt=it=>it.info?it.t.replace(INFO_RE,""):it.t;
+const noteKind=t=>timingOf(t)?.k==="to"?"T/O":timingOf(t)?.k==="ld"?"LAND":/^NOTES?\b/i.test(t)?"NOTE":"INFO";
+function tailTimes(t){const j=D.jobs.find(x=>active(x)&&x.tail===t);if(!j)return [];return items(j).map(it=>timingOf(it.t)).filter(Boolean)}
+function timesHtml(t){const tt=tailTimes(t);if(!tt.length)return "";const now0=new Date();
+  return `<span class="ttimes">${tt.map(x=>{const[h,m]=x.time.split(":").map(Number);const d=new Date();d.setHours(h,m,0,0);let mins=Math.round((d-now0)/60000);if(mins<-12*60)mins+=1440;
+    const rel=mins>0?` <small>in ${mins<60?mins+"m":Math.floor(mins/60)+"h"+String(mins%60).padStart(2,"0")}</small>`:mins>-90?` <small>${mins===0?"now":-mins+"m ago"}</small>`:"";
+    return `<span class="tt-${x.k}">${x.k==="to"?"T/O":"LAND"} ${x.time}${rel}</span>`}).join("")}</span>`}
 const tasksOnly=j=>items(j).filter(x=>!x.info);
 function items(j){
   const lines=String(j.task||"").split("\n").map(t=>t.trim()).filter(Boolean),old=j.items||[];
   const used=new Set();
   j.items=lines.map((t,i)=>{let o=old.findIndex((x,k)=>!used.has(k)&&x.t===t);if(o<0&&old[i]&&!used.has(i)&&!lines.includes(old[i].t))o=i;
-    const info=INFO_RE.test(t);
+    const info=isInfoLine(t);
     if(o>=0){used.add(o);const r={t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[],info,cf:!!old[o].cf};if(old[o].nw&&old[o].t===t)r.nw=old[o].nw;return r}return {t,s:j.status==="done"?"done":"todo",at:null,who:[],info,cf:false}});
   return j.items;
 }
@@ -1530,7 +1564,7 @@ function renderBoard(){
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
   const ROLES=[["B1",[1],"Cert"],["B2",[2],"Cert"],["Mechs",[3,4,5,6],"A+ / A Cat"],["Other",[0],""]];
   const roleOf=e=>{const t=tradeIx(e);return t===1?0:t===2?1:t===0?3:2};
-  $("#jobs").innerHTML=jobs.map(j=>{
+  const tileHtml=j=>{
     const cur=current(j),done=j.status==="done",off=j.tail==="Off Aircraft",ro=!canEdit(ownerOf(j.tail));
     const did=done?whoDid(j):[];
     const people=done?did.map(x=>x.id):cur;
@@ -1554,8 +1588,8 @@ function renderBoard(){
       :j.status==="work"?`<span class="status">In work</span><span class="sub">${IC.clock} ${ago(j.started)}</span>`
       :j.status==="planned"?`<span class="status">Not started</span>`
       :`<span class="status">Unmanned</span>`;
-    const acts=done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
-      :off?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`;
+    const acts=(!done&&!tasksOnly(j).some(x=>x.s!=="done")?`<button class="btn sm" data-collapse="${esc(j.tail)}" title="Fold back into the collapsed strip">Collapse ▴</button>`:"")+(done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
+      :off?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`);
     const us=unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
       <div class="jh">
@@ -1563,7 +1597,7 @@ function renderBoard(){
         ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta">${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(j.tail)}" value="${esc(acGet(j.tail).rcfg||"")}" placeholder="+ role config" title="Current role config" ${done||!canEdit(ownerOf(j.tail))?"disabled":""}>`:""}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
+      <div class="jmeta">${timesHtml(j.tail)?`<div class="jtimes">${timesHtml(j.tail)}</div>`:""}${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(j.tail)}" value="${esc(acGet(j.tail).rcfg||"")}" placeholder="+ role config" title="Current role config" ${done||!canEdit(ownerOf(j.tail))?"disabled":""}>`:""}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
@@ -1571,7 +1605,7 @@ function renderBoard(){
           const key=j.id+"|"+i,ed=!done&&LEDIT===key;
           const nb=lineNew(j,it)?`<button class="lnew" data-lseen="${j.id}|${i}" title="Added by ${esc(nwOf(j,it).by||"someone")} ${fmt(nwOf(j,it).at)} – click to clear">NEW ✕</button>`:"";
           const tbox=txt=>`<span class="tline">${nb}`+(ed?`<input class="line-edit" data-lj="${j.id}" data-li="${i}" value="${esc(LDRAFT??it.t)}" placeholder="Empty = remove this line">`:`<span class="tt ${done?"":"tedit"}" ${done?"":`data-tedit="${key}" title="Click to edit this line"`}>${esc(txt)}</span>`)+`</span>`;
-          if(it.info)return `<div class="ti info${nb?" is-new":""}"><span class="ibadge">INFO</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
+          if(it.info)return `<div class="ti info${nb?" is-new":""} nk-${noteKind(it.t).replace("/","")}"><span class="ibadge">${noteKind(it.t)}</span><div class="tbody">${tbox(itxt(it))}</div></div>`;
           const crew=cur.filter(e=>!it.who.includes(e)),others=onShift.filter(e=>!cur.includes(e.id)&&!it.who.includes(e.id));
           const opt=e=>`<option value="${e}">${esc(engName(e))}</option>`;
           return `<div class="ti s-${it.s}${nb?" is-new":""}">${tbox(it.t)}
@@ -1579,7 +1613,16 @@ function renderBoard(){
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>
       <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div></fieldset>
-    </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
+    </div>`};
+  // every aircraft has a tile; anything with no open tasks is collapsed into the strip below
+  const openT=j=>tasksOnly(j).some(x=>x.s!=="done");
+  const showAll=FILTER==="active"&&!q;
+  const viewTails=TAILS.filter(t=>OWNV==="All"||(t==="Off Aircraft"?OWNV==="Line":ownerOf(t)===OWNV));
+  const full=jobs.filter(j=>!showAll||openT(j)||EXP.has(j.tail));
+  const expEmpty=showAll?viewTails.filter(t=>EXP.has(t)&&!D.jobs.some(j=>active(j)&&j.tail===t)):[];
+  const coll=showAll?viewTails.filter(t=>!full.some(j=>j.tail===t)&&!expEmpty.includes(t)):[];
+  $("#jobs").innerHTML=(full.map(tileHtml).join("")+expEmpty.map(emptyTile).join("")||(showAll?"":`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`))
+    +(coll.length?`<div class="collhdr">No open tasks · tap a tail to expand</div><div class="colls">${coll.map(t=>collTile(t)).join("")}</div>`:"");
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
   $("#teamSub").textContent=onShift.length+" on shift";$("#teamBadge").textContent=freeE.length+" free";
@@ -1592,7 +1635,9 @@ function renderBoard(){
   $("#offList").innerHTML=offE.map(e=>`<div class="person off">${av(e.id)}<div class="nm">${esc(e.name)}</div></div>`).join("")||`<div class="team-empty">–</div>`;
 }
 $("#jobs").addEventListener("click",e=>{
+  const ex=e.target.closest("[data-expand]");if(ex&&!e.target.closest("button,select,input")){EXP.add(ex.dataset.expand);render();setTimeout(()=>document.querySelector(`#jobs .job[data-tail="${ex.dataset.expand}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),30);return}
   const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.collapse){EXP.delete(t.dataset.collapse);render();return}
   if(t.dataset.un){const[j,en]=t.dataset.un.split("|");unassign(j,en)}
   else if(t.dataset.done)complete(t.dataset.done);
   else if(t.dataset.start)start(t.dataset.start);
@@ -1658,6 +1703,9 @@ $("#jobs").addEventListener("click",e=>{const t=e.target.closest("[data-tedit]")
 $("#jobs").addEventListener("input",e=>{if(e.target.classList.contains("line-edit"))LDRAFT=e.target.value});
 $("#jobs").addEventListener("keydown",e=>{const t=e.target;
   if(t.classList.contains("line-edit")){if(e.key==="Enter"){e.preventDefault();t.dataset.done=1;lineSave(t)}else if(e.key==="Escape"){t.dataset.done=1;LEDIT=null;LDRAFT=null;render()}}
+  else if(t.dataset.newtile&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const tl=t.dataset.newtile;
+    if(!canEdit(ownerOf(tl)))return;clearCRS(tl);D.jobs.push({id:uid(),tail:tl,bay:"",tag:"",lsj:"",pri:"",acst:"",area:"Line",task:v,status:"open",created:now(),started:null,completed:null,assignments:[]});
+    EXP.add(tl);save();setTimeout(()=>document.querySelector(`.line-add[data-ladd]`)&&document.querySelector(`#jobs .job[data-tail="${tl}"] .line-add`)?.focus(),0)}
   else if(t.classList.contains("line-add")&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const j=job(t.dataset.ladd);const id=j.id;
     clearCRS(j.tail);editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
 $("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("line-edit")&&!t.dataset.done)setTimeout(()=>{if(document.body.contains(t)&&!t.dataset.done){t.dataset.done=1;lineSave(t)}},0)});
@@ -1920,6 +1968,23 @@ $("#flClose").onclick=closeFl;$("#flCancel").onclick=closeFl;
 $("#flSave").onclick=()=>{if(!canFlight())return;const f={};FLF.forEach(([id,k])=>{const v=$("#"+id).value.trim();if(v)f[k]=v});f.at=now();f.by=(typeof myName==="function"&&myName())||"";
   acRec(FL_T).flight=f;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T);toast(FL_T+" next flight saved")};
 $("#flClear").onclick=()=>{if(!canFlight())return;delete acRec(FL_T).flight;save();closeFl();if(!$("#acModal").classList.contains("hide"))openAc(FL_T)};
+
+/* ---------- collapsed tiles (aircraft with no open tasks) ---------- */
+let EXP=new Set();
+function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),off=t==="Off Aircraft",own=ownerOf(t),se=sentOf(t);
+  const notes=j?[...tagList(j).map(x=>`<span class="tagc">${esc(x)}</span>`),...items(j).filter(it=>it.info&&!timingOf(it.t)).map(it=>`<span class="cnote">${esc(itxt(it))}</span>`)]:[];
+  const done=j?tasksOnly(j).length:0;
+  return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" title="Expand ${esc(t)}">
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg?`<span class="ct-role">${esc(a.rcfg)}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}<span class="ct-chev">▾</span></div>
+    ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
+    ${flightLine(t)?`<div class="ct-fl">✈ ${flightLine(t)}</div>`:""}
+    ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
+    ${done?`<div class="ct-sub">${done} task${done>1?"s":""} done this shift</div>`:""}
+  </div>`}
+function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t));
+  return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
+    <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ed?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(t)}" value="${esc(a.rcfg||"")}" placeholder="+ role config" ${ed?"":"disabled"}>${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
+    <div class="jr jobrow"><div class="jl">Job</div><div class="jtask"><div class="sx-empty" style="padding:4px 0">No open tasks.</div>${ed?`<input class="line-add" data-newtile="${esc(t)}" placeholder="+ Add a task – or NOTE …, take off 18:00, landing 22:00">`:""}</div></div></div>`}
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
