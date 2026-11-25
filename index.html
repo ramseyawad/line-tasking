@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125200502">
+<meta name="build" content="20261125201133">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1944,6 +1944,7 @@ function renderBoard(){
     const parts=[...TAILS].sort((a,b)=>tPri(a)-tPri(b)||TAILS.indexOf(a)-TAILS.indexOf(b)).map(t=>{
       const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
       if(isAIOC()){if(t==="Off Aircraft"||!aiocShows(t))return null;return{f:j?tileHtml(j):tileHtml(blankJob(t))}}
+      if(isMgmt())return{f:j?tileHtml(j):t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))}; // managers: every aircraft open, read only
       if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};return{c:collTile(t)}}
       if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
       if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};
