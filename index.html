@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125003829">
+<meta name="build" content="20261125004112">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -589,6 +589,19 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 @media(max-width:640px){.ti{grid-template-columns:minmax(0,1fr) auto auto!important}}
 .newrib{flex-wrap:wrap}
 .ribdesc{flex-basis:100%;font-weight:600;letter-spacing:0;font-size:12.5px;line-height:1.35;opacity:.95;padding-top:2px}
+.guide .card-b{max-height:calc(88vh - 70px);overflow-y:auto;padding-top:6px}
+.gnav{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 12px;border-bottom:1px solid var(--line);margin-bottom:6px;position:sticky;top:-6px;background:#fff;z-index:1}
+.gnav a{font-size:12px;font-weight:700;color:var(--blue);background:var(--blueBg,#EFF6FF);border-radius:99px;padding:3px 10px;text-decoration:none}
+.gnav a:hover{background:#DBEAFE}
+.guide section{padding:10px 0 4px;scroll-margin-top:60px}
+.guide h3{margin:0 0 6px;font-size:15px}
+.guide ul{margin:0;padding-left:20px}
+.guide li{font-size:13.5px;line-height:1.5;margin:3px 0;color:var(--ink2)}
+.guide li b{color:var(--ink)}
+.gkeys{list-style:none;padding:0!important;display:flex;flex-wrap:wrap;gap:8px 18px}
+kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px solid #CBD5E1;border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.shiftpill i{display:none}
+.syncdot{cursor:help}
 </style>
 </head>
 <body>
@@ -607,6 +620,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
     <span class="syncdot hide" id="syncDot" title="Live – synced"></span>
     <span class="shiftpill"><i></i><span id="shiftName">Early shift</span></span>
     <span class="clock" id="clock"></span>
+    <button class="hbtn" id="guideOpen" title="How to use Line Tasking (?)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="l">How to</span></button>
     <button class="hbtn" id="shareAll" title="Send the whole board as a text"><svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg><span class="l">Send to group</span></button>
     <button class="hbtn solid" id="openDisplay" title="Full-screen board for the hangar screen"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="l">Wall board</span></button>
     <button class="hbtn hide" id="userBtn" title="Signed in"><span class="av sm" id="userAv"></span><span class="l" id="userName"></span></button>
@@ -862,6 +876,94 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
   </div>
 </div>
 
+<div id="guide" class="modal hide"><div class="mcard card guide" style="width:min(860px,100%)">
+  <div class="mhead"><h2>How to use Line Tasking</h2><span class="sub">Press ? any time</span><button class="btn icon" id="guideClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b">
+  <nav class="gnav" id="gnav"><a href="#g-start">Start of shift</a><a href="#g-raise">Raise a job</a><a href="#g-crew">Crew a job</a><a href="#g-tasks">Task lines</a><a href="#g-progress">Progress</a><a href="#g-card">Card details</a><a href="#g-find">Finding things</a><a href="#g-new">New &amp; updated</a><a href="#g-team">Team &amp; manning</a><a href="#g-send">Send to group</a><a href="#g-wall">Wall board</a><a href="#g-hand">Handover</a><a href="#g-tabs">Other tabs</a><a href="#g-keys">Shortcuts</a></nav>
+
+  <section id="g-start"><h3>1 · Start of shift</h3><ul>
+    <li>Check the bar under the header shows the right <b>crew letter, shift and date</b> (e.g. <i>A Shift · Lates · Tue 24 Nov</i>). If not, press <b>Correct</b>.</li>
+    <li>Check who's in: <b>Shift list</b> tab → pick the day and shift and press <b>Apply</b>, or flick people on/off with the switches.</li>
+    <li>Pick your view next to <b>Jobs</b>: <b>Line tasks</b> (line controller), <b>Certifier</b> (maintenance controller) or <b>All</b>. Each screen remembers its own choice.</li>
+    <li>Unfinished jobs from the last shift are already on the board.</li></ul></section>
+
+  <section id="g-raise"><h3>2 · Raise a job</h3><ul>
+    <li><b>Raise a job</b> (or press <b>N</b>). Pick the tail, bay, priority, state and area.</li>
+    <li>Choose <b>Line task</b> or <b>Certifier</b> – it applies to every line you type.</li>
+    <li>Type <b>one task per line</b>. Start a line with <b>INFO</b> for a note rather than a task (e.g. <i>INFO crew in at 1400</i>).</li>
+    <li>Status notes (WATER DUMPED, NO APU…) go in the notes box, separated by commas.</li>
+    <li>Pick engineers by trade at the bottom if you already know who – optional.</li>
+    <li><b>Ctrl + Enter</b> adds it.</li></ul></section>
+
+  <section id="g-crew"><h3>3 · Crew a job</h3><ul>
+    <li>Each card has <b>B1, B2, Mechs</b> (and Other) boxes at the top – use <b>+ Add</b> in the right box. It only offers people on shift in that trade.</li>
+    <li>Assigning doesn't make them busy. They stay <b>available</b> until you press <b>Start</b> – so you can line people up for the next job.</li>
+    <li>Press <b>Start</b> when they crack on. If someone's already working another started job, they're moved across.</li>
+    <li>Press <b>×</b> on a name to take them off.</li>
+    <li>To put someone on just one line, use <b>+ assign</b> at the right of that line.</li></ul></section>
+
+  <section id="g-tasks"><h3>4 · Task lines</h3><ul>
+    <li><b>Click a line's text</b> to edit just that line. Enter saves, Esc cancels. Clear the text and press Enter to remove the line.</li>
+    <li><b>+ Add a task</b> at the bottom of a card adds a line (Enter to add, the box stays open for the next one).</li>
+    <li>The <b>Line / Cert</b> dropdown on each line marks who it belongs to. Cert lines show amber.</li></ul></section>
+
+  <section id="g-progress"><h3>5 · Progress</h3><ul>
+    <li>Tap the <b>circle</b> on a line to move it on: ○ Not started → ▶ In progress → ✓ Done.</li>
+    <li>When every line is done, the job completes itself. Or press <b>Complete</b> on the card.</li>
+    <li><b>⏸</b> puts a started job back to not started. <b>Reopen</b> brings a completed job back.</li>
+    <li>Press <b>Start</b> and <b>Complete</b> honestly – the times feed the diary and the Stats tab.</li></ul></section>
+
+  <section id="g-card"><h3>6 · Card details</h3><ul>
+    <li><b>P</b> = priority (1 is highest – sorts to the top).</li>
+    <li><b>State</b>: Serviceable / AOG / Shed Maint – AOG time is recorded for Stats. <b>Area</b>: Line / Line Support / Deployed.</li>
+    <li><b>Status notes</b>: type a note and press Enter; × removes it.</li>
+    <li>Change the tail or bay straight on the card.</li></ul></section>
+
+  <section id="g-find"><h3>7 · Finding things</h3><ul>
+    <li>The <b>aircraft buttons</b> (400–421, Off A/C) float at the top on every tab – tap one to jump to its card. Colours: orange in work, purple not started, amber unmanned, red ring AOG.</li>
+    <li><b>Notes</b> at the end of that row jumps to the shift notes.</li>
+    <li>Filters next to Jobs: Open / In work / Not started / Unmanned / Done this shift. Search box finds tail, bay, task or name.</li>
+    <li>Switch between <b>squares</b> and <b>stretched</b> layouts with the two icons.</li></ul></section>
+
+  <section id="g-new"><h3>8 · New &amp; updated highlights</h3><ul>
+    <li>Everything is <b>live</b> – changes appear on everyone's screen within a second (green dot = connected).</li>
+    <li>A job someone else adds glows <b>blue – NEW</b>. One they change shows <b>purple – UPDATED</b> with what changed and who did it.</li>
+    <li>New lines get a blue <b>NEW ✕</b> badge – click it to clear that line. <b>✓ Seen</b> clears the card, <b>mark all seen</b> clears everything.</li>
+    <li>A blue dot on an aircraft button means something on it you haven't seen.</li></ul></section>
+
+  <section id="g-team"><h3>9 · Team &amp; manning</h3><ul>
+    <li><b>Team</b> button (or <b>T</b>) slides out who's free, who's working and who's on line roles.</li>
+    <li>The manning boxes show each trade against target/minimum – <b>Set targets</b> to change them. All A certs count together.</li>
+    <li>Line walkers (LWL) are on shift but not offered for tasks.</li>
+    <li><b>22:00–02:00</b>: lates and nights overlap – the other shift's rostered people are available too, marked <b>N</b> or <b>L</b>.</li></ul></section>
+
+  <section id="g-send"><h3>10 · Send to group</h3><ul>
+    <li><b>Send to group</b> (top) sends every manned tail with its engineers, e.g. <i>ZM420: Kyle J, Paul E</i>. The paper-plane on a card sends just that one.</li>
+    <li>On a phone it opens your share sheet; on a laptop it copies – paste into the group chat.</li></ul></section>
+
+  <section id="g-wall"><h3>11 · Wall board</h3><ul>
+    <li><b>Wall board</b> (top right) goes full screen for the hangar screen. It shows manned jobs only: red = not started, orange = in progress, green = complete.</li>
+    <li>Move the mouse to see the controls: scroll speed, squares/rows, exit (Esc).</li>
+    <li>It updates live and picks up new app versions by itself.</li></ul></section>
+
+  <section id="g-hand"><h3>12 · Shift notes &amp; handover</h3><ul>
+    <li><b>Shift notes</b> (bottom of the board) carry through every shift and save to each diary. <b>Useful info</b> tab is for standing info (contacts, reminders).</li>
+    <li><b>Export so far</b> previews the diary at any time.</li>
+    <li><b>Hand over shift</b>: enter the off-going and on-coming names and sign (or tick <i>not available</i> with a reason), pick the <b>crew coming on</b>, then hand over. The diary is saved permanently and opens to print or save as PDF.</li>
+    <li>Unfinished jobs carry over to the next shift automatically.</li></ul></section>
+
+  <section id="g-tabs"><h3>13 · Other tabs</h3><ul>
+    <li><b>Shift list</b> – the roster by trade, who's on shift, import a new roster.</li>
+    <li><b>History</b> – every completed job, who did it and how long; export CSV.</li>
+    <li><b>Stats</b> – hours per engineer and aircraft, turnaround, busiest hours, carry-overs, shifts below minimum; pick a date range; export CSV.</li>
+    <li><b>Diary</b> – every handed-over shift, read-only.</li>
+    <li><b>Users</b> (admin) – approve profile requests and manage access.</li></ul></section>
+
+  <section id="g-keys"><h3>Shortcuts</h3><ul class="gkeys">
+    <li><kbd>N</kbd> raise a job</li><li><kbd>T</kbd> team panel</li><li><kbd>?</kbd> this guide</li><li><kbd>Ctrl</kbd>+<kbd>Enter</kbd> add job</li><li><kbd>Esc</kbd> close / cancel</li></ul>
+    <p class="sub">Keep entries at OFFICIAL – nothing classified on here.</p></section>
+  </div>
+</div></div>
 <div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
   <div class="mhead"><h2>Manning targets</h2><span class="sub">per shift</span><button class="btn icon" id="mnClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="card-b"><table class="mntbl"><thead><tr><th></th><th>Target</th><th>Minimum</th></tr></thead><tbody id="mnRows"></tbody></table>
@@ -1388,6 +1490,13 @@ function changeDesc(j,us){
   const u=[...new Set(out)];
   return u.slice(0,4).join(" · ")+(u.length>4?` · +${u.length-4} more`:"");
 }
+
+const openGuide=()=>{$("#guide").classList.remove("hide");$("#guide .card-b").scrollTop=0};
+$("#guideOpen").onclick=openGuide;$("#guideClose").onclick=()=>$("#guide").classList.add("hide");
+$("#guide").addEventListener("click",e=>{if(e.target.id==="guide")$("#guide").classList.add("hide");const a=e.target.closest("#gnav a");if(a){e.preventDefault();$(a.getAttribute("href"))?.scrollIntoView({behavior:"smooth",block:"start"})}});
+addEventListener("keydown",e=>{const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
+  if(e.key==="?"&&!typing){e.preventDefault();openGuide()}
+  if(e.key==="Escape"&&!$("#guide").classList.contains("hide"))$("#guide").classList.add("hide")});
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
