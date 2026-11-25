@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125090127">
+<meta name="build" content="20261125091506">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -710,13 +710,21 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .acp-fl{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:10px 12px;border-radius:8px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:13px;font-weight:600}
 .acp-fl>div{flex:1}.acp-fl button{flex:none}
 .flgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(min-width:520px){.flgrid{grid-template-columns:repeat(4,1fr)}.flgrid label:nth-child(-n+4){grid-column:span 2}}
+.flgrid{grid-template-columns:repeat(5,1fr)!important}.flgrid label:nth-child(1),.flgrid label:nth-child(3){grid-column:span 3}.flgrid label:nth-child(2),.flgrid label:nth-child(4){grid-column:span 2}
+@media(max-width:520px){.flgrid{grid-template-columns:1fr 1fr!important}.flgrid label{grid-column:auto!important}}
 .job.g-tr{border-color:#22C55E;box-shadow:0 0 0 2px #22C55E,0 0 18px rgba(34,197,94,.45)}
 .job.g-aog{border-color:#EF4444;box-shadow:0 0 0 2px #EF4444,0 0 18px rgba(239,68,68,.45)}
 .job.g-o{border-color:#F59E0B;box-shadow:0 0 0 2px #F59E0B,0 0 14px rgba(245,158,11,.35)}
 .job.g-dep{border-color:#3B82F6;box-shadow:0 0 0 2px #3B82F6,0 0 18px rgba(59,130,246,.4)}
 .job.g-ret{border-color:#94A3B8;box-shadow:0 0 0 2px #94A3B8,0 0 14px rgba(100,116,139,.35)}
 #jobs{padding-top:6px}
+.tailname{border:0;background:none;padding:0;font-family:inherit;font-size:24px;font-weight:900;letter-spacing:-.3px;color:var(--ink);cursor:pointer;line-height:1.1}
+.tailname:hover{color:var(--blue)}
+.tailname.off{color:#B45309;font-size:20px}
+.dasssel{width:auto!important;max-width:none;min-width:92px;font-weight:700}
+.dasssel.set{background:#1E293B;color:#fff;border-color:#1E293B}
+.dasssel option{background:#fff;color:#0F172A}
+.rcfgin{width:110px}
 </style>
 </head>
 <body>
@@ -1016,8 +1024,8 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 
   <section id="g-crew"><h3>3 · Crew a job</h3><ul>
     <li>Each card has <b>B1, B2, Mechs</b> (and Other) boxes at the top – use <b>+ Add</b> in the right box. It only offers people on shift in that trade.</li>
-    <li>Assigning doesn't make them busy. They stay <b>available</b> until you press <b>Start</b> – so you can line people up for the next job.</li>
-    <li>Press <b>Start</b> when they crack on. Anyone already on another started job shows <i>on ZM…</i> next to their name. When someone has finished all the lines assigned to them, their name turns green – <b>✓ done – free</b> – and they show as available again.</li>
+    <li>Assigning doesn't make them busy. They stay <b>available</b> until a line they're on is put <b>in progress</b> – so you can line people up for the next task.</li>
+    <li>Work starts per task: tap a line's circle to put it <b>in progress</b> – that starts the clock for the people on that line. Anyone already on another started job shows <i>on ZM…</i> next to their name. When someone has finished all the lines assigned to them, their name turns green – <b>✓ done – free</b> – and they show as available again.</li>
     <li>Press <b>×</b> on a name to take them off.</li>
     <li>To put someone on just one line, use <b>+ assign</b> at the right of that line.</li></ul></section>
 
@@ -1028,9 +1036,8 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 
   <section id="g-progress"><h3>5 · Progress</h3><ul>
     <li>Tap the <b>circle</b> on a line to move it on: ○ Not started → ▶ In progress → ✓ Done.</li>
-    <li>When every line is done, the job completes itself. Or press <b>Complete</b> on the card.</li>
-    <li><b>⏸</b> puts a started job back to not started. <b>Reopen</b> brings a completed job back.</li>
-    <li>Press <b>Start</b> and <b>Complete</b> honestly – the times feed the diary and the Stats tab.</li></ul></section>
+    <li>Each aircraft is one <b>tile</b>. Raising a job on a tail that already has a tile adds the tasks to it. When every line is done the tile shows <b>All tasks done</b> and stays until handover. <b>CRS</b> marks the aircraft Tech ready (green).</li>
+        <li>Move lines on honestly – the times feed the diary and the Stats tab.</li></ul></section>
 
   <section id="g-card"><h3>6 · Card details</h3><ul>
     <li><b>P</b> = priority (1 is highest – sorts to the top).</li>
@@ -1145,10 +1152,11 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
     <label class="mv-f"><span>Role required</span><input id="flRole" placeholder="e.g. AAR, Cargo"></label>
     <label class="mv-f"><span>Date</span><input type="date" id="flDate"></label>
     <label class="mv-f"><span>Time</span><input type="time" id="flTime"></label>
-    <label class="mv-f"><span>FH</span><input id="flFH" inputmode="decimal" placeholder="Flight hours"></label>
-    <label class="mv-f"><span>FC</span><input id="flFC" inputmode="numeric" placeholder="Flight cycles"></label>
-    <label class="mv-f"><span>LG</span><input id="flLG" inputmode="numeric"></label>
-    <label class="mv-f"><span>TG</span><input id="flTG" inputmode="numeric"></label>
+    <label class="mv-f"><span title="Flight hours">FH</span><input id="flFH" inputmode="decimal" placeholder="hrs"></label>
+    <label class="mv-f"><span title="Flight cycles">FC</span><input id="flFC" inputmode="numeric" placeholder="cycles"></label>
+    <label class="mv-f"><span title="Days">DY</span><input id="flDY" inputmode="numeric" placeholder="days"></label>
+    <label class="mv-f"><span title="Landings">LG</span><input id="flLG" inputmode="numeric" placeholder="landings"></label>
+    <label class="mv-f"><span title="Touch and go's">TG</span><input id="flTG" inputmode="numeric" placeholder="T&amp;Gs"></label>
   </div><p class="sub" id="flWho" style="margin:10px 0 0"></p></div>
   <div class="mv-foot"><div class="mvbtns"><button class="linkbtn" id="flClear">Clear</button><button class="btn" id="flCancel">Close</button><button class="btn pri" id="flSave">Save</button></div></div>
 </div></div>
@@ -1217,7 +1225,7 @@ const dur=(a,b)=>{if(!a||!b)return"";const m=Math.round((new Date(b)-new Date(a)
 let D;
 try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!D||!Array.isArray(D.jobs))D={engineers:[],jobs:[]};
-const save=()=>{markMine();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
+const save=()=>{mergeTiles();D.jobs.forEach(j=>{if(j.status!=="done")j.status=deriveStatus(j)});markMine();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
 const alertMsg=m=>console.warn(m);
 
 const eng=id=>D.engineers.find(e=>e.id===id);
@@ -1273,6 +1281,15 @@ $("#addJob").onclick=()=>{
   const task=$("#nTask").value.trim();
   if(!task){$("#nTask").focus();return}
   const engs=[...PICK].filter(id=>isOn(eng(id)));clearCRS($("#nTail").value);
+  const ex=D.jobs.find(j=>active(j)&&j.tail===$("#nTail").value);
+  if(ex){const add=task.split("\n").map(x=>x.trim()).filter(Boolean),have=items(ex).map(i=>i.t);const nw=add.filter(x=>!have.includes(x));
+    ex.task=[...have,...nw].join("\n");items(ex);if($("#nLt").value==="C"){ex.lt=ex.lt||{};nw.filter(x=>!INFO_RE.test(x)).forEach(x=>ex.lt[x]="C")}
+    engs.forEach(e=>{if(!current(ex).includes(e))ex.assignments.push({eng:e,from:null,to:null})});
+    ["bay","lsj","pri"].forEach(k=>{const v=$("#n"+k[0].toUpperCase()+k.slice(1)).value.trim();if(v&&!ex[k])ex[k]=v});
+    const tg=$("#nTag").value.trim();if(tg)ex.tag=[...new Set([...tagList(ex),...tg.split(",").map(x=>x.trim()).filter(Boolean)])].join(", ");
+    if($("#nSt").value)ex.acst=$("#nSt").value;
+    $("#nTask").value="";$("#nBay").value="";$("#nTag").value="";$("#nLsj").value="";$("#nPri").value="";$("#nSt").value="";
+    PICK.clear();closeNew();save();toast(`${nw.length} task${nw.length===1?"":"s"} added to ${ex.tail}`);return}
   D.jobs.push({id:uid(),tail:$("#nTail").value,bay:$("#nBay").value.trim(),tag:$("#nTag").value.trim(),lsj:$("#nLsj").value.trim(),pri:$("#nPri").value.trim(),acst:$("#nSt").value,acstLog:$("#nSt").value?[{v:$("#nSt").value,at:now()}]:[],area:$("#nArea").value,task,status:engs.length?"planned":"open",
     created:now(),started:null,completed:null,assignments:engs.map(e=>({eng:e,from:null,to:null})),
     lt:$("#nLt").value==="C"?Object.fromEntries(task.split("\n").map(t=>t.trim()).filter(t=>t&&!INFO_RE.test(t)).map(t=>[t,"C"])):undefined});
@@ -1298,6 +1315,23 @@ $("#pills").addEventListener("click",e=>{const b=e.target.closest("button");if(b
 document.querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{if(k.dataset.k==="team"){toggleTeam(true);return}setFilter(FILTER===k.dataset.k?"active":k.dataset.k)});
 
 const job=id=>D.jobs.find(x=>x.id===id);
+// ---- one tile per aircraft: tasks (lines) start/stop, the tile just reflects them ----
+const allDone=j=>{const t=tasksOnly(j);return t.length>0&&t.every(x=>x.s==="done")};
+function deriveStatus(j){const t=tasksOnly(j);if(t.some(x=>x.s==="work"||x.s==="done"))return "work"; // under way (or all done – stays on the board until handover)
+  return current(j).length?"planned":"open"}
+function mergeTiles(){ // fold any second job on the same tail into the first, so each aircraft is one tile
+  let n=0;const by={};D.jobs.filter(active).sort((a,b)=>a.created.localeCompare(b.created)).forEach(j=>{const k=j.tail;if(!by[k]){by[k]=j;return}
+    const m=by[k];items(m);items(j);
+    const have=new Set(m.items.map(i=>i.t));j.items.forEach(it=>{if(!have.has(it.t)){m.items.push(it);have.add(it.t)}});
+    m.task=m.items.map(i=>i.t).join("\n");
+    j.assignments.forEach(a=>m.assignments.push(a));
+    const tg=[...new Set([...tagList(m),...tagList(j)])];m.tag=tg.join(", ");
+    m.lt={...(j.lt||{}),...(m.lt||{})};if(j.nl)m.nl=[...(m.nl||[]),...j.nl];
+    m.bay=m.bay||j.bay;m.lsj=m.lsj||j.lsj;m.cf=Math.max(m.cf||0,j.cf||0);
+    if(j.pri&&(!m.pri||+j.pri<+m.pri))m.pri=j.pri;if(j.acst==="AOG"||!m.acst)m.acst=j.acst||m.acst;
+    if(j.started&&(!m.started||j.started<m.started))m.started=j.started;
+    D.jobs=D.jobs.filter(x=>x!==j);n++});
+  return n}
 function settle(j){ // status for a job not yet started
   if(j.status!=="work"&&j.status!=="done")j.status=current(j).length?"planned":"open";
 }
@@ -1395,9 +1429,12 @@ function unassignItem(jobId,idx,engId){const j=job(jobId);const it=items(j)[idx]
 const ITEM={todo:{n:"Not started",i:"○",next:"work"},work:{n:"In progress",i:"▶",next:"done"},done:{n:"Done",i:"✓",next:"todo"}};
 function cycleItem(jobId,idx){
   const j=job(jobId);if(!j||j.status==="done")return;const it=items(j)[idx];if(!it||it.info)return;
-  it.s=ITEM[it.s].next;it.at=now();
-  if(it.s!=="todo"&&j.status!=="work"&&current(j).length){j.status="work";j.started=j.started||it.at;j.assignments.forEach(a=>{if(!a.to&&!a.from)a.from=it.at})}
-  if(tasksOnly(j).length&&tasksOnly(j).every(x=>x.s==="done")){complete(jobId);toast(`All tasks done – ${j.tail} complete`,()=>{reopen(jobId);const k=job(jobId);items(k);k.items[idx].s="work";start(jobId)});return}
+  it.s=ITEM[it.s].next;it.at=now();const t=it.at;
+  const ppl=it.who.length?it.who:current(j);
+  if(it.s==="work"){j.started=j.started||t;j.assignments.forEach(a=>{if(!a.to&&!a.from&&ppl.includes(a.eng))a.from=t})}
+  // anyone whose lines on this tile are all done stops the clock and is free again (kept as crew, not working)
+  [...new Set(current(j))].forEach(e=>{if(finishedOn(j,e)){j.assignments.forEach(a=>{if(a.eng===e&&!a.to&&a.from){a.to=t;j.assignments.push({eng:e,from:null,to:null})}})}
+    else if(it.s!=="todo"&&linesLeft(j,e).some(x=>x.s==="work"))j.assignments.forEach(a=>{if(a.eng===e&&!a.to&&!a.from)a.from=t})});
   save();
 }
 
@@ -1513,20 +1550,20 @@ function renderBoard(){
       const add=addFor(ri);
       return `<div class="jr"><div class="jl">${r[0]}<small>${r[2]}</small></div><div class="chips">${list.map(chip).join("")||(done?'<span class="sub">–</span>':`<span class="none">${["No B1","No B2","No mechs"][ri]}</span>`)}${add}</div></div>`}).join("");
     const st=done?`<span class="status">Complete</span><span class="sub">${fmt(j.completed)}</span>`
+      :tasksOnly(j).length&&tasksOnly(j).every(x=>x.s==="done")?`<span class="status">All tasks done</span>`
       :j.status==="work"?`<span class="status">In work</span><span class="sub">${IC.clock} ${ago(j.started)}</span>`
       :j.status==="planned"?`<span class="status">Not started</span>`
       :`<span class="status">Unmanned</span>`;
     const acts=done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
-      :j.status==="work"?(off?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button>`:techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`)+`<button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
-      :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
+      :off?"":techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`;
     const us=unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
       <div class="jh">
-        <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
+        <button type="button" class="tailname ${off?"off":""}" data-actile="${esc(j.tail)}" title="Aircraft details">${esc(off?"Off Aircraft":j.tail)}</button>
         ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
         <div class="jst">${st}</div>
       </div>
-      <div class="jmeta">${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
+      <div class="jmeta">${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}${ownSel(j.tail,done)}${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select><input class="tagf rcfgin" data-rcfg="${esc(j.tail)}" value="${esc(acGet(j.tail).rcfg||"")}" placeholder="+ role config" title="Current role config" ${done||!canEdit(ownerOf(j.tail))?"disabled":""}>`:""}${j.tail!=="Off Aircraft"?sentSel(j.tail,done)+(sentOf(j.tail)?`<span class="sentage" title="In this sentence since ${fmt(sentOf(j.tail).at)}">${ago(sentOf(j.tail).at)}</span>`:""):""}<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${done?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${done?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span><input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${done?"disabled":""} placeholder="+ LSJ set"></div>
       <div class="crewbox">${rows}</div>
       <div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
@@ -1541,7 +1578,7 @@ function renderBoard(){
           ${(ty=>done?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
           <button class="tstat" data-item="${j.id}|${i}" ${done?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}"><option value="">${it.who.length?"+":"+ assign"}</option>${crew.length?`<optgroup label="On this aircraft">${crew.map(opt).join("")}</optgroup>`:""}${others.length?`<optgroup label="Other engineers on shift">${others.map(e=>opt(e.id)).join("")}</optgroup>`:""}</select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>
-      <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}<button class="btn icon warn" data-del="${j.id}" title="Delete job">${IC.trash}</button></div></div></fieldset>
+      <div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div></fieldset>
     </div>`}).join("")||`<div class="empty"><b>${q?"No jobs match “"+esc(q)+"”":emptyMsg[0]}</b>${q?"":emptyMsg[1]}</div>`;
   // team
   $("#cFree").textContent=freeE.length;$("#cBusy").textContent=busyE.length;$("#cOff").textContent=offE.length;
@@ -1566,6 +1603,7 @@ $("#jobs").addEventListener("click",e=>{
   else if(t.dataset.stop)stop(t.dataset.stop);
   else if(t.dataset.reopen)reopen(t.dataset.reopen);
   else if(t.dataset.del)del(t.dataset.del);
+  else if(t.dataset.actile)openAc(t.dataset.actile);
   else if(t.dataset.crs){const tl=t.dataset.crs;setCRS(tl,!techReady(tl))}
   else if(t.dataset.flight)openFlight(t.dataset.flight);
   else if(t.dataset.tagdel){const[id,i]=t.dataset.tagdel.split("|"),l=tagList(job(id));l.splice(+i,1);editField(id,"tag",l.join(", "))}
@@ -1579,6 +1617,8 @@ $("#jobs").addEventListener("change",e=>{
   else if(t.dataset.iadd){const[j,i]=t.dataset.iadd.split("|");assignItem(j,+i,t.value)}
   else if(t.dataset.tagadd)addTag(t);
   else if(t.dataset.sent!=null)setSent(t.dataset.sent,t.value);
+  else if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save()}
+  else if(t.dataset.rcfg!=null){acRec(t.dataset.rcfg).rcfg=t.value.trim();save()}
   else if(t.dataset.owner!=null)setOwner(t.dataset.owner,t.value);
   else if(t.dataset.lt){const[id,i]=t.dataset.lt.split("|"),j=job(id),it=items(j)[+i];if(it){j.lt=j.lt||{};if(t.value==="C")j.lt[it.t]="C";else delete j.lt[it.t];save()}}
   else if(t.dataset.f)editField(t.dataset.id,t.dataset.f,t.value.trim());
@@ -1868,7 +1908,7 @@ $("#ownSave").onclick=()=>{let l=[...new Set($("#ownList").value.split("\n").map
 
 /* ---------- next flight details (editable by SLE / Line Control / admin) ---------- */
 let FL_T="";
-const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flTime","time"],["flFH","fh"],["flFC","fc"],["flLG","lg"],["flTG","tg"]];
+const FLF=[["flNo","no"],["flRole","role"],["flDate","date"],["flTime","time"],["flFH","fh"],["flFC","fc"],["flDY","dy"],["flLG","lg"],["flTG","tg"]];
 function openFlight(t){FL_T=t;const f=acGet(t).flight||{},ed=canFlight();
   $("#flTitle").textContent=t+" – next flight";$("#flSub").textContent=ed?"":"View only – SLE / Line Control can edit";
   FLF.forEach(([id,k])=>{$("#"+id).value=f[k]||"";$("#"+id).disabled=!ed});
@@ -2179,7 +2219,7 @@ const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";i
 const clearCRS=t=>{const a=(D.ac||{})[t];if(a&&a.crs){delete a.crs}};
 const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
-  return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
+  return [f.no,f.role,d,f.fh&&"FH "+f.fh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?sh.crew+" Shift":"";
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
@@ -2256,6 +2296,8 @@ $("#hoGo").onclick=async()=>{
   D.jobs.filter(j=>active(j)&&ownJob(o)(j)).forEach(j=>{
     j.cf=(j.cf||0)+1;
     const its=items(j),keep=its.filter(it=>it.info||it.s!=="done");
+    if(!keep.some(it=>!it.info)&&its.some(it=>!it.info)){ // every task done – the tile is finished and leaves the board
+      j.assignments.forEach(a=>{if(!a.to)a.to=t0});j.assignments=j.assignments.filter(a=>a.from);j.status="done";j.completed=t0;return}
     if(keep.some(it=>!it.info)){j.task=keep.map(it=>it.t).join("\n");j.items=keep}
     (j.items||[]).forEach(it=>it.who=[]);
     j.assignments=j.assignments.filter(a=>a.from||a.to).map(a=>a.to?a:{...a,to:t0});
@@ -2288,8 +2330,8 @@ function buildRecord(handover,o="Line"){
     notes:sh.notes||"",info:D.info||"",
     manning:o!=="Line"?[]:grp.map(([n,t],i)=>({n,count:onS.filter(e=>!duty(e)&&t.includes(tradeIx(e))).length,target:M[keys[i]]?.t??null,min:M[keys[i]]?.m??null})),
     onShift:onS.sort(byTrade).map(e=>({n:e.name,t:catShort(e),duty:duty(e)})),
-    done:D.jobs.filter(j=>mine(j)&&j.status==="done"&&new Date(j.completed)>=ss).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
-    open:D.jobs.filter(j=>mine(j)&&active(j)).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
+    done:D.jobs.filter(j=>mine(j)&&((j.status==="done"&&new Date(j.completed)>=ss)||(active(j)&&allDone(j)))).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
+    open:D.jobs.filter(j=>mine(j)&&active(j)&&!allDone(j)).sort((a,b)=>prio(a)-prio(b)).map(snapJob),
     sixs:o!=="Line"?null:SIXS.map(([k,n])=>({n,done:!!sixState()[k],at:sixState()[k]?.at||null,by:sixState()[k]?.by||""})),
     handover:handover||null};
 }
