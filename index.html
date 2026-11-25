@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125135406">
+<meta name="build" content="20261125135608">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1576,7 +1576,7 @@ const ltype=(j,t)=>(j.lt||{})[t]||"L";
 const aiocTick=(j,it,i,done)=>{const on=aiocOn(j,it.t);if(canFlight()&&!done)return `<label class="aiocchk ${on?"on":""}" title="Highlight to AIOC – they see this line in full"><input type="checkbox" data-ha="${j.id}|${i}" ${on?"checked":""}>AIOC</label>`;
   return on?`<span class="aiocchk on ro" title="Shown to AIOC">AIOC</span>`:""};
 let HEAD="all";try{HEAD=localStorage.getItem("wa-head")||"all"}catch(e){}
-const lineShown=(j,it)=>(!engMode()||it.info||lineMine(j,it)||!tileMine(j))&&(it.info||HEAD==="all"||ltype(j,it.t)===HEAD);
+const lineShown=(j,it)=>(it.info||HEAD==="all"||ltype(j,it.t)===HEAD);
 const tagList=j=>String(j?.tag||"").split(",").map(x=>x.trim()).filter(Boolean);
 const selHtml=(f,id,list,val,dis,blank)=>`<select class="acsel ${f==="acst"?stCls(val):""}" data-f="${f}" data-id="${id}" ${dis?"disabled":""}>${blank?`<option value="">${blank}</option>`:""}${list.map(v=>`<option ${v===val?"selected":""}>${v}</option>`).join("")}</select>`;
 const INFO_RE=/^(INFO|NOTES?)\b[\s:–-]*/i;
