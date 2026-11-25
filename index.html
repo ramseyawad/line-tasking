@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125122632">
+<meta name="build" content="20261125122656">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2039,7 +2039,8 @@ const LAY_NAMES={head:"Tail, bay & status",times:"Take off / landing",flight:"Ne
 const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],["dass",30],["role",30],["sent",40],["notes",70],["lsj",30],["flight",100],["crew",100],["tasks",100],["foot",100]].map(([k,w])=>({k,w}));
 const tileLayout=()=>{const L=(D.tileLayout&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>LAY_NAMES[b.k]);
   LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
-const layCustom=()=>{const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false]))};
+let LAY_FORCE=false;
+const layCustom=()=>{if(LAY_FORCE)return true;const L=D.tileLayout;if(!L||!L.length)return false;return JSON.stringify(L.map(b=>[b.k,b.w,!!b.hide]))!==JSON.stringify(LAY_DEF.map(b=>[b.k,b.w,false]))};
 function layoutHtml(BL,edit){
   // no custom template saved → the original tile exactly as it was
   if(!edit&&!layCustom())return BL.head+`<div class="jmeta">${BL.times}${BL.flight}${BL.pri}${BL.state}${BL.owner}${BL.dass}${BL.role}${BL.sent}${BL.notes}${BL.lsj}</div>`+BL.crew+BL.tasks+BL.foot;
@@ -2071,12 +2072,12 @@ function openLayout(){
   LAYCUR=sample;renderLayEditor();$("#layModal").classList.remove("hide");
 }
 function renderLayEditor(){
-  const saved=D.tileLayout;D.tileLayout=LAYDRAFT;
+  const saved=D.tileLayout;D.tileLayout=LAYDRAFT;LAY_FORCE=true;
   let html="";
   if(LAYCUR){const had=EXP.has(LAYCUR.tail);EXP.add(LAYCUR.tail);
     // render the real tile for the sample aircraft, then turn its blocks into editable boxes
     renderBoard();const el=document.querySelector(`#jobs .job[data-tail="${LAYCUR.tail}"]`);html=el?el.outerHTML:"";if(!had)EXP.delete(LAYCUR.tail)}
-  D.tileLayout=saved;
+  D.tileLayout=saved;LAY_FORCE=false;renderBoard();
   $("#layPrev").innerHTML=html||`<div class="job"><fieldset class="rofs">${layoutHtml(Object.fromEntries(Object.keys(LAY_NAMES).map(k=>[k,`<div class="laydummy">${LAY_NAMES[k]}</div>`])),true)}</fieldset></div>`;
   const tile=$("#layPrev .job");if(!tile)return;
   tile.classList.add("laying");tile.querySelectorAll(".newrib").forEach(x=>x.remove());
