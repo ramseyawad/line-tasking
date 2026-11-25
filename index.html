@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125202029">
+<meta name="build" content="20261125202238">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -901,6 +901,13 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .docbox:not(.set) .doch{background:#94A3B8}
 .doclink{flex:1;min-width:0;text-align:left;text-decoration:none;display:block;background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:#1D4ED8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .docnone{flex:1}
+.grplist{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.grow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #E2E8F0;border-radius:10px;background:#fff}
+.gname{flex:1;min-width:0;display:flex;flex-direction:column}.gname b{font-size:14px}
+.gstate{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;max-width:55%}
+.gst{font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;border-radius:99px;padding:2px 9px}
+.gst.free{background:#DCFCE7;color:#15803D}.gst.busy{background:#DBEAFE;color:#1D4ED8}
+.gwhere{font-size:12px;color:#64748B}
 .mini.ge{background:#ECFEFF;border-color:#A5F3FC;color:#0E7490}.docup{cursor:pointer;flex:none}
 .etsbox{flex:1 1 100%;display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:8px;padding:3px 6px 3px 0;background:#fff;min-width:0}
 .etsbox .etsh{font-size:10px;font-weight:900;letter-spacing:.06em;color:#fff;background:#64748B;border-radius:7px 0 0 7px;align-self:stretch;display:grid;place-items:center;padding:0 7px;margin:-3px 0}
@@ -1357,6 +1364,10 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
     <div class="mvbtns"><button class="linkbtn" id="mvPrev">Preview</button><button class="btn" id="mvEml" title="Downloads a draft that opens fully formatted in Outlook desktop">Outlook draft</button><button class="btn pri" id="mvGo">Submit</button></div>
   </div>
 </div></div>
+<div id="grpModal" class="modal hide"><div class="mcard card" style="width:min(520px,100%)">
+  <div class="mhead"><h2 id="grpTitle">Engineers</h2><span class="sub" id="grpSub"></span><button class="btn icon" id="grpClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b"><div id="grpList" class="grplist"></div><button class="btn pri hide" id="grpRaise" style="width:100%;margin-top:12px">Raise a job for this group</button></div>
+</div></div>
 <div id="sixModal" class="modal hide"><div class="mcard card" style="width:min(560px,100%)">
   <div class="mhead"><h2>6S reset</h2><span class="sub" id="sixSub">End of shift</span><button class="btn icon" id="sixClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="card-b"><p class="sub" style="margin:0 0 10px">Open each area's form, complete it, then tick it off. Ticks are shared with everyone and reset at handover.</p><div id="sixList" class="sixlist"></div></div>
@@ -1596,7 +1607,23 @@ $("#nEng").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)
 $("#nSummary").addEventListener("click",e=>{const b=e.target.closest("[data-unpick]");if(b){PICK.delete(b.dataset.unpick);renderPicker()}});
 $("#nTrade").onchange=()=>{try{localStorage.setItem("wa-pick-trade2",$("#nTrade").value)}catch(e){}renderPicker()};
 $("#nBusy").onchange=renderPicker;
-$("#tradeStrip").addEventListener("click",e=>{if(e.target.id==="setManning"){openManning();return}const c=e.target.closest(".tcell");if(!c)return;if(e.target.id==="setManning")return;openNew();$("#nTrade").value=c.dataset.t;$("#nTrade").dispatchEvent(new Event("change"));render()});
+const GRPS={mgmt:["Management",[0]],b1:["B1 Cert",[1]],b2:["B2 Cert",[2]],a:["A Certs",[3,4,5,6]]};
+function openGroup(k){const g=GRPS[k];if(!g)return;const {w,p,f}=jobMaps();
+  const l=D.engineers.filter(e=>isOn(e)&&!duty(e)&&g[1].includes(tradeIx(e))).sort(byTrade);
+  const st=e=>w[e.id]?0:f[e.id]?1:2;
+  const rows=l.slice().sort((a,b)=>st(b)-st(a)).map(e=>{const wk=w[e.id]||[],fn=f[e.id]||[],nx=p[e.id]||[];
+    const s=wk.length?`<span class="gst busy">Working</span><span class="gwhere">${wk.map(j=>{const n=linesLeft(j,e.id).length;return label(j)+(n?` · ${n} task${n>1?"s":""} left`:"")}).join(", ")}</span>`
+      :`<span class="gst free">Free</span><span class="gwhere">${fn.length?"finished on "+fn.map(label).join(", "):""}${nx.length?(fn.length?" · ":"")+"next "+nx.map(label).join(", "):""}</span>`;
+    return `<div class="grow">${av(e.id)}<div class="gname"><b>${esc(e.name)}</b><span class="sub">${esc(TRADES[tradeIx(e)]||"")}${ovl(e)?" · "+esc(ovl(e)):""}</span></div><div class="gstate">${s}</div></div>`}).join("");
+  const fr=l.filter(e=>!w[e.id]).length;
+  $("#grpTitle").textContent=g[0];$("#grpSub").textContent=`${l.length} on shift · ${fr} free · ${l.length-fr} working`;
+  $("#grpList").innerHTML=rows||`<div class="sx-empty">Nobody from ${esc(g[0])} on shift.</div>`;
+  $("#grpRaise").dataset.t=g[1].length===1?g[1][0]:"";$("#grpRaise").classList.toggle("hide",isAIOC()||engMode()||isMgmt());
+  $("#grpModal").classList.remove("hide")}
+$("#grpClose").onclick=()=>$("#grpModal").classList.add("hide");
+$("#grpModal").addEventListener("click",e=>{if(e.target.id==="grpModal")$("#grpModal").classList.add("hide")});
+$("#grpRaise").onclick=()=>{$("#grpModal").classList.add("hide");openNew();$("#nTrade").value=$("#grpRaise").dataset.t;$("#nTrade").dispatchEvent(new Event("change"));render()};
+$("#tradeStrip").addEventListener("click",e=>{if(e.target.id==="setManning"){openManning();return}const c=e.target.closest(".tcell");if(!c)return;openGroup(c.dataset.g)});
 let FILTER="active";
 const VIEW="tiles"; // stretched view only (squares view removed)
 const applyView=()=>{$("#jobs").classList.toggle("tiles",VIEW==="tiles");document.querySelectorAll("#viewSw button").forEach(b=>b.classList.toggle("on",b.dataset.v===VIEW))};
@@ -1847,7 +1874,7 @@ function renderBoard(){
     const l=onShift.filter(e=>g.t.includes(tradeIx(e))),n=l.length,fr=l.filter(e=>!w[e.id]).length,m=MN[g.k]||{},tg=+m.t||0,mn=+m.m||0;
     const st=!tg&&!mn?"":mn&&n<mn?"crit":tg&&n<tg?"low":"ok";
     const lbl={crit:`${mn-n} below minimum`,low:`${tg-n} below target`,ok:"On target","":""}[st];
-    return `<button class="tcell ${g.c} mn-${st||"none"}" data-g="${g.k}" data-t="${g.t.length===1?g.t[0]:""}" title="Pick from ${g.n}"><b>${n}</b><div style="flex:1;min-width:0"><div class="tn">${g.n}</div><div class="tf"><i>${fr}</i> free${tg||mn?` · target ${tg||"–"} · min ${mn||"–"}`:""}</div></div>${st?`<span class="mnst">${lbl}</span>`:""}</button>`}).join(""):"";
+    return `<button class="tcell ${g.c} mn-${st||"none"}" data-g="${g.k}" data-t="${g.t.length===1?g.t[0]:""}" title="See who's on shift from ${g.n}"><b>${n}</b><div style="flex:1;min-width:0"><div class="tn">${g.n}</div><div class="tf"><i>${fr}</i> free${tg||mn?` · target ${tg||"–"} · min ${mn||"–"}`:""}</div></div>${st?`<span class="mnst">${lbl}</span>`:""}</button>`}).join(""):"";
   $("#pcActive").textContent=act.length;$("#pcWork").textContent=n.work;$("#pcPlan").textContent=n.planned;$("#pcOpen").textContent=n.open;$("#pcDone").textContent=n.done;
   document.querySelectorAll(".kpi").forEach(k=>k.classList.toggle("on",k.dataset.k===FILTER));
   // jobs list
