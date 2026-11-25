@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125132648">
+<meta name="build" content="20261125132842">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -803,7 +803,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .layname{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .laying .blk.bhid .laytag .layeye{display:inline-block}
 .rolepair{display:flex;gap:6px;flex:1 1 100%;width:100%;min-width:0}
-.rolepair>input{flex:1 1 0;min-width:0;width:auto!important}
+.rolepair>input{flex:1 1 0;min-width:0;width:auto!important}.rolepair{align-items:flex-end}
 .laying .blk-role .layrs,.laying .blk-role .layw{display:none}
 .rcfgin.rok,.rreqin.rok,.ct-role.rok{background:#DCFCE7!important;border-color:#22C55E!important;color:#15803D!important;font-weight:700}
 .rcfgin.rbad,.rreqin.rbad,.ct-role.rbad{background:#FEE2E2!important;border-color:#EF4444!important;color:#B91C1C!important;font-weight:700}
@@ -857,6 +857,9 @@ body.aioc .acbar button.unseen::after{display:none}
 .flrow .flnums span{color:#334155}
 .flrow{min-width:0;max-width:100%}.flrow .nfbtn{min-width:0;overflow:hidden}.fllist{min-width:0;max-width:100%}
 .flrow .flnums{gap:4px;justify-content:space-between;font-size:10.5px;padding-right:2px}.flrow .flnums b{font-size:9px;margin-right:1px}
+.rolef{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:2px;margin:0}
+.rolef>span{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748B;padding-left:2px}
+.rolef>input{width:100%!important;min-width:0}
 </style>
 </head>
 <body>
@@ -2064,9 +2067,9 @@ function openAc(t){
      <label class="mv-f"><span>Sentence</span>${sentSel(t,false)}</label></div>
    <div class="acp-grid" style="margin-top:10px">
      <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canAc(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
-     <label class="mv-f"><span>Role config – current / required</span><span style="display:flex;gap:6px">${roleBoxes(t,false)}</span></label></div>
+     <div class="mv-f"><span>Role config</span>${roleBoxes(t,false)}</div></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canEdit(own)?`<button class="btn sm ${techReady(t)?"":"ok"}" data-crs="${t}">${techReady(t)?"Undo":"CRS – Tech ready"}</button>`:""}</div>
-   <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).length?flightsOf(t).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
+   <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${se?` · ${esc(se.c)} for ${ago(se.at)}`:""}</p>
    ${isAIOC()?`<h4 class="mv-h">Jobs</h4>${js.length?js.map(aiocTasks).join(""):'<p class="sub">No open jobs.</p>'}`:""}<h4 class="mv-h ${isAIOC()?"hide":""}">Open jobs</h4>${isAIOC()?"":js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
   $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canEdit(own));$("#acBody .acp-jobs")?.classList.toggle("hide",isAIOC());$("#acModal").classList.remove("hide");
@@ -2149,7 +2152,7 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
     <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${(own!=="Line"||isAIOC())&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
-    ${flightsOf(t).length?`<div class="ct-fl">${flightsOf(t).map(f=>`<div>✈ ${fl1(f)}</div>`).join("")}</div>`:""}
+    ${flightsOf(t).some(flReal)?`<div class="ct-fl">${flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join("")}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
     ${open?`<div class="ct-sub"><b>${open} open task${open>1?"s":""}</b> – tap to see</div>`:done?`<div class="ct-sub">${done} task${done>1?"s":""} done this shift</div>`:""}
   </div>`}
@@ -2557,15 +2560,16 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 // role config: current (what's fitted) vs required (the next flight's role). Green when they match, red when they don't.
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
-const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></span>`};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
 const fl1=f=>{const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   const top=[f.no,d,f.ld&&"Ldg "+f.ld].filter(Boolean).map(esc).join(" · ")||"Flight";
   const nums=[["FH",f.fh],["EH",f.eh],["FC",f.fc],["DY",f.dy],["LG",f.lg],["TG",f.tg]].filter(x=>x[1]).map(([k,v])=>`<span><b>${k}</b> ${esc(v)}</span>`).join("");
   return `<span class="fltop">${top}</span>${nums?`<span class="flnums">${nums}</span>`:""}`};
 // every planned flight, one per line, each with a bin to clear it once it's landed / no longer needed
+const flReal=f=>Object.keys(f).some(k=>!["at","by","role"].includes(k)&&f[k]); // a role on its own isn't a flight to list
 const flightsHtml=(t,dis)=>{const fs=flightsOf(t),ed=!dis&&canNF();
-  if(!fs.length)return `<button class="nfbtn" data-flight="${esc(t)}" title="Add flights">✈ <span>Next flight…</span></button>`;
-  return `<div class="fllist">${fs.map((f,n)=>`<div class="flrow ${n?"":"next"}"><button class="nfbtn" data-flight="${esc(t)}" title="${n?"Planned flight":"Next flight"} – click to edit"><span class="flic">✈</span><span class="flbody">${fl1(f)}</span></button>${ed?`<button class="flbin" data-flbin="${esc(t)}|${n}" title="Clear this flight (landed / no longer needed)"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>`:""}</div>`).join("")}</div>`};
+  if(!fs.some(flReal))return `<button class="nfbtn" data-flight="${esc(t)}" title="Add flights">✈ <span>Next flight…</span></button>`;
+  return `<div class="fllist">${fs.map((f,n)=>!flReal(f)?"":`<div class="flrow ${n?"":"next"}"><button class="nfbtn" data-flight="${esc(t)}" title="${n?"Planned flight":"Next flight"} – click to edit"><span class="flic">✈</span><span class="flbody">${fl1(f)}</span></button>${ed?`<button class="flbin" data-flbin="${esc(t)}|${n}" title="Clear this flight (landed / no longer needed)"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>`:""}</div>`).join("")}</div>`};
 function binFlight(t,n){if(!canNF())return;const fs=flightsOf(t).map(f=>({...f})),gone=fs.splice(n,1)[0],r=acRec(t),prev={flight:r.flight,more:r.more};
   if(fs.length){const at=r.flight?.at||now(),by=r.flight?.by||"";const f0={...fs[0]};delete f0.at;delete f0.by;r.flight={...f0,at,by};r.more=fs.slice(1).map(f=>{const o={...f};delete o.at;delete o.by;return o})}else{delete r.flight;delete r.more}
   save();toast(`${t}: ${gone?.no||"flight"} cleared`,()=>{const q=acRec(t);if(prev.flight)q.flight=prev.flight;else delete q.flight;if(prev.more)q.more=prev.more;else delete q.more;save()})}
