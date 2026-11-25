@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125002815">
+<meta name="build" content="20261125003829">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -587,6 +587,8 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .headsw button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
 .headsw button[data-h=C].on{background:#FEF3C7;color:#92400E}
 @media(max-width:640px){.ti{grid-template-columns:minmax(0,1fr) auto auto!important}}
+.newrib{flex-wrap:wrap}
+.ribdesc{flex-basis:100%;font-weight:600;letter-spacing:0;font-size:12.5px;line-height:1.35;opacity:.95;padding-top:2px}
 </style>
 </head>
 <body>
@@ -1197,7 +1199,7 @@ function renderBoard(){
       :j.status==="work"?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button><button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
     const us=unseen(j);
-    return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button></div>`:""}
+    return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
@@ -1353,6 +1355,39 @@ seenStart();BASE=sigs();BASEL=lineMap();
 
 const markHead=()=>document.querySelectorAll("#headSw button").forEach(b=>b.classList.toggle("on",b.dataset.h===HEAD));
 $("#headSw").onclick=e=>{const b=e.target.closest("button");if(!b)return;HEAD=b.dataset.h;try{localStorage.setItem("wa-head",HEAD)}catch(_){}markHead();render()};markHead();
+
+/* what changed since this device last saw the job – shown on the NEW / UPDATED strip */
+function changeDesc(j,us){
+  const lines=t=>String(t||"").split("\n").map(x=>x.trim()).filter(Boolean);
+  const cut=(t,n=60)=>t.length>n?t.slice(0,n-1)+"…":t;
+  const curL=lines(j.task);
+  if(us==="new")return curL.map(t=>cut(t.replace(INFO_RE,"ℹ "),50)).slice(0,3).join(" · ")+(curL.length>3?` · +${curL.length-3} more`:"");
+  const nl=items(j).filter(it=>lineNew(j,it)).map(it=>"New: "+cut(it.t));
+  let o=null;try{o=JSON.parse(SEEN[j.id]||"null")}catch(e){}
+  const out=[...nl];
+  if(o){
+    const [tail,bay,task,st,tag,acst,area,pri,lsj,asg,its]=o;
+    const STN={open:"unmanned",planned:"not started",work:"in progress",done:"complete"},ITS={todo:"not started",work:"in progress",done:"done"};
+    if(tail!==j.tail)out.push(`Moved ${tail} → ${j.tail}`);
+    if(bay!==j.bay)out.push(bay?`Bay ${bay} → ${j.bay||"none"}`:`Bay ${j.bay}`);
+    if(st!==j.status)out.push(`Job ${STN[j.status]||j.status}`);
+    if(acst!==(j.acst||""))out.push(`State: ${j.acst||"cleared"}`);
+    if(area!==(j.area||""))out.push(`Area: ${j.area||"Line"}`);
+    if(pri!==(j.pri||""))out.push(`Priority: ${j.pri?"P"+j.pri:"none"}`);
+    if(tag!==(j.tag||""))out.push(j.tag?`Notes: ${j.tag}`:"Notes cleared");
+    if(lsj!==(j.lsj||""))out.push(`LSJ: ${j.lsj||"cleared"}`);
+    const oldL=lines(task);
+    curL.filter(t=>!oldL.includes(t)&&!nl.includes("New: "+cut(t))).forEach(t=>out.push("Added: "+cut(t)));
+    oldL.filter(t=>!curL.includes(t)).forEach(t=>out.push("Removed: "+cut(t)));
+    const cur=items(j);oldL.forEach((t,i)=>{if(INFO_RE.test(t))return;const c=cur.find(y=>y.t===t);if(!c)return;const s0=its&&its[i]!=null?String(its[i]).split(":")[0]:(st==="done"?"done":"todo");if(s0!==c.s)out.push(`${cut(t,40)}: ${ITS[c.s]}`)});
+    const ids=allNames().map(e=>e.id),idOf=k=>ids.find(id=>k===id||k===id+"s"||k===id+"e"||k===id+"se");
+    const oldIds=new Set((asg||[]).map(idOf).filter(Boolean)),curIds=new Set(current(j));
+    [...curIds].filter(e=>!oldIds.has(e)).forEach(e=>out.push(`+ ${shortName(e)}`));
+    [...oldIds].filter(e=>!curIds.has(e)&&!j.assignments.some(a=>a.eng===e&&!a.to)).forEach(e=>out.push(`− ${shortName(e)}`));
+  }
+  const u=[...new Set(out)];
+  return u.slice(0,4).join(" · ")+(u.length>4?` · +${u.length-4} more`:"");
+}
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
