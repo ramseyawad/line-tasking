@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125195124">
+<meta name="build" content="20261125195542">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -836,7 +836,8 @@ body.aioc #shareAll,body.aioc .jobs-h .search,body.aioc #openDisplay,body.aioc #
 body.aioc .ct-crs,body.aioc .crsbtn,body.aioc [data-share],body.aioc #acRaise,body.aioc #sxKpis,body.aioc .sx-note,body.aioc #sxCsv,
 body.aioc #tab-stats .sx-grid>.card:not(:has(#sxSent)):not(:has(#sxAc)){display:none!important}
 body.aioc .acbar button.unseen::after{display:none}
-body.aioc .job.dp .twho,body.aioc .job.dp .aiocchk{display:none!important}
+body.aioc .job.dp .aiocchk{display:none!important}
+body.aioc .job.dp .crsbtn,body.aioc .job.dp [data-share]{display:inline-flex!important}
 .flcard{border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#FBFCFE}
 .flcard-h{display:flex;align-items:center;margin-bottom:6px}.flcard-h b{font-size:13px}.flcard-h .linkbtn{margin-left:auto;color:#DC2626}
 #flList .flgrid{grid-template-columns:repeat(30,minmax(0,1fr))!important;gap:8px}
@@ -1900,7 +1901,7 @@ function renderBoard(){
       sent:`${j.tail!=="Off Aircraft"?sentSel(j.tail,done):""}`,
       notes:`<span class="tags">${tagList(j).map((t,i)=>`<span class="tagc">${esc(t)}${lk?"":`<button data-tagdel="${j.id}|${i}" title="Remove this note">×</button>`}</span>`).join("")}${lk?"":`<input class="tagadd" data-tagadd="${j.id}" placeholder="${tagList(j).length?"+ add":"+ status note (WATER DUMPED, NO APU…)"}" title="Type a note and press Enter">`}</span>`,
       lsj:`<input class="tagf" style="width:100px" data-f="lsj" data-id="${j.id}" value="${esc(j.lsj||"")}" ${lk?"disabled":""} placeholder="+ LSJ set">`,
-      crew:AI||DP?"":`<div class="crewbox">${rows}</div>`,
+      crew:AI?"":`<div class="crewbox">${rows}</div>`,
       tasks:AI?aiocTasks(j):`<div class="jr jobrow"><div class="jl">Job${(()=>{const it=tasksOnly(j),n=it.filter(x=>x.s==="done").length;return it.length>1?`<small>${n}/${it.length} done</small>`:""})()}</div><div class="jtask">${!done&&EDIT.has(j.id)?`<textarea class="task-edit" data-f="task" data-id="${j.id}" rows="${Math.max(2,j.task.split("\n").length)}">${esc(j.task)}</textarea><div class="sub">One task per line · click away or Ctrl+Enter to save</div>`
         :`<div class="tlist">${items(j).map((it,i)=>{
           if(!lineShown(j,it))return "";
@@ -2762,7 +2763,7 @@ const myEng=()=>{if(ENGV&&realFlight())return ENGV;if(!realEngMode())return null
 const lineMine=(j,it)=>{const me=myEng();return !!me&&(it.who.includes(me)||(!it.who.length&&(j.ab||{})[it.t]===me))};
 const tileMine=j=>{const me=myEng();return !!me&&(current(j).includes(me)||items(j).some(it=>!it.info&&lineMine(j,it)))};
 const canCRS=t=>{if(!engMode())return canEdit(ownerOf(t));const e=eng(myEng()),j=D.jobs.find(x=>active(x)&&x.tail===t);return !!e&&[1,2].includes(tradeIx(e))&&!!j&&tileMine(j)&&ownerOf(t)==="Line"};
-const canEdit=o=>!isAIOC()&&!engMode()&&(isAdmin()||o===mySec());
+const canEdit=o=>!engMode()&&(isAIOC()?o==="Deployed":(isAdmin()||o===mySec())); // AIOC: SLE rights on Deployed aircraft only
 const canAc=o=>isAIOC()||canEdit(o);
 const AIOC_OWN="Deployed"; // deployed aircraft are the AIOC's: they add tasks to them like the SLE
 const aiocOwns=t=>isAIOC()&&t!=="Off Aircraft"&&ownerOf(t)===AIOC_OWN;
