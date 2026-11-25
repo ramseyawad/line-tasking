@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125005457">
+<meta name="build" content="20261125010436">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -604,6 +604,20 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
 .syncdot{cursor:help}
 .chip.fin{background:#DCFCE7;border-color:#86EFAC}
 .chip small.fin,.ds.fin{color:#15803D;font-weight:700}
+.qforms .qf-row{display:flex;align-items:center;gap:12px;padding:12px 16px 16px;flex-wrap:wrap}
+.mvform{max-height:calc(88vh - 70px);overflow-y:auto}
+.mvgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px;align-items:end}
+.mvgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--ink2)}
+.mvgrid label.mvchk{flex-direction:row;align-items:center;gap:8px;font-weight:600;font-size:13px;padding-bottom:8px}
+.mvq{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px}
+.mvq th{background:#F1F5F9;text-align:left;padding:6px 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--mute)}
+.mvq td{border-top:1px solid var(--line);padding:6px 8px;vertical-align:middle}
+.mvq td.yn{white-space:nowrap}.mvq td.yn label{margin-right:10px;font-weight:700;cursor:pointer}.mvq td.yn input{margin-right:3px}
+.mvq td input:not([type=radio]){width:100%;min-width:140px}
+.mvconf{margin:0 0 10px}
+.mvto{font-size:12.5px;background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;word-break:break-all}
+.mvbtns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.mvpreview{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:14px;background:#fff;overflow-x:auto}
 </style>
 </head>
 <body>
@@ -776,6 +790,9 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
 </section>
 
 <section id="tab-info" class="hide">
+  <div class="card qforms"><div class="card-h"><h2>Forms</h2><span class="sub" style="margin-left:auto">Fill in, then it opens a ready-made email</span></div>
+    <div class="qf-row"><button class="btn pri" id="mvOpen"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Move request</button><span class="sub">Aircraft contractor tow request to Eng Ops Front Desk (DEOCs) &amp; Serco Ramp</span></div>
+  </div>
   <div class="card">
     <div class="card-h"><h2>Useful information</h2><span class="sub" id="infoMeta" style="margin-left:auto">Stays shift to shift · included in every diary export</span></div>
     <textarea id="usefulInfo" class="infobox" placeholder="Contacts, phone numbers, email addresses, standing instructions, stores, MOC, spares procedures…&#10;&#10;Tip: use a line of capitals as a heading, e.g.&#10;SPARES / DEMANDS&#10;Fwd stores Brize 01993 847863"></textarea>
@@ -959,11 +976,38 @@ kbd{font:inherit;font-size:12px;font-weight:700;background:#F1F5F9;border:1px so
     <li><b>History</b> – every completed job, who did it and how long; export CSV.</li>
     <li><b>Stats</b> – hours per engineer and aircraft, turnaround, busiest hours, carry-overs, shifts below minimum; pick a date range; export CSV.</li>
     <li><b>Diary</b> – every handed-over shift, read-only.</li>
+    <li><b>Useful info → Move request</b> – fill in the tow request; <b>Submit</b> opens your email to Eng Ops (DEOCs) and Serco Ramp with the subject set, and copies the formatted form – click in the message and paste (Ctrl+V / ⌘V). <b>Download Outlook draft</b> gives a fully filled email that opens in Outlook desktop.</li>
     <li><b>Users</b> (admin) – approve profile requests and manage access.</li></ul></section>
 
   <section id="g-keys"><h3>Shortcuts</h3><ul class="gkeys">
     <li><kbd>N</kbd> raise a job</li><li><kbd>T</kbd> team panel</li><li><kbd>?</kbd> this guide</li><li><kbd>Ctrl</kbd>+<kbd>Enter</kbd> add job</li><li><kbd>Esc</kbd> close / cancel</li></ul>
     <p class="sub">Keep entries at OFFICIAL – nothing classified on here.</p></section>
+  </div>
+</div></div>
+<div id="mvModal" class="modal hide"><div class="mcard card" style="width:min(780px,100%)">
+  <div class="mhead"><h2>Aircraft move request</h2><span class="sub">Contractor tow request</span><button class="btn icon" id="mvClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="card-b mvform">
+    <div class="mvgrid">
+      <label>Tail<select id="mvTail"></select></label>
+      <label>Tow from (start location)<input id="mvFrom" list="mvLocs" placeholder="e.g. Bay 60"></label>
+      <label>Tow to (end location)<input id="mvTo" list="mvLocs" placeholder="e.g. Hangar 2"></label>
+      <datalist id="mvLocs"></datalist>
+    </div>
+    <div class="mvgrid">
+      <label>Greeting<select id="mvGreet"><option>Good Morning</option><option>Good Afternoon</option><option>Good Evening</option></select></label>
+      <label class="mvchk"><input type="checkbox" id="mvLow"> Authorise the move in <b>low level light</b> conditions</label>
+    </div>
+    <table class="mvq"><thead><tr><th>Requirement</th><th>Y/N</th><th>Details</th></tr></thead><tbody id="mvRows"></tbody></table>
+    <div class="mvgrid">
+      <label>Your name<input id="mvName" placeholder="Name"></label>
+      <label>Position<input id="mvPos" value="SLE"></label>
+      <label>Marking<select id="mvMark"><option value="">None</option><option>OFFICIAL</option><option>OFFICIAL-SENSITIVE</option><option>PRIVATE</option></select></label>
+    </div>
+    <p class="sub mvconf">By sending you confirm the aircraft is in a fit state to perform the move requested and the Pt.145 aircraft brake operator is competent and authorised.</p>
+    <div class="mvto"><b>To:</b> <span id="mvToList"></span><br><b>Subject:</b> <span id="mvSubj"></span></div>
+    <div class="err" id="mvErr"></div>
+    <div class="mvbtns"><button class="btn" id="mvPrev">Preview</button><button class="btn" id="mvEml" title="Download a draft that opens fully formatted in Outlook desktop">Download Outlook draft</button><button class="btn pri" id="mvGo">Submit – open in Outlook</button></div>
+    <div id="mvPreview" class="mvpreview hide"></div>
   </div>
 </div></div>
 <div id="mnModal" class="modal hide"><div class="mcard card" style="width:min(460px,100%)">
@@ -1503,6 +1547,81 @@ $("#guide").addEventListener("click",e=>{if(e.target.id==="guide")$("#guide").cl
 addEventListener("keydown",e=>{const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
   if(e.key==="?"&&!typing){e.preventDefault();openGuide()}
   if(e.key==="Escape"&&!$("#guide").classList.contains("hide"))$("#guide").classList.add("hide")});
+
+/* ---------- aircraft move request (contractor tow request email) ---------- */
+const MV_TO=["bzn-opswg-eng-opscontrol@mod.gov.uk","BZN-SERCO-RAMP@mod.gov.uk"];
+const MV_Q=[["gpu","Ground Electrical Power Available?","Y"],["apu","APU Electrical Power Available?","Y"],["brk","Aircraft Brakes Available?","Y"],["cfg","Aircraft Unusual Configuration (e.g. panels open or removed, propellers removed, ballast fitted etc.)?","N"],["path","If towing in or out of a hangar, is the path clear?","Y"],["oth","Any other considerations for the aircraft tow request?","N"]];
+let MV_LOCS=[];try{MV_LOCS=JSON.parse(localStorage.getItem("wa-mvlocs"))||[]}catch(e){}
+function openMove(tail){
+  $("#mvTail").innerHTML=TAILS.filter(t=>t!=="Off Aircraft").map(t=>`<option>${t}</option>`).join("");if(tail)$("#mvTail").value=tail;
+  const h=new Date().getHours();$("#mvGreet").value=h<12?"Good Morning":h<17?"Good Afternoon":"Good Evening";
+  $("#mvLow").checked=h>=17||h<7;
+  $("#mvRows").innerHTML=MV_Q.map(([k,q,d])=>`<tr><td>${esc(q)}</td><td class="yn"><label><input type="radio" name="mv_${k}" value="Y" ${d==="Y"?"checked":""}>Y</label><label><input type="radio" name="mv_${k}" value="N" ${d==="N"?"checked":""}>N</label></td><td><input id="mvd_${k}" placeholder="Details"></td></tr>`).join("");
+  const me=window.__waCloud?.me?.();if(!$("#mvName").value)$("#mvName").value=me?.full_name||"";
+  $("#mvLocs").innerHTML=MV_LOCS.map(l=>`<option value="${esc(l)}">`).join("");
+  $("#mvFrom").value="";$("#mvTo").value="";$("#mvErr").textContent="";$("#mvPreview").classList.add("hide");
+  $("#mvToList").textContent=MV_TO.join("; ");mvSubj();$("#mvModal").classList.remove("hide");setTimeout(()=>$("#mvFrom").focus(),30);
+}
+const mvSubj=()=>$("#mvSubj").textContent="Aircraft move "+$("#mvTail").value;
+function mvData(){
+  const v=k=>(document.querySelector(`input[name=mv_${k}]:checked`)||{}).value||"";
+  return{tail:$("#mvTail").value,from:$("#mvFrom").value.trim(),to:$("#mvTo").value.trim(),greet:$("#mvGreet").value,low:$("#mvLow").checked,
+    rows:MV_Q.map(([k,q])=>({q,yn:v(k),d:$("#mvd_"+k).value.trim()})),name:$("#mvName").value.trim(),pos:$("#mvPos").value.trim(),mark:$("#mvMark").value};
+}
+function mvCheck(m){
+  if(!m.from||!m.to)return "Enter where the aircraft is being towed from and to.";
+  if(!m.name)return "Enter your name for the confirmation statement.";
+  const c=m.rows[3],o=m.rows[5];if(c.yn==="Y"&&!c.d)return "Give details of the unusual configuration.";if(o.yn==="Y"&&!o.d)return "Give details of the other considerations.";
+  if(m.rows[4].yn==="N"&&!m.rows[4].d)return "Path not clear – add details.";return "";
+}
+function mvHtml(m){
+  const td='style="border:1px solid #000;padding:2px 7px;font-family:Calibri,Arial,sans-serif;font-size:11pt;vertical-align:top"',th='style="border:1px solid #000;padding:2px 7px;background:#D9D9D9;font-family:Calibri,Arial,sans-serif;font-size:11pt;font-weight:bold;text-align:center"',p='style="margin:0;font-family:Calibri,Arial,sans-serif;font-size:11pt"';
+  const tbl='style="border-collapse:collapse;margin:0"';
+  return `<div>${m.mark?`<p style="margin:0;text-align:center;font-family:Arial,sans-serif;font-size:8pt">${esc(m.mark)}</p><br>`:""}
+<p ${p}>${esc(m.greet)},</p><br>
+<p ${p}>We would like to arrange an aircraft move, details are as follows:</p><br>
+${m.low?`<p ${p}>Please also take this email as authorisation to carry out the move in low level light conditions.</p><br>`:""}
+<table ${tbl}><tr><td colspan="3" ${th}>Aircraft Contractor Tow Request</td></tr>
+<tr><td ${th} width="160">Aircraft Tail Number</td><td ${th} width="208">Tow From (Start Location)</td><td ${th} width="233">Tow To (End Location)</td></tr>
+<tr><td ${td}>${esc(m.tail)}</td><td ${td}>${esc(m.from)}</td><td ${td}>${esc(m.to)}</td></tr></table><br>
+<p ${p}><b>Note: </b>If time permits, attempt to deconflict aircraft moves across Team Atlas Pt 145's (Forward and Depth)</p><br>
+<table ${tbl} width="604"><tr><td ${th} width="340">Requirement</td><td ${th} width="38">Y/N</td><td ${th} width="227">Details</td></tr>
+${m.rows.map(r=>`<tr><td ${td}>${esc(r.q)}</td><td ${td} align="center">${esc(r.yn)}</td><td ${td}>${esc(r.d)}</td></tr>`).join("")}</table><br>
+<table ${tbl}><tr><td ${th} width="283">Confirmation Statement</td><td ${th} width="170">Name</td><td ${th} width="148">Position</td></tr>
+<tr><td ${td}>I confirm that the aircraft is in a fit state to perform the move requested and the Pt.145 aircraft brake operator is competent and authorised.</td><td ${td}>${esc(m.name)}</td><td ${td}>${esc(m.pos)}</td></tr></table><br>
+<p ${p}>Regards</p><br><p ${p}>${esc(m.name)}${m.pos?"<br>"+esc(m.pos):""}</p></div>`;
+}
+function mvText(m){
+  const L=[];if(m.mark)L.push(m.mark,"");L.push(m.greet+",","","We would like to arrange an aircraft move, details are as follows:","");
+  if(m.low)L.push("Please also take this email as authorisation to carry out the move in low level light conditions.","");
+  L.push("AIRCRAFT CONTRACTOR TOW REQUEST",`Aircraft Tail Number: ${m.tail}`,`Tow From (Start Location): ${m.from}`,`Tow To (End Location): ${m.to}`,"",
+    "Note: If time permits, attempt to deconflict aircraft moves across Team Atlas Pt 145's (Forward and Depth)","","REQUIREMENT – Y/N – DETAILS");
+  m.rows.forEach(r=>L.push(`${r.q}  ${r.yn}${r.d?"  – "+r.d:""}`));
+  L.push("","CONFIRMATION STATEMENT","I confirm that the aircraft is in a fit state to perform the move requested and the Pt.145 aircraft brake operator is competent and authorised.",`Name: ${m.name}`,`Position: ${m.pos}`,"","Regards","",m.name);
+  return L.join("\r\n");
+}
+function mvRemember(m){[m.from,m.to].forEach(l=>{if(l&&!MV_LOCS.includes(l))MV_LOCS.unshift(l)});MV_LOCS=MV_LOCS.slice(0,30);try{localStorage.setItem("wa-mvlocs",JSON.stringify(MV_LOCS))}catch(e){}}
+function mvReady(){const m=mvData(),e=mvCheck(m);$("#mvErr").textContent=e;if(e)return null;return m}
+async function mvCopy(m){
+  const html=mvHtml(m),text=mvText(m);
+  try{await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]);return true}
+  catch(e){try{const d=document.createElement("div");d.innerHTML=html;d.style.cssText="position:fixed;left:-9999px";document.body.append(d);const r=document.createRange();r.selectNodeContents(d);const s=getSelection();s.removeAllRanges();s.addRange(r);const ok=document.execCommand("copy");s.removeAllRanges();d.remove();return ok}catch(_){return false}}
+}
+$("#mvOpen").onclick=()=>openMove();
+$("#mvClose").onclick=()=>$("#mvModal").classList.add("hide");
+$("#mvTail").onchange=mvSubj;
+$("#mvPrev").onclick=()=>{const m=mvReady();if(!m)return;$("#mvPreview").innerHTML=mvHtml(m);$("#mvPreview").classList.remove("hide");$("#mvPreview").scrollIntoView({behavior:"smooth",block:"nearest"})};
+$("#mvGo").onclick=async()=>{const m=mvReady();if(!m)return;mvRemember(m);
+  const copied=await mvCopy(m);
+  const url=`mailto:${MV_TO.join(";")}?subject=${encodeURIComponent("Aircraft move "+m.tail)}`+(copied?"":`&body=${encodeURIComponent(mvText(m))}`);
+  location.href=url;
+  $("#mvPreview").innerHTML=mvHtml(m);$("#mvPreview").classList.remove("hide");
+  toast(copied?"Email opening – click in the message and press Ctrl+V (⌘V on Mac) to paste the filled-in form":"Email opening with the form filled in as text");
+};
+$("#mvEml").onclick=()=>{const m=mvReady();if(!m)return;mvRemember(m);
+  const b64=s=>btoa(unescape(encodeURIComponent(s))).replace(/.{76}/g,"$&\r\n");
+  const eml=["X-Unsent: 1",`To: ${MV_TO.join(", ")}`,`Subject: Aircraft move ${m.tail}`,"MIME-Version: 1.0","Content-Type: text/html; charset=utf-8","Content-Transfer-Encoding: base64","",b64(`<html><body>${mvHtml(m)}</body></html>`)].join("\r\n");
+  download(`Aircraft move ${m.tail}.eml`,eml,"message/rfc822");toast("Draft downloaded – open it and it appears as a new Outlook email ready to send")};
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
