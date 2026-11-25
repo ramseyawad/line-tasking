@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125175415">
+<meta name="build" content="20261125180459">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2709,7 +2709,8 @@ $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/^([
 const SHIFT={E:"Earlies",L:"Lates",N:"Nights"};
 // NSE / NSL = national standby early / late (taskable); LMMD = LMM deputy (days)
 const SHIFT_CODES={E:["E","LCE","LWE","SE","NSE","LMMD"],L:["L","LCL","LWL","SL","NSL","LMMD"],N:["N"]};
-function guessShift(d=new Date()){const h=d.getHours(),x=new Date(d);let t=h<6?"N":h<14?"E":h<22?"L":"N";if(h<6)x.setDate(x.getDate()-1);return{date:iso(x),type:t}}
+// Earlies 06:00–18:00, Lates 18:00–06:00 (a late that runs past midnight belongs to the day it started); Nights are picked at handover
+function guessShift(d=new Date()){const h=d.getHours(),x=new Date(d);const t=h>=6&&h<18?"E":"L";if(h<6)x.setDate(x.getDate()-1);return{date:iso(x),type:t}}
 function curShift(o="Line"){
   if(o&&o!=="Line"){D.shifts=D.shifts||{};if(!D.shifts[o]){const g=guessShift();D.shifts[o]={id:uid(),date:g.date,type:g.type,startedAt:now(),notes:"",crew:"A"}}return D.shifts[o]}
   if(!D.shift){const g=guessShift();D.shift={id:uid(),date:g.date,type:g.type,startedAt:now(),notes:"",crew:"A"}}if(!D.shift.crew)D.shift.crew="A";return D.shift}
@@ -2813,7 +2814,8 @@ const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role||f.ti
   const more=(acGet(t).more||[]).length;
   return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,more&&`+${more} more flight${more>1?"s":""}`,f.fh&&"FH "+f.fh,f.eh&&"EH "+f.eh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
 const crewLbl=sh=>sh?.crew?esc(sh.crew)+" Shift":"";
-const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
+// Earlies (06–18) hand to Lates (18–06) the same day; Lates and Nights hand to the next day's Earlies
+const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type!=="E")d.setDate(d.getDate()+1);return{date:iso(d),type:sh.type==="E"?"L":"E"}};
 let DIARY=[];
 async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary();if(!$("#tab-stats").classList.contains("hide"))renderStats()}
 const tm=iso=>iso?new Date(iso).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"";
