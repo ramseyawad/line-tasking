@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125130742">
+<meta name="build" content="20261125130940">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -900,7 +900,6 @@ body.aioc .acbar button.unseen::after{display:none}
           </div>
           <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search tail, bay, task, name"></div>
           <button class="btn icon" id="layOpen" title="Edit tile layout – move and resize what's on each aircraft tile"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/></svg></button>
-          <div class="viewsw" id="viewSw" title="Change layout"><button data-v="grid" title="Squares"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button data-v="tiles" title="Stretched tiles"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg></button></div>
           <button class="btn seenall hide" id="seenAll" title="Clear all the new / updated highlights"><i>0</i> new or changed · mark all seen</button>
           <button class="btn teambtn" id="teamOpen" title="Show the team (T)"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team <i id="teamBadge">0 free</i></button>
           <select id="sortBy"><option value="tail">Sort: tail</option><option value="status">Sort: status</option><option value="bay">Sort: bay</option><option value="new">Sort: newest</option></select>
@@ -1425,9 +1424,9 @@ $("#nTrade").onchange=()=>{try{localStorage.setItem("wa-pick-trade2",$("#nTrade"
 $("#nBusy").onchange=renderPicker;
 $("#tradeStrip").addEventListener("click",e=>{if(e.target.id==="setManning"){openManning();return}const c=e.target.closest(".tcell");if(!c)return;if(e.target.id==="setManning")return;openNew();$("#nTrade").value=c.dataset.t;$("#nTrade").dispatchEvent(new Event("change"));render()});
 let FILTER="active";
-let VIEW="grid";try{VIEW=localStorage.getItem("wa-view")||"grid"}catch(e){}
+const VIEW="tiles"; // stretched view only (squares view removed)
 const applyView=()=>{$("#jobs").classList.toggle("tiles",VIEW==="tiles");document.querySelectorAll("#viewSw button").forEach(b=>b.classList.toggle("on",b.dataset.v===VIEW))};
-$("#viewSw").onclick=e=>{const b=e.target.closest("button");if(!b)return;VIEW=b.dataset.v;try{localStorage.setItem("wa-view",VIEW)}catch(_){}applyView()};
+
 applyView();
 $("#sortBy").onchange=render;$("#q").addEventListener("input",render);
 const setFilter=f=>{FILTER=f;document.querySelectorAll("#pills button").forEach(b=>b.classList.toggle("on",b.dataset.f===f));render()};
@@ -2159,7 +2158,7 @@ function renderLayEditor(){
   const tile=$("#layPrev .job");if(!tile)return;
   const real=document.querySelector("#jobs > .job");tile.style.width=(real?real.offsetWidth:466)+"px";tile.style.maxWidth="none";
   const two=tile.querySelector(".tlay2");if(two){const h=document.createElement("i");h.className="laycolrs";h.title="Drag to make the left column wider or narrower";h.style.left=(LAYCOL||290)+"px";two.style.position="relative";two.append(h)}
-  $("#laySub").textContent=(VIEW==="tiles"?"Stretched view – drag boxes between the left and right columns":"Squares view")+" · drag the right edge to resize · applies to every aircraft";
+  $("#laySub").textContent="Drag boxes between the left and right columns · drag the right edge to resize · applies to every aircraft";
   tile.classList.add("laying");tile.querySelectorAll(".newrib").forEach(x=>x.remove());
   // add hidden blocks so they can be shown again
   const lay=tile.querySelector(".tlay");
