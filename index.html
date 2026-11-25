@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125132324">
+<meta name="build" content="20261125132648">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -847,6 +847,16 @@ body.aioc .acbar button.unseen::after{display:none}
 .flrow:not(.next) .nfbtn{background:#F8FAFC;color:#475569}
 .flbin{flex:0 0 26px;border:1px solid #E2E8F0;background:#fff;border-radius:6px;color:#94A3B8;cursor:pointer;display:grid;place-items:center;padding:0}
 .flbin .i{width:13px;height:13px}.flbin:hover{color:#DC2626;border-color:#FCA5A5;background:#FEF2F2}
+.nfbtn .fltop{display:block}
+.nfbtn .flnums{display:flex;flex-wrap:nowrap;gap:9px;margin-top:2px;font-size:11px;font-weight:600;color:#475569;white-space:nowrap;overflow:hidden}
+.nfbtn .flnums b{font-weight:800;color:#64748B;font-size:10px}
+.flrow{align-items:flex-start}.flbin{min-height:26px}
+.ct-fl .fltop{display:inline}.ct-fl .flnums{display:inline-flex;gap:8px;margin-left:10px;font-size:11px;color:#64748B}.ct-fl .flnums b{font-size:10px}
+.acp-fl .fltop{display:block;font-weight:700}.acp-fl .flnums{display:flex;gap:10px;font-size:12px;color:#475569}
+.flrow .nfbtn{display:flex;gap:6px;align-items:flex-start}.flrow .flbody{min-width:0;flex:1}
+.flrow .flnums span{color:#334155}
+.flrow{min-width:0;max-width:100%}.flrow .nfbtn{min-width:0;overflow:hidden}.fllist{min-width:0;max-width:100%}
+.flrow .flnums{gap:4px;justify-content:space-between;font-size:10.5px;padding-right:2px}.flrow .flnums b{font-size:9px;margin-right:1px}
 </style>
 </head>
 <body>
@@ -2547,13 +2557,15 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 // role config: current (what's fitted) vs required (the next flight's role). Green when they match, red when they don't.
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
-const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canAc(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></span>`};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="Current role" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="Required role" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></span>`};
 const fl1=f=>{const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
-  return [f.no,f.role,d,f.ld&&"Ldg "+f.ld,f.fh&&"FH "+f.fh,f.eh&&"EH "+f.eh,f.fc&&"FC "+f.fc,f.dy&&"DY "+f.dy,f.lg&&"LG "+f.lg,f.tg&&"TG "+f.tg].filter(Boolean).map(esc).join(" · ")};
+  const top=[f.no,d,f.ld&&"Ldg "+f.ld].filter(Boolean).map(esc).join(" · ")||"Flight";
+  const nums=[["FH",f.fh],["EH",f.eh],["FC",f.fc],["DY",f.dy],["LG",f.lg],["TG",f.tg]].filter(x=>x[1]).map(([k,v])=>`<span><b>${k}</b> ${esc(v)}</span>`).join("");
+  return `<span class="fltop">${top}</span>${nums?`<span class="flnums">${nums}</span>`:""}`};
 // every planned flight, one per line, each with a bin to clear it once it's landed / no longer needed
 const flightsHtml=(t,dis)=>{const fs=flightsOf(t),ed=!dis&&canNF();
   if(!fs.length)return `<button class="nfbtn" data-flight="${esc(t)}" title="Add flights">✈ <span>Next flight…</span></button>`;
-  return `<div class="fllist">${fs.map((f,n)=>`<div class="flrow ${n?"":"next"}"><button class="nfbtn" data-flight="${esc(t)}" title="${n?"Planned flight":"Next flight"} – click to edit">✈ ${fl1(f)}</button>${ed?`<button class="flbin" data-flbin="${esc(t)}|${n}" title="Clear this flight (landed / no longer needed)"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>`:""}</div>`).join("")}</div>`};
+  return `<div class="fllist">${fs.map((f,n)=>`<div class="flrow ${n?"":"next"}"><button class="nfbtn" data-flight="${esc(t)}" title="${n?"Planned flight":"Next flight"} – click to edit"><span class="flic">✈</span><span class="flbody">${fl1(f)}</span></button>${ed?`<button class="flbin" data-flbin="${esc(t)}|${n}" title="Clear this flight (landed / no longer needed)"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>`:""}</div>`).join("")}</div>`};
 function binFlight(t,n){if(!canNF())return;const fs=flightsOf(t).map(f=>({...f})),gone=fs.splice(n,1)[0],r=acRec(t),prev={flight:r.flight,more:r.more};
   if(fs.length){const at=r.flight?.at||now(),by=r.flight?.by||"";const f0={...fs[0]};delete f0.at;delete f0.by;r.flight={...f0,at,by};r.more=fs.slice(1).map(f=>{const o={...f};delete o.at;delete o.by;return o})}else{delete r.flight;delete r.more}
   save();toast(`${t}: ${gone?.no||"flight"} cleared`,()=>{const q=acRec(t);if(prev.flight)q.flight=prev.flight;else delete q.flight;if(prev.more)q.more=prev.more;else delete q.more;save()})}
