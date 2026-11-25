@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125133153">
+<meta name="build" content="20261125133453">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -864,6 +864,18 @@ body.aioc .acbar button.unseen::after{display:none}
 .flrow:not(.next) .fltimes{color:#475569}
 .ct-fl .fltimes{display:inline;margin-left:8px;font-size:11px}
 .nfbtn .flt{white-space:nowrap;color:inherit}.flico{width:14px;height:14px;fill:currentColor;vertical-align:-2px;margin-right:3px}
+.db-fl{display:flex;gap:.8vw;align-items:stretch;overflow:hidden}
+.db-fl .dbf-h{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.75vw;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#64748B;text-align:center}
+.dbf{flex:0 0 auto;min-width:0;display:flex;gap:.8vw;align-items:center;background:#0F172A;border:1px solid #1E293B;border-radius:.7vw;padding:.6vw .9vw}
+.dbf.soon{border-color:#38BDF8;box-shadow:0 0 0 1px #38BDF8 inset,0 0 1.2vw rgba(56,189,248,.25)}
+.dbf-tail{font-size:2.2vw;font-weight:900;line-height:1;color:#F8FAFC;display:flex;flex-direction:column;align-items:center}
+.dbf-tail small{font-size:.7vw;font-weight:800;letter-spacing:.06em;color:#94A3B8;margin-top:.3vw;white-space:nowrap}
+.dbf-b{min-width:0;display:flex;flex-direction:column;gap:.15vw}
+.dbf-no{font-size:.85vw;font-weight:700;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dbf-no span{color:#FBBF24}
+.dbf-t{display:flex;gap:.8vw;font-size:1.25vw;font-weight:800;color:#CBD5E1;white-space:nowrap}
+.dbf-t .flico{width:1.2vw;height:1.2vw;vertical-align:-.15vw;margin-right:.25vw}
+.dbf-t .nx{color:#38BDF8}
+.dbf-in{font-size:.8vw;font-weight:700;color:#7DD3FC}
 </style>
 </head>
 <body>
@@ -1342,6 +1354,7 @@ body.aioc .acbar button.unseen::after{display:none}
     </div>
     <div class="db-clock"><b id="dTime"></b><span id="dDate"></span></div>
   </div>
+  <div class="db-fl hide" id="dbFlights"></div>
   <div class="db-body">
     <div class="cards" id="dbGrid"></div>
     <div class="db-busy" hidden><h3><i></i>Busy<em id="nBusyW">0</em></h3><div class="cards" id="dbBusy"></div></div>
@@ -2565,6 +2578,19 @@ const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 const roleReq=t=>(acGet(t).flight||{}).role||"";
 const roleState=t=>{const c=(acGet(t).rcfg||"").trim().toLowerCase(),r=roleReq(t).trim().toLowerCase();if(!r)return "";return c===r?"rok":"rbad"};
 const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&canEdit(ownerOf(t));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canNF()?"":"disabled"}></label></span>`};
+const FL_ICO={to:`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/></svg>`,
+  ld:`<svg class="flico" viewBox="0 0 24 24" aria-label="Landing"><path d="M2.5 19h19v2h-19v-2zm7.18-5.73l4.35 1.16 5.31 1.42c.8.21 1.62-.26 1.84-1.06.21-.8-.26-1.62-1.06-1.84l-5.31-1.42-2.76-9.02L10.12 2v8.28L5.15 8.95l-.93-2.32-1.45-.39v5.17l1.6.43 5.31 1.43z"/></svg>`};
+const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+// next take off / landing events across Line aircraft (a flight stays listed until it has landed, or 1h after take off if no landing time)
+function upcomingFlights(n){const now=Date.now(),out=[];
+  TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)==="Line").forEach(t=>flightsOf(t).filter(flReal).forEach(f=>{if(!f.time&&!f.ld)return;
+    const day=f.date||todayISO(),at=hm=>hm?new Date(day+"T"+hm).getTime():null;let to=at(f.time),ld=at(f.ld);if(to&&ld&&ld<to)ld+=864e5;
+    const end=ld||(to?to+36e5:null);if(end&&end<now)return;
+    const next=to&&to>now?"to":ld?"ld":"to",when=next==="to"?to:ld;if(!when)return;
+    const mins=Math.round((when-now)/6e4),inTxt=mins<=0?"now":mins<60?`in ${mins} min`:mins<1440?`in ${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`:`in ${Math.round(mins/1440)} day${Math.round(mins/1440)>1?"s":""}`;
+    const j=D.jobs.find(x=>active(x)&&x.tail===t);
+    out.push({t,f,bay:j?.bay||"",next,when,inTxt,soon:mins<=60})}));
+  return out.sort((a,b)=>a.when-b.when).slice(0,n)}
 const fl1=f=>{const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})+(f.time?" "+f.time:""):(f.time||"");
   const dt=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
   const TO=`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/></svg>`,
@@ -2812,6 +2838,9 @@ function renderDisplay(){
   const busy=D.engineers.filter(e=>w[e.id]).sort(byTrade);
   $("#nBusyW").textContent=busy.length;
   fillHtml("#dbBusy",busy.map(e=>`<div class="bz"><span class="n">${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span><span class="w">On ${w[e.id].map(label).join(", ")}</span></div>`).join("")||`<div class="empty-lane" style="font-size:1.1vw;padding:3vw 0">Nobody on a job</div>`);
+  // coming up: the next take offs / landings on Line aircraft, with tail and bay
+  const up=upcomingFlights(6);$("#dbFlights").classList.toggle("hide",!up.length);
+  (h=>{if($("#dbFlights").innerHTML!==h)$("#dbFlights").innerHTML=h})(up.length?`<div class="dbf-h">Coming up</div>`+up.map(x=>`<div class="dbf ${x.soon?"soon":""}"><div class="dbf-tail">${esc(x.t.slice(2))}<small>${x.bay?"BAY "+esc(x.bay):"No bay"}</small></div><div class="dbf-b"><div class="dbf-no">${esc(x.f.no||"")}${x.f.date&&x.f.date!==todayISO()?` <span>${esc(new Date(x.f.date+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric"}))}</span>`:""}</div><div class="dbf-t">${x.f.time?`<span class="${x.next==="to"?"nx":""}">${FL_ICO.to}${esc(x.f.time)}</span>`:""}${x.f.ld?`<span class="${x.next==="ld"?"nx":""}">${FL_ICO.ld}${esc(x.f.ld)}</span>`:""}</div><div class="dbf-in">${x.next==="ld"?"Lands":"Takes off"} ${x.inTxt}</div></div></div>`).join(""):"");
   fillHtml("#dbGrid",[...idle,...work,...done].map(card).join("")||`<div class="empty-lane">No jobs assigned yet</div>`);
 }
 function openDisplay(){$("#display").classList.remove("hide");document.querySelectorAll("#display .cards").forEach(b=>b.dataset.h="");if(location.hash!=="#display")history.replaceState(null,"","#display");
