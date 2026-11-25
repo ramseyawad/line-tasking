@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125201528">
+<meta name="build" content="20261125201727">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -917,6 +917,11 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .etsbox .etsh{align-self:stretch;margin:-3px 0 -3px 0}
 .etsbox .etsx{position:absolute;right:3px;top:3px}
 .aiocf{display:flex;gap:4px;flex:0 0 auto;margin-right:6px}
+body.aioc .acbar{flex-wrap:wrap}
+body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
+.acrow{flex:0 0 100%;display:flex;flex-wrap:nowrap;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.acrow::-webkit-scrollbar{display:none}
+.acrow>button{flex:1 1 0!important;min-width:38px!important;padding:7px 2px!important;font-size:12.5px!important}
 .aiocf button{flex:0 0 auto!important;min-width:0!important;padding:7px 10px!important;font-size:12.5px!important;white-space:nowrap}
 .aiocf button.on{background:#0E7490!important;color:#fff!important;border-color:#0E7490!important}
 .aiocf button i{position:static!important;background:rgba(15,23,42,.1)!important;color:inherit!important;margin-left:3px}
@@ -1862,9 +1867,9 @@ function renderBoard(){
   const vis=isAIOC()?TAILS.filter(t=>t!=="Off Aircraft"&&aiocShows(t)):TAILS;
   $("#acBar").innerHTML=(isAIOC()
     ?`<div class="aiocf"><button data-aiocf="All" class="${AIOCF==="All"?"on":""}">All <i>${TAILS.length-1}</i></button>${owners().map(o=>`<button data-aiocf="${esc(o)}" class="${AIOCF===o?"on":""}">${esc(o)} <i>${ownCount(o)}</i></button>`).join("")}</div>`
-    :`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`)+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
+    :`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`)+(isAIOC()?'<div class="acrow">':"")+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
     const aog=js.some(j=>j.acst==="AOG"),own=ownerOf(t),sc=sentList(t).map(s=>s.c).join(", ");
-    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""} ${(t==="Off Aircraft"?"Line":own)!==mySec()?"nm":""}" title="${t}${isNS3(t)?" · NS3 national standby (P1)":""} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${isNS3(t)?`<b class="ns3mini">NS3</b>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
+    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""} ${(t==="Off Aircraft"?"Line":own)!==mySec()?"nm":""}" title="${t}${isNS3(t)?" · NS3 national standby (P1)":""} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${isNS3(t)?`<b class="ns3mini">NS3</b>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+(isAIOC()?"</div>":"")+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
   setTimeout(renderSeenBits,0);
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
