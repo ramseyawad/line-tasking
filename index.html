@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125085814">
+<meta name="build" content="20261125085903">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -712,6 +712,12 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .flgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .flgrid label:nth-child(3){grid-column:1/-1}
 @media(min-width:520px){.flgrid{grid-template-columns:repeat(4,1fr)}.flgrid label:nth-child(1),.flgrid label:nth-child(2){grid-column:span 2}.flgrid label:nth-child(3){grid-column:span 4}}
+.job.g-tr{border-color:#22C55E;box-shadow:0 0 0 2px #22C55E,0 0 18px rgba(34,197,94,.45)}
+.job.g-aog{border-color:#EF4444;box-shadow:0 0 0 2px #EF4444,0 0 18px rgba(239,68,68,.45)}
+.job.g-o{border-color:#F59E0B;box-shadow:0 0 0 2px #F59E0B,0 0 14px rgba(245,158,11,.35)}
+.job.g-dep{border-color:#3B82F6;box-shadow:0 0 0 2px #3B82F6,0 0 18px rgba(59,130,246,.4)}
+.job.g-ret{border-color:#94A3B8;box-shadow:0 0 0 2px #94A3B8,0 0 14px rgba(100,116,139,.35)}
+#jobs{padding-top:6px}
 </style>
 </head>
 <body>
@@ -1514,7 +1520,7 @@ function renderBoard(){
       :j.status==="work"?(off?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button>`:techReady(j.tail)?`<button class="btn sm crsbtn on" data-crs="${esc(j.tail)}" title="Tech ready since ${fmt(techReady(j.tail).at)} – click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn" data-crs="${esc(j.tail)}" title="Certify – marks ${esc(j.tail)} Tech ready">CRS</button>`)+`<button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
     const us=unseen(j);
-    return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
+    return `<div class="job st-${j.status} ${glowOf(j.tail)}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
         ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
@@ -2166,6 +2172,8 @@ const acGet=t=>(D.ac||{})[t]||{};
 const techReady=t=>acGet(t).crs||null;
 function setCRS(t,on){if(!canEdit(ownerOf(t))){toast("View only – "+ownerOf(t)+" aircraft");return}const a=acRec(t);
   if(on)a.crs={at:now(),by:(typeof myName==="function"&&myName())||""};else delete a.crs;save();toast(on?`${t} CRS – Tech ready`:`${t} no longer tech ready`)}
+const tailAOG=t=>D.jobs.some(j=>active(j)&&j.tail===t&&j.acst==="AOG")||sentOf(t)?.c==="AOG";
+const glowOf=t=>{if(t==="Off Aircraft")return "";if(techReady(t))return "g-tr";if(tailAOG(t))return "g-aog";const o=ownerOf(t);return o==="Deployed"?"g-dep":o==="Retrofit"?"g-ret":"g-o"};
 const clearCRS=t=>{const a=(D.ac||{})[t];if(a&&a.crs){delete a.crs}};
 const DASS=["DASS-0","DASS-1","DASS-2","DASS-3"];
 const flightLine=t=>{const f=acGet(t).flight;if(!f||!(f.no||f.date||f.role))return "";const d=f.date?new Date(f.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
