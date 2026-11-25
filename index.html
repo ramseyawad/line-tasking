@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125145808">
+<meta name="build" content="20261125150122">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1873,7 +1873,7 @@ function renderBoard(){
           ${(ty=>done||EV?`<span class="ltsel lt-${ty} ro">${ty==="C"?"Cert":"Line"}</span>`:`<select class="ltsel lt-${ty}" data-lt="${j.id}|${i}" title="Line task or certifier job"><option value="L" ${ty==="L"?"selected":""}>Line</option><option value="C" ${ty==="C"?"selected":""}>Cert</option></select>`)(ltype(j,it.t))}
           <button class="tstat" data-item="${j.id}|${i}" ${done||(EV&&!lineMine(j,it))?"disabled":""} title="${ITEM[it.s].n}${done?"":" – tap to change"}"><span class="tst">${ITEM[it.s].i}</span><span class="tl">${ITEM[it.s].n}</span></button>
           <div class="twho">${it.who.map(e=>`<span class="mini">${esc(shortName(e))}${done||(EV&&e!==myEng())?"":`<button data-iun="${j.id}|${i}|${e}" title="Take off this task">×</button>`}</span>`).join("")}${EV?(done||it.who.includes(myEng())?"":it.who.length?`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Join this task">+ me</button><button type="button" class="meb tko" data-itake="${j.id}|${i}" title="Take this task over – the others come off it">Take over</button>`:`<button type="button" class="meb" data-iself="${j.id}|${i}" title="Assign yourself to this task">+ me</button>`):done?(it.who.length?"":'<span class="sub">–</span>'):`<select class="addmini" data-iadd="${j.id}|${i}" data-lazy="1"><option value="">${it.who.length?"+":"+ assign"}</option></select>`}</div></div>`}).join("")}</div>${done?"":`<input class="line-add" data-ladd="${j.id}" placeholder="+ Add a task" title="Type and press Enter · start with INFO for an info line">`}`}</div></div>`,
-      foot:AI?`<div class="jf"><span class="sub">${ownerOf(j.tail)}</span><div class="acts">${!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}">Collapse ▴</button>`:""}</div></div>`:`<div class="jf"><span class="sub">Raised ${fmt(j.created)}</span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
+      foot:AI?`<div class="jf"><span class="sub">${ownerOf(j.tail)}</span><div class="acts">${!done&&EXP.has(j.tail)?`<button class="btn sm" data-collapse="${esc(j.tail)}">Collapse ▴</button>`:""}</div></div>`:`<div class="jf"><span class="sub"></span><div class="acts">${acts}${done?"":`<button class="btn icon" data-share="${j.id}" title="Send this job as a text">${IC.send}</button>`}</div></div>`};
     const us=AI?"":unseen(j);
     return `<div class="job st-${j.status} ${glowOf(j.tail)}${layCustom()?" customlay":""}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":hasNewLines(j)?"NEW LINES":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):hasNewLines(j)?(n=>n?" · by "+esc(n):"")(nwOf(j,items(j).find(it=>lineNew(j,it)))?.by):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:hasNewLines(j)?nwOf(j,items(j).find(it=>lineNew(j,it)))?.at:j.chAt)}<button class="seenbtn" data-seen="${j.id}" title="Clear this highlight">✓ Seen</button>${(d=>d?`<div class="ribdesc">${esc(d)}</div>`:"")(changeDesc(j,us))}</div>`:""}<fieldset class="rofs" ${ro?"disabled":""}>${layoutHtml(BL)}</fieldset>
     </div>`};
@@ -2269,7 +2269,7 @@ const LAY_DEF=[["head",100],["times",100],["pri",14],["state",43],["owner",43],[
 const defCol=k=>(k==="crew"||k==="tasks")?"R":"L";
 const colOf=b=>b.c||defCol(b.k);
 const tileLayout=()=>{const L=(Array.isArray(D.tileLayout)&&D.tileLayout.length?D.tileLayout:LAY_DEF).filter(b=>b&&LAY_NAMES[b.k]).map(b=>({...b,w:Math.max(10,Math.min(100,Math.round(+b.w)||100))}));
-  LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d})});return L}; // new blocks added later still appear
+  LAY_DEF.forEach(d=>{if(!L.some(b=>b.k===d.k))L.push({...d,...(L.some(b=>b.nr!=null)?{nr:true}:{})})});return L}; // new blocks added later still appear
 let LAY_FORCE=false,LAYCOL=null;
 const colW=()=>Math.max(200,Math.min(1200,Math.round(+((LAY_FORCE&&LAYCOL)||D.tileCol||290))||290));
 const packNr=L=>{let sum=0;return L.map((b,i)=>{const n=i===0||sum+b.w>100;sum=n?b.w:sum+b.w;return n})};
@@ -2938,7 +2938,7 @@ function card(j){
   const cls=done?"green":j.status==="work"?"amber":"red";
   const its=tasksOnly(j),nd=its.filter(x=>x.s==="done").length;
   const st=(done?"Complete":j.status==="work"?"In progress":who.length?"Not started":"Unmanned")+(its.length>1&&!done?` · ${nd}/${its.length} done`:"");
-  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${!off&&sentOf(j.tail)?`<span class="jc-bay jc-sent" style="--sc:${SENT[sentOf(j.tail).c]?.col}" title="${esc(SENT[sentOf(j.tail).c]?.d||"")}">${esc(sentOf(j.tail).c)}</span>`:""}${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${!off&&etsOf(j.tail)?`<span class="jc-bay jc-ets">ETS ${etsTxt(etsOf(j.tail))}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${ownerOf(j.tail)!=="Line"&&j.tail!=="Off Aircraft"?`<span class="jc-bay">${esc(ownerOf(j.tail))}</span>`:""}<span class="jc-st">${st}</span></div>
+  return `<div class="jc ${cls}"><div class="jc-top">${j.pri?`<span class="jc-pri">P${esc(j.pri)}</span>`:""}<span class="jc-tail ${off?"off":""}">${esc(off?"OFF AIRCRAFT":j.tail)}</span>${!off&&sentOf(j.tail)?`<span class="jc-bay jc-sent" style="--sc:${SENT[sentOf(j.tail).c]?.col}" title="${esc(SENT[sentOf(j.tail).c]?.d||"")}">${esc(sentOf(j.tail).c)}</span>`:""}${j.bay?`<span class="jc-bay">BAY ${esc(j.bay)}</span>`:""}${j.acst?`<span class="jc-bay ${stCls(j.acst)}">${esc(j.acst)}</span>`:""}${tagList(j).map(t=>`<span class="jc-bay">${esc(t)}</span>`).join("")}${ownerOf(j.tail)!=="Line"&&j.tail!=="Off Aircraft"?`<span class="jc-bay">${esc(ownerOf(j.tail))}</span>`:""}<span class="jc-st">${st}</span></div>
     <ul class="jc-tasks">${items(j).map(t=>t.info?`<li class="t-info">${esc(itxt(t))}</li>`:`<li class="t-${t.s}">${esc(t.t)}${t.s==="work"?' <em>in progress</em>':""}${t.who.length?`<span class="tw">${t.who.map(e=>esc(shortName(e))).join(", ")}</span>`:""}</li>`).join("")}</ul>
     <div class="jc-who">${who.length?who.map(e=>`<span>${esc(e.name)}${e.cat?`<em>${esc(catShort(e))}</em>`:""}</span>`).join(""):`<span class="none">Nobody assigned</span>`}</div>
     ${j.status==="work"?`<div class="jc-time">⏱ <span class="since" data-t="${j.started}"></span> in progress</div>`:done?`<div class="jc-time">✓ ${new Date(j.completed).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
