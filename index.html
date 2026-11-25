@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125180526">
+<meta name="build" content="20261125184745">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2431,8 +2431,13 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ns3]");if(
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
-  const who=current(j).map(engName);
-  return (head?"Tasking "+stamp()+"\n\n":"")+`${j.tail==="Off Aircraft"?"Off Aircraft":j.tail}: ${who.length?who.join(", "):"nobody assigned"}`;
+  const who=current(j).map(engName),tl=j.tail==="Off Aircraft"?"Off Aircraft":j.tail;
+  const view=HEAD==="L"?"Line tasks":HEAD==="C"?"Cert tasks":"All tasks";
+  const ls=items(j).filter(it=>lineShown(j,it)).map(it=>{
+    if(it.info)return "ℹ️ "+it.t;
+    const m=it.s==="done"?"✅":it.s==="work"?"🔧":"▫️",w=(it.who||[]).map(engName).filter(Boolean);
+    return `${m} ${it.t}${w.length?" ("+w.join(", ")+")":""}`});
+  return (head?"Tasking "+stamp()+"\n\n":"")+`${tl}${j.bay?" · Bay "+j.bay:""} — ${view}\n${who.length?"On it: "+who.join(", "):"Nobody assigned"}\n\n`+(ls.length?ls.join("\n"):"No "+view.toLowerCase());
 }
 function boardText(){
   const jobs=D.jobs.filter(active).filter(j=>current(j).length).sort((a,b)=>TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail));
