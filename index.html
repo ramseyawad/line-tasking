@@ -556,6 +556,16 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
 .sx-mn{display:inline-block;font-size:11px;font-weight:700;background:#F1F5F9;border-radius:4px;padding:1px 6px;margin:0 3px 2px 0;color:var(--ink2)}
 .sx-mn.low{background:#FEE2E2;color:#B91C1C}
 @media(max-width:600px){.sx-row{grid-template-columns:minmax(90px,40%) 1fr 56px}.sx-x{display:none}}
+.job.unseen-new,.job.unseen-upd{box-shadow:0 0 0 3px #3B82F6,0 0 22px rgba(59,130,246,.45)!important;animation:unseenp 2s ease-in-out infinite}
+.job.unseen-upd{box-shadow:0 0 0 3px #8B5CF6,0 0 22px rgba(139,92,246,.4)!important;animation:none}
+@keyframes unseenp{50%{box-shadow:0 0 0 3px #3B82F6,0 0 6px rgba(59,130,246,.2)}}
+.newrib{display:flex;align-items:center;gap:6px;background:#2563EB;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.3px;padding:5px 14px;grid-column:1/-1}
+.unseen-upd .newrib{background:#7C3AED}
+.newrib span{margin-left:auto;font-weight:600;opacity:.8;letter-spacing:0}
+.seenall{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;font-weight:700}
+.seenall i{font-style:normal;background:#2563EB;color:#fff;border-radius:99px;padding:0 7px;margin-right:2px}
+.acbar button.unseen::after{content:"";position:absolute;top:-4px;left:-4px;width:10px;height:10px;border-radius:50%;background:#2563EB;box-shadow:0 0 0 2px #fff}
+@media(min-width:900px){#jobs.tiles .job .newrib{grid-column:1/-1}#jobs.tiles .job.unseen-new,#jobs.tiles .job.unseen-upd{grid-template-areas:"r r" "h c" "m j" "f j";grid-template-rows:auto auto auto 1fr}#jobs.tiles .newrib{grid-area:r}}
 </style>
 </head>
 <body>
@@ -616,6 +626,7 @@ body.team-open .teambtn{background:var(--ink,#0F172A);color:#fff}
           </div>
           <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search tail, bay, task, name"></div>
           <div class="viewsw" id="viewSw" title="Change layout"><button data-v="grid" title="Squares"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button data-v="tiles" title="Stretched tiles"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg></button></div>
+          <button class="btn seenall hide" id="seenAll" title="Clear all the new / updated highlights"><i>0</i> new or changed · mark all seen</button>
           <button class="btn teambtn" id="teamOpen" title="Show the team (T)"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team <i id="teamBadge">0 free</i></button>
           <select id="sortBy"><option value="tail">Sort: tail</option><option value="status">Sort: status</option><option value="bay">Sort: bay</option><option value="new">Sort: newest</option></select>
         </div>
@@ -891,7 +902,7 @@ const dur=(a,b)=>{if(!a||!b)return"";const m=Math.round((new Date(b)-new Date(a)
 let D;
 try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!D||!Array.isArray(D.jobs))D={engineers:[],jobs:[]};
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
+const save=()=>{markMine();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alertMsg("Couldn't save on this device")}render();if(window.__waCloud)window.__waCloud.push()};
 const alertMsg=m=>console.warn(m);
 
 const eng=id=>D.engineers.find(e=>e.id===id);
@@ -1126,6 +1137,7 @@ function renderBoard(){
   $("#acBar").innerHTML=TAILS.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
     const aog=js.some(j=>j.acst==="AOG");
     return `<button data-jump="${t}" class="${c} ${aog?"aog":""}" ${js.length?"":"disabled"} title="${t}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}</button>`}).join("")+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
+  setTimeout(renderSeenBits,0);
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
   const ROLES=[["B1",[1],"Cert"],["B2",[2],"Cert"],["Mechs",[3,4,5,6],"A+ / A Cat"],["Other",[0],""]];
@@ -1156,7 +1168,8 @@ function renderBoard(){
     const acts=done?`<button class="btn sm" data-reopen="${j.id}">${IC.undo}Reopen</button>`
       :j.status==="work"?`<button class="btn ok sm" data-done="${j.id}">${IC.check}Complete</button><button class="btn icon" data-stop="${j.id}" title="Stop – back to not started">${IC.pause}</button>`
       :`<button class="btn pri sm" data-start="${j.id}" ${cur.length?"":"disabled title='Assign an engineer first'"}>${IC.play}Start</button><button class="btn icon" data-done="${j.id}" title="Mark complete">${IC.check}</button>`;
-    return `<div class="job st-${j.status}" data-tail="${esc(j.tail)}">
+    const us=unseen(j);
+    return `<div class="job st-${j.status}${us?" unseen-"+us:""}" data-tail="${esc(j.tail)}" data-id="${j.id}">${us?`<div class="newrib">${us==="new"?"NEW":"UPDATED"}${us==="new"?(j.by?" · added by "+esc(j.by):""):(j.chBy?" · by "+esc(j.chBy):"")}${(t=>t?" · "+(ago(t)==="0 min"?"just now":ago(t)+" ago"):"")(us==="new"?j.created:j.chAt)}<span>tap to clear</span></div>`:""}
       <div class="jh">
         <select data-f="tail" data-id="${j.id}" class="tailsel ${off?"off":""}" ${done?"disabled":""} title="Change aircraft">${TAILS.map(t=>`<option ${t===j.tail?"selected":""}>${t}</option>`).join("")}</select>
         <label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
@@ -1249,6 +1262,42 @@ $("#jobs").addEventListener("keydown",e=>{const t=e.target;
   else if(t.classList.contains("line-add")&&e.key==="Enter"){e.preventDefault();const v=t.value.trim();if(!v)return;const j=job(t.dataset.ladd);const id=j.id;
     editField(id,"task",(j.task?j.task.replace(/\s+$/,"")+"\n":"")+v);setTimeout(()=>document.querySelector(`.line-add[data-ladd="${id}"]`)?.focus(),0)}});
 $("#jobs").addEventListener("focusout",e=>{const t=e.target;if(t.classList?.contains("line-edit")&&!t.dataset.done)setTimeout(()=>{if(document.body.contains(t)&&!t.dataset.done){t.dataset.done=1;lineSave(t)}},0)});
+
+/* ---------- highlight changes made by other people until seen ---------- */
+const SEENK="wa-seen";
+let SEEN={};try{SEEN=JSON.parse(localStorage.getItem(SEENK))||{}}catch(e){}
+const jsig=j=>JSON.stringify([j.tail,j.bay,j.task,j.status,j.tag||"",j.acst||"",j.area||"",j.pri||"",j.lsj||"",j.assignments.map(a=>a.eng+(a.from?"s":"")+(a.to?"e":"")),(j.items||[]).map(i=>i.s+":"+i.who.join("+"))]);
+const sigs=()=>Object.fromEntries(D.jobs.map(j=>[j.id,jsig(j)]));
+let BASE=null; // the board as it last arrived from elsewhere
+const seenSave=()=>{try{localStorage.setItem(SEENK,JSON.stringify(SEEN))}catch(e){}};
+const myName=()=>{const m=window.__waCloud?.me?.();return m?(m.full_name||m.username||""):""};
+function seenStart(){ // first time on this device: everything already on the board counts as seen
+  if(!SEEN.__init&&D.jobs.length){D.jobs.forEach(j=>SEEN[j.id]=jsig(j));SEEN.__init=1;seenSave()}
+}
+window.__waRemote=()=>{seenStart();BASE=sigs();
+  const fresh=D.jobs.filter(j=>j.status!=="done"&&SEEN.__init&&!SEEN[j.id]);
+  if(fresh.length&&document.readyState==="complete")toast(fresh.length===1?`New job: ${fresh[0].tail}${fresh[0].by?" – added by "+fresh[0].by:""}`:`${fresh.length} new jobs added`)};
+function markMine(){
+  if(!BASE)BASE=sigs();const me=myName();
+  D.jobs.forEach(j=>{const s0=jsig(j);if(s0!==BASE[j.id]){if(!BASE[j.id]&&!j.by&&me)j.by=me;if(BASE[j.id]){j.chBy=me;j.chAt=now()}SEEN[j.id]=jsig(j)}});
+  SEEN.__init=1;BASE=sigs();
+  Object.keys(SEEN).forEach(k=>{if(k!=="__init"&&!D.jobs.some(j=>j.id===k))delete SEEN[k]});seenSave();
+}
+const unseen=j=>{if(!SEEN.__init||j.status==="done")return "";const v=SEEN[j.id];return !v?"new":v!==jsig(j)?"upd":""};
+function markSeen(id){const j=job(id);if(!j)return;SEEN[id]=jsig(j);seenSave();
+  document.querySelectorAll(`#jobs .job[data-id="${id}"]`).forEach(c=>{c.classList.remove("unseen-new","unseen-upd");c.querySelector(".newrib")?.remove()});renderSeenBits()}
+function markAllSeen(){D.jobs.forEach(j=>SEEN[j.id]=jsig(j));SEEN.__init=1;seenSave();render()}
+function renderSeenBits(){
+  const n=D.jobs.filter(j=>unseen(j)).length;
+  const b=$("#seenAll");if(b){b.classList.toggle("hide",!n);b.querySelector("i").textContent=n}
+  document.querySelectorAll("#acBar button[data-jump]").forEach(x=>x.classList.toggle("unseen",D.jobs.some(j=>j.tail===x.dataset.jump&&unseen(j))));
+}
+let hoverT=null;
+$("#jobs").addEventListener("pointerdown",e=>{const c=e.target.closest(".job.unseen-new,.job.unseen-upd");if(c)markSeen(c.dataset.id)},true);
+$("#jobs").addEventListener("mouseover",e=>{const c=e.target.closest(".job.unseen-new,.job.unseen-upd");clearTimeout(hoverT);if(c)hoverT=setTimeout(()=>markSeen(c.dataset.id),1500)});
+$("#jobs").addEventListener("mouseleave",()=>clearTimeout(hoverT));
+$("#seenAll").onclick=markAllSeen;
+seenStart();BASE=sigs();
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
@@ -1708,7 +1757,7 @@ function render(){curShift();renderBoard();renderShiftBar();renderNotes();render
   if(!$("#tab-shift").classList.contains("hide"))renderShift();
   if(!$("#tab-history").classList.contains("hide"))renderHistory();
   if(!$("#tab-stats").classList.contains("hide"))renderStats();}
-window.addEventListener("storage",e=>{if(e.key===KEY){try{D=JSON.parse(e.newValue)}catch(_){}render()}});
+window.addEventListener("storage",e=>{if(e.key===KEY){try{D=JSON.parse(e.newValue);window.__waRemote?.()}catch(_){}render()}});
 render();
 
 /* ---------- cloud: sign-in, users, live sync (Supabase) ---------- */
@@ -1754,7 +1803,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#userAv").style.background="#2563EB";
     $("#navUsers").classList.toggle("hide",prof.role!=="admin");
     await pull(true);loadDiary();
-    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){VER=p.new.version;D=fix(p.new.data);cache();render()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
+    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){VER=p.new.version;D=fix(p.new.data);window.__waRemote?.();cache();render()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
     if(prof.role==="admin"){loadUsers();sb.channel("wa-p").on("postgres_changes",{event:"*",schema:"public",table:"wa_profiles"},loadUsers).subscribe()}
   }
   const fix=d=>{d=d||{};d.engineers=d.engineers||[];d.jobs=d.jobs||[];return d};
@@ -1765,7 +1814,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const remote=fix(data.data),empty=!remote.engineers.length&&!remote.jobs.length;
     VER=data.version;
     if(first&&empty&&(D.engineers.length||D.jobs.length)&&ME.role==="admin"){toast("Uploading this device's board to the cloud…");push();return}
-    D=remote;cache();render();
+    D=remote;window.__waRemote?.(first);cache();render();
   }
   async function push(){
     if(!ME)return;if(pushing){again=true;return}pushing=true;
