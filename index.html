@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125133725">
+<meta name="build" content="20261125134138">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2547,11 +2547,12 @@ const secOf=u=>(D.sec||{})[u]||"Line";
 const mySec=()=>window.__waCloud?secOf(window.__waCloud.me?.()?.username||""):"Line";
 // AIOC: a point of contact for every section. Real AIOC users get it from their position; Line Control / SLE / admins can preview it.
 let AIOCV=false;try{AIOCV=localStorage.getItem("wa-aiocv")==="1"}catch(e){}
-const isAIOC=()=>AIOCV||(!!window.__waCloud&&!isAdmin()&&myPos()==="AIOC");
+// AIOC is a section (not an aircraft owner) – anyone in it gets the AIOC view
+const isAIOC=()=>AIOCV||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC");
 const canEdit=o=>!isAIOC()&&(isAdmin()||o===mySec());
 const canAc=o=>isAIOC()||canEdit(o); // left-panel aircraft info (bay, state, priority, NS3, DASS, role, notes, LSJ, sentence)
 // user positions (set by an admin in Users) – SLE and Line Control can edit next-flight details
-const POSITIONS=["Line Control","SLE","B1","B2","A cert","AIOC"];
+const POSITIONS=["Line Control","SLE","B1","B2","A cert"];
 const myUser=()=>window.__waCloud?.me?.()?.username||"";
 const POS_DEF={ramsey:"Line Control",kev:"SLE"}; // starting positions until an admin changes them in Users
 const posOf=u=>(D.pos||{})[u]??POS_DEF[u]??"";
@@ -2856,7 +2857,7 @@ if(location.hash==="#display"){$("#display").classList.remove("hide")}
 
 /* ---------- render ---------- */
 function applyAIOC(){const a=isAIOC();document.body.classList.toggle("aioc",a);
-  const b=$("#aiocBtn");if(b){b.classList.toggle("hide",!realFlight()||(!!window.__waCloud&&!isAdmin()&&myPos()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
+  const b=$("#aiocBtn");if(b){b.classList.toggle("hide",!realFlight()||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
   let bn=$("#aiocBan");if(a&&!bn){bn=document.createElement("div");bn.id="aiocBan";$("#acWrap").prepend(bn)}if(bn){bn.classList.toggle("hide",!a);bn.innerHTML=AIOCV?`<b>AIOC view</b> – this is what the AIOC see. You can try their edits here. <button class="btn sm" id="aiocExit">Exit AIOC view</button>`:`<b>AIOC</b> – all aircraft and who they belong to. Tasks show as a count; lines Line Control highlight to you appear in full.`}
   if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
 function setAIOCV(v){AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
@@ -2960,14 +2961,14 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const mem=PROFILES.filter(p=>p.role!=="pending");
     $("#userList").innerHTML=mem.map(p=>`<tr><td><b>${esc(p.full_name||"–")}</b>${p.id===ME.id?' <span class="sub">(you)</span>':""}</td><td>@${esc(p.username)}</td>
       <td><select class="rolesel" data-u="${p.id}" ${p.id===ME.id?"disabled":""}>${[["user","User"],["admin","Admin"],["rejected","No access"]].map(([v,l])=>`<option value="${v}" ${p.role===v?"selected":""}>${l}</option>`).join("")}</select></td>
-      <td><select class="secsel" data-su="${esc(p.username)}">${owners().map(o=>`<option ${secOf(p.username)===o?"selected":""}>${esc(o)}</option>`).join("")}</select></td>
-      <td><select class="possel" data-pu="${esc(p.username)}"><option value="">–</option>${POSITIONS.map(x=>`<option ${posOf(p.username)===x?"selected":""}>${x}</option>`).join("")}</select></td>
+      <td><select class="secsel" data-su="${esc(p.username)}">${[...owners(),"AIOC"].map(o=>`<option ${secOf(p.username)===o?"selected":""}>${esc(o)}</option>`).join("")}</select></td>
+      <td>${secOf(p.username)==="AIOC"?'<span class="sub">– (AIOC view)</span>':`<select class="possel" data-pu="${esc(p.username)}"><option value="">–</option>${POSITIONS.map(x=>`<option ${posOf(p.username)===x?"selected":""}>${x}</option>`).join("")}</select>`}</td>
       <td class="sub">${fmt(p.created_at)}</td></tr>`).join("");
   }
   const setRole=async(id,role)=>{const {error}=await sb.from("wa_profiles").update({role}).eq("id",id);toast(error?error.message:"Updated");loadUsers()};
   $("#reqList").onclick=e=>{const b=e.target.closest("[data-u]");if(b)setRole(b.dataset.u,b.dataset.role)};
   $("#userList").onchange=e=>{const t=e.target.closest(".rolesel");if(t)setRole(t.dataset.u,t.value);
-    const sc=e.target.closest(".secsel");if(sc){D.sec=D.sec||{};D.sec[sc.dataset.su]=sc.value;save();toast("Section updated")}
+    const sc=e.target.closest(".secsel");if(sc){D.sec=D.sec||{};D.sec[sc.dataset.su]=sc.value;if(sc.value==="AIOC"&&D.pos)delete D.pos[sc.dataset.su];save();toast(sc.value==="AIOC"?"Section set to AIOC – they'll get the AIOC view":"Section updated");if(typeof loadUsers==="function")loadUsers()}
     const ps=e.target.closest(".possel");if(ps){D.pos=D.pos||{};D.pos[ps.dataset.pu]=ps.value;save();toast("Position updated")}};
   $("#auAdd").onclick=async()=>{
     const u=uname($("#auUser").value),pw=$("#auPass").value,name=$("#auName").value.trim(),role=$("#auRole").value;
