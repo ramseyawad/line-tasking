@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125125224">
+<meta name="build" content="20261125125755">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -814,6 +814,13 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 .laynr{height:14px;margin:2px 14px;border:1px dashed transparent;border-radius:6px;font-size:9px;color:transparent;text-align:center;line-height:12px;transition:all .12s}
 .laying.dragging .laynr{border-color:#93C5FD;color:#3B82F6;height:20px;line-height:18px}
 .laying .laynr:hover{background:#EFF6FF}
+.ns3btn{font:inherit;font-size:10px;font-weight:800;letter-spacing:.04em;padding:3px 7px;margin-left:6px;border-radius:6px;border:1.5px dashed #CBD5E1;background:#fff;color:#94A3B8;cursor:pointer;vertical-align:middle}
+.ns3btn:hover:not(:disabled){border-color:#7C3AED;color:#7C3AED}
+.ns3btn.on{border:1.5px solid #6D28D9;background:#6D28D9;color:#fff;box-shadow:0 0 0 3px rgba(109,40,217,.18)}
+.ns3btn:disabled{cursor:default;opacity:.6}
+.ns3tag{font-size:10px;font-weight:800;background:#6D28D9;color:#fff;border-radius:5px;padding:1px 6px;margin-left:6px}
+.acbar button .ns3mini{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:900;letter-spacing:.04em;background:#6D28D9;color:#fff;border-radius:4px;padding:0 4px;line-height:12px;box-shadow:0 0 0 1.5px #fff}
+.prif.ns3p input{color:#6D28D9;font-weight:800}
 </style>
 </head>
 <body>
@@ -1075,7 +1082,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
       <svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
     <div class="jh">
       <select id="nTail" class="tailsel"></select>
-      <label class="bayf">(<span>BAY</span><input id="nBay" placeholder="–">)</label>
+      <label class="bayf">(<span>BAY</span><input id="nBay" placeholder="–">)</label>${ns3Btn(j.tail)}
       <label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" id="nPri" placeholder="–"></label>
       <select id="nLt" class="acsel" title="Line task or certifier job"><option value="L">Line task</option><option value="C">Certifier</option></select>
       <select id="nSt" class="acsel"><option value="">State…</option><option>Serviceable</option><option>AOG</option><option>Shed Maint</option></select>
@@ -1483,7 +1490,12 @@ function setOwner(tail,o){if(tail==="Off Aircraft")return;if(!canEdit(ownerOf(ta
 const ownSel=(tail,dis,cls="")=>tail==="Off Aircraft"?"":`<select class="acsel ownsel ${cls} ${ownerOf(tail)!=="Line"?"notline":""}" data-owner="${esc(tail)}" ${dis||!canEdit(ownerOf(tail))?"disabled":""} title="Current owner of ${esc(tail)}">${owners().map(o=>`<option ${o===ownerOf(tail)?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
 let OWNV="";try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){}
 const stCls=v=>({Serviceable:"sv",AOG:"aog","Shed Maint":"shed"}[v]||"");
-const prio=j=>{const p=parseInt(j.pri);return p>0?p:999};
+const isNS3=t=>!!t&&D.ns3===t;
+const prio=j=>{if(isNS3(j.tail))return 0;const p=parseInt(j.pri);return p>0?p:999};
+const ns3Btn=t=>t==="Off Aircraft"?"":`<button type="button" class="ns3btn ${isNS3(t)?"on":""}" data-ns3="${esc(t)}" ${canEdit(ownerOf(t))?"":"disabled"} title="${isNS3(t)?"National standby – click to clear":"Make this aircraft NS3 (national standby). Only one at a time; it's always P1"}">NS3</button>`;
+function toggleNS3(t){if(!canEdit(ownerOf(t)))return;const prev=D.ns3||null;
+  D.ns3=isNS3(t)?null:t;save();
+  toast(D.ns3?`${t} is NS3 (national standby) – P1${prev&&prev!==t?" · "+prev+" no longer NS3":""}`:`${t} no longer NS3`,()=>{D.ns3=prev;save()})}
 // Airbus aircraft sentencing – one code per tail, hours tracked from every change
 const SENT_G=[["Cargo damage","#D946EF",[["CAR","Damage to cargo area"]]],
  ["Delays","#22D3EE",[["FUE","Delay Refuel/Defuel"],["TOW","Delay in Towing"]]],
@@ -1632,7 +1644,7 @@ function renderBoard(){
   const vis=TAILS;
   $("#acBar").innerHTML=`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
     const aog=js.some(j=>j.acst==="AOG"),own=ownerOf(t),sc=sentOf(t)?.c;
-    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""} ${(t==="Off Aircraft"?"Line":own)!==mySec()?"nm":""}" title="${t} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
+    return `<button data-jump="${t}" class="${c} ${aog?"aog":""} ${js.length?"":"idle"} ${techReady(t)?"tr":""} ${(t==="Off Aircraft"?"Line":own)!==mySec()?"nm":""}" title="${t}${isNS3(t)?" · NS3 national standby (P1)":""} · ${esc(own)}${sc?" · "+sc:""}${js.length?" – "+js.length+" open job"+(js.length>1?"s":""):" – no open jobs (tap for aircraft details)"}${aog?" – AOG":""}">${t==="Off Aircraft"?"Off A/C":t.slice(2)}${js.length>1?`<i>${js.length}</i>`:""}${isNS3(t)?`<b class="ns3mini">NS3</b>`:""}</button>`}).join("")||`<span class="acnone">No aircraft with ${esc(OWNV)}</span>`)+`<button data-notes class="notesbtn" title="Jump to shift notes (carries through every shift)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes</button>`;
   setTimeout(renderSeenBits,0);
   const emptyMsg={active:["No open jobs","Press Raise a job (or N) to add one."],work:["Nothing in work","Press Start on a job when the team cracks on."],planned:["Nothing waiting to start",""],open:["No unmanned jobs","Every open job has someone on it."],done:["Nothing completed this shift yet",""]}[FILTER];
   // role rows on each job card: Cert = B1/B2, Mechs = A Cat / A+ trades, Other = management / no trade
@@ -1667,12 +1679,12 @@ function renderBoard(){
     const BL={
       head:`<div class="jh">
         <button type="button" class="tailname ${off?"off":""}" data-actile="${esc(j.tail)}" title="Aircraft details">${esc(off?"Off Aircraft":j.tail)}</button>
-        ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>
+        ${!off&&techReady(j.tail)?`<span class="trbadge" title="CRS ${fmt(techReady(j.tail).at)}${techReady(j.tail).by?" – "+esc(techReady(j.tail).by):""}">TECH READY</span>`:""}${ro?`<span class="robadge" title="Only admins can change ${esc(ownerOf(j.tail))} aircraft">${esc(ownerOf(j.tail))} · view only</span>`:""}<label class="bayf">(<span>BAY</span><input data-f="bay" data-id="${j.id}" value="${esc(j.bay)}" ${done?"disabled":""} placeholder="–">)</label>${ns3Btn(j.tail)}
         <div class="jst">${st}</div>
       </div>`,
       times:`${timesHtml(j.tail)?`<div class="jtimes">${timesHtml(j.tail)}</div>`:""}`,
       flight:`${off?"":`<button class="nfbtn" data-flight="${esc(j.tail)}" title="Next flight details">✈ ${flightLine(j.tail)||"<span>Next flight…</span>"}</button>`}`,
-      pri:`<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>`,
+      pri:isNS3(j.tail)?`<label class="prif ns3p" title="NS3 aircraft are always P1">P<input value="1" disabled></label>`:`<label class="prif" title="Priority – 1 is highest">P<input type="number" min="1" max="99" data-f="pri" data-id="${j.id}" value="${esc(j.pri||"")}" ${done?"disabled":""} placeholder="–"></label>`,
       state:`${selHtml("acst",j.id,ACSTATE,j.acst||"",done,"State…")}`,
       owner:`${ownSel(j.tail,done)}`,
       dass:`${j.tail!=="Off Aircraft"?`<select class="acsel dasssel ${acGet(j.tail).dass?"set":""}" data-dass="${esc(j.tail)}" ${done||!canEdit(ownerOf(j.tail))?"disabled":""} title="DASS config"><option value="">DASS…</option>${DASS.map(d=>`<option ${acGet(j.tail).dass===d?"selected":""}>${d}</option>`).join("")}</select>`:""}`,
@@ -1703,7 +1715,7 @@ function renderBoard(){
   const showAll=FILTER==="active"&&!q;
   // every aircraft, in tail order (priority first); other owners' aircraft stay collapsed unless expanded
   const notMine=t=>OWNV!=="All"&&(t==="Off Aircraft"?OWNV!=="Line":ownerOf(t)!==OWNV);
-  const tPri=t=>{const j=D.jobs.find(x=>active(x)&&x.tail===t);return j?prio(j):999};
+  const tPri=t=>{if(isNS3(t))return 0;const j=D.jobs.find(x=>active(x)&&x.tail===t);return j?prio(j):999};
   let html="";
   if(showAll){
     // runs of collapsed aircraft share one grid cell, so the order reads left-to-right without big gaps
@@ -2096,14 +2108,14 @@ function collTile(t){const j=D.jobs.find(x=>active(x)&&x.tail===t),a=acGet(t),of
   const done=j?tasksOnly(j).length:0;
   const open=j?tasksOnly(j).filter(x=>x.s!=="done").length:0;
   return `<div class="ctile ${glowOf(t)}" data-expand="${esc(t)}" data-tail="${esc(t)}" title="Expand ${esc(t)}">
-    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
+    <div class="ct-top"><b class="ct-tail">${off?"Off A/C":esc(t)}</b>${isNS3(t)?`<span class="ns3tag">NS3 · P1</span>`:""}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}${a.dass?`<span class="ct-dass">${esc(a.dass)}</span>`:""}${a.rcfg||roleReq(t)?`<span class="ct-role ${roleState(t)}" title="Current / required role">${esc(a.rcfg||"–")}${roleReq(t)?" / "+esc(roleReq(t)):""}</span>`:""}${own!=="Line"&&!off?`<span class="ct-own">${esc(own)}</span>`:""}${se?`<span class="sentchip" style="--sc:${SENT[se.c]?.col}">${esc(se.c)}</span>`:""}${!off&&canEdit(own)&&(done||techReady(t))?(techReady(t)?`<button class="btn sm crsbtn on ct-crs" data-crs="${esc(t)}" title="Click to undo">✓ Tech ready</button>`:`<button class="btn ok sm crsbtn ct-crs" data-crs="${esc(t)}">CRS</button>`):""}<span class="ct-chev">▾</span></div>
     ${timesHtml(t)?`<div class="ct-times">${timesHtml(t)}</div>`:""}
     ${flightLine(t)?`<div class="ct-fl">✈ ${flightLine(t)}</div>`:""}
     ${notes.length?`<div class="ct-notes">${notes.join("")}</div>`:""}
     ${open?`<div class="ct-sub"><b>${open} open task${open>1?"s":""}</b> – tap to see</div>`:done?`<div class="ct-sub">${done} task${done>1?"s":""} done this shift</div>`:""}
   </div>`}
 function emptyTile(t){const a=acGet(t),off=t==="Off Aircraft",ed=canEdit(ownerOf(t));
-  return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
+  return `<div class="job ${glowOf(t)} etile" data-tail="${esc(t)}"><div class="jh"><button type="button" class="tailname ${off?"off":""}" data-actile="${esc(t)}">${off?"Off Aircraft":esc(t)}</button>${ns3Btn(t)}${techReady(t)?`<span class="trbadge">TECH READY</span>`:""}<button class="btn sm" data-collapse="${esc(t)}" style="margin-left:auto">Collapse ▴</button></div>
     <div class="jmeta">${off?"":`<select class="acsel dasssel ${a.dass?"set":""}" data-dass="${esc(t)}" ${ed?"":"disabled"}><option value="">DASS…</option>${DASS.map(d=>`<option ${a.dass===d?"selected":""}>${d}</option>`).join("")}</select>${roleBoxes(t,false)}${ownSel(t,false)}${sentSel(t,false)}<button class="nfbtn" data-flight="${esc(t)}">✈ ${flightLine(t)||"<span>Next flight…</span>"}</button>`}</div>
     <div class="jr jobrow"><div class="jl">Job</div><div class="jtask"><div class="sx-empty" style="padding:4px 0">No open tasks.</div>${ed?`<input class="line-add" data-newtile="${esc(t)}" placeholder="+ Add a task – or NOTE …, take off 18:00, landing 22:00">`:""}</div></div></div>`}
 
@@ -2189,6 +2201,7 @@ $("#layReset").onclick=()=>{LAYDRAFT=LAY_DEF.map(b=>({...b}));LAYCOL=290;layFixR
 // give every block an explicit row flag, per column, matching the current packing
 function layFixRows(){if(LAYDRAFT.some(b=>b.nr!=null))return;["L","R",null].forEach(c=>{const list=c?LAYDRAFT.filter(b=>colOf(b)===c):LAYDRAFT;const n=packNr(list);list.forEach((b,i)=>b.nr=n[i])})}
 $("#layOpen").onclick=openLayout;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ns3]");if(!b)return;e.preventDefault();e.stopPropagation();toggleNS3(b.dataset.ns3)},true);
 /* ---------- send as text ---------- */
 const stamp=()=>new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 function jobText(j,head){
