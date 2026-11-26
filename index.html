@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126023645">
+<meta name="build" content="20261126023839">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -895,7 +895,7 @@ body.aioc .job.dp .crsbtn,body.aioc .job.dp [data-share]{display:inline-flex!imp
 .meb{font:inherit;font-size:11px;font-weight:800;color:#4F46E5;background:#EEF2FF;border:1px dashed #A5B4FC;border-radius:99px;padding:2px 9px;cursor:pointer}
 body.engv nav button[data-tab]:not([data-tab=board]),
 body.engv .kpis,body.engv #tradeStrip,body.engv #headSw,body.engv #pills,body.engv #teamOpen,body.engv #layOpen,body.engv .jobs-h .search,body.engv #seenAll,
-body.engv #shareAll,body.engv #openDisplay,body.engv #notesCard,body.engv #shiftBar,body.engv .notesbtn,body.engv #team,body.engv #teamBg,body.engv #ownView,
+body.engv #shareAll,body.engv #openDisplay,body.engv #notesCard,body.engv #shiftBar,body.engv .notesbtn,body.engv #team,body.engv #teamBg,
 body.engv [data-share],body.engv #acRaise,body.engv .ct-notes,body.engv .ct-crs,body.engv #aiocBtn,body.engv .aiocchk,
 body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,body.engv #nTag,body.engv #nLsj,body.engv #nBusy,body.engv #nj label:has(#nBusy){display:none!important}
 .viewswrap{position:relative;cursor:pointer}
@@ -1823,6 +1823,7 @@ function setOwner(tail,o){if(tail==="Off Aircraft")return;if(!canOwn(ownerOf(tai
   D.ac[tail]={...(D.ac[tail]||{}),owner:o,at:now(),by:(typeof myName==="function"&&myName())||""};D.ownLog.push({t:tail,o,at:now()});save();toast(`${tail} now owned by ${o}`)}
 const ownSel=(tail,dis,cls="")=>tail==="Off Aircraft"?"":`<select class="acsel ownsel ${cls} ${ownerOf(tail)!=="Line"?"notline":""}" data-owner="${esc(tail)}" ${dis||!canOwn(ownerOf(tail))?"disabled":""} title="Current owner of ${esc(tail)}">${owners().map(o=>`<option ${o===ownerOf(tail)?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
 let OWNV="";try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){}
+let OWNV_PICKED=!!OWNV;
 const stCls=v=>({Serviceable:"sv",AOG:"aog","Shed Maint":"shed"}[v]||"");
 const isNS3=t=>!!t&&D.ns3===t;
 const prio=j=>{if(isNS3(j.tail))return 0;const p=parseInt(j.pri);return p>0?p:999};
@@ -2004,11 +2005,11 @@ function renderBoard(){
   const s=$("#sortBy").value, rank={work:0,planned:1,open:2,done:3};
   jobs=[...jobs].sort((a,b)=>prio(a)-prio(b)||(s==="new"?b.created.localeCompare(a.created):s==="bay"?String(a.bay).localeCompare(String(b.bay),undefined,{numeric:true}):s==="status"?rank[a.status]-rank[b.status]||TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail):TAILS.indexOf(a.tail)-TAILS.indexOf(b.tail)));
   // aircraft jump bar
-  if(isAIOC())OWNV="All";else if(!OWNV)OWNV=mySec();
+  if(isAIOC())OWNV="All";else if(!OWNV_PICKED||!OWNV)OWNV=isMgmt()||engMode()?"All":mySec();
   if(OWNV!=="All"&&!owners().includes(OWNV))OWNV="Line";
   const ownCount=o=>TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)===o).length;
   if(isAIOC()&&AIOCF!=="All"&&!owners().includes(AIOCF))AIOCF="All";
-  const vis=isAIOC()?TAILS.filter(t=>t!=="Off Aircraft"&&aiocShows(t)):(engMode()||isMgmt()||!OWNV||OWNV==="All")?TAILS:TAILS.filter(t=>(t==="Off Aircraft"?"Line":ownerOf(t))===OWNV);
+  const vis=isAIOC()?TAILS.filter(t=>t!=="Off Aircraft"&&aiocShows(t)):(!OWNV||OWNV==="All")?TAILS:TAILS.filter(t=>(t==="Off Aircraft"?"Line":ownerOf(t))===OWNV);
   $("#acBar").innerHTML=(isAIOC()
     ?`<div class="aiocf"><button data-aiocf="All" class="${AIOCF==="All"?"on":""}">All <i>${TAILS.length-1}</i></button>${owners().map(o=>`<button data-aiocf="${esc(o)}" class="${AIOCF===o?"on":""}">${esc(o)} <i>${ownCount(o)}</i></button>`).join("")}</div>`
     :`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`)+(isAIOC()?'<div class="acrow">':"")+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
@@ -2094,8 +2095,8 @@ function renderBoard(){
     const parts=[...TAILS].sort((a,b)=>tPri(a)-tPri(b)||TAILS.indexOf(a)-TAILS.indexOf(b)).map(t=>{
       const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
       if(isAIOC()){if(t==="Off Aircraft"||!aiocShows(t))return null;return{f:j?tileHtml(j):tileHtml(blankJob(t))}}
-      if(isMgmt())return{f:j?tileHtml(j):t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))}; // managers: every aircraft open, read only
-      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};return{c:collTile(t)}}
+      if(isMgmt()){if(notMine(t))return null;return{f:j?tileHtml(j):t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))}} // managers: every aircraft open, read only
+      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(notMine(t))return null;if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};return{c:collTile(t)}}
       if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
       if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};
       return{c:collTile(t)}});
@@ -2411,7 +2412,7 @@ $("#sixModal").addEventListener("click",e=>{if(e.target.id==="sixModal")$("#sixM
 /* ---------- aircraft panel + owners ---------- */
 document.addEventListener("change",e=>{const t=e.target;if(t.id!=="ownView")return;
   if(t.value==="__edit"){t.value=OWNV;if(!isAdmin()){toast("Only admins can edit the owner list");return}openOwners();return}
-  OWNV=t.value;try{localStorage.setItem("wa-ownv",OWNV)}catch(_){}render()});
+  OWNV=t.value;OWNV_PICKED=true;try{localStorage.setItem("wa-ownv",OWNV)}catch(_){}render()});
 function openAc(t){
   if(t==="Off Aircraft"){openNew();return}
   const js=D.jobs.filter(j=>active(j)&&j.tail===t),own=ownerOf(t),ac=(D.ac||{})[t]||{},se=sentOf(t);
@@ -2432,7 +2433,7 @@ $("#acClose").onclick=()=>$("#acModal").classList.add("hide");
 $("#acModal").addEventListener("click",e=>{if(e.target.id==="acModal"){$("#acModal").classList.add("hide");return}
   const cr=e.target.closest("[data-crs]");if(cr){setCRS(cr.dataset.crs,!techReady(cr.dataset.crs));openAc(cr.dataset.crs);return}
   const fl=e.target.closest("[data-flight]");if(fl){openFlight(fl.dataset.flight);return}
-  const g=e.target.closest("[data-gojob]");if(g){const j=job(g.dataset.gojob);$("#acModal").classList.add("hide");if(j){OWNV="All";try{localStorage.setItem("wa-ownv","All")}catch(_){}HEAD="all";markHead();$("#q").value="";setFilter("active");setTimeout(()=>{const el=document.querySelector(`#jobs .job[data-id="${j.id}"]`);el?.scrollIntoView({behavior:"smooth",block:"start"});el?.classList.add("flash")},50)}}});
+  const g=e.target.closest("[data-gojob]");if(g){const j=job(g.dataset.gojob);$("#acModal").classList.add("hide");if(j){OWNV="All";OWNV_PICKED=true;try{localStorage.setItem("wa-ownv","All")}catch(_){}HEAD="all";markHead();$("#q").value="";setFilter("active");setTimeout(()=>{const el=document.querySelector(`#jobs .job[data-id="${j.id}"]`);el?.scrollIntoView({behavior:"smooth",block:"start"});el?.classList.add("flash")},50)}}});
 $("#acModal").addEventListener("change",e=>{const t=e.target;
   if(t.dataset.dass!=null){acRec(t.dataset.dass).dass=t.value;save();return}
   if(t.dataset.ets!=null){if(!canAc(ownerOf(t.dataset.ets)))return;const a=acRec(t.dataset.ets);if(t.value)a.ets=t.value;else delete a.ets;save();openAc(t.dataset.ets);return}
