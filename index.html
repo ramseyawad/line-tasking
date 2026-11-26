@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126005344">
+<meta name="build" content="20261126005942">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -905,6 +905,12 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .docbox:not(.set) .doch{background:#94A3B8}
 .doclink{flex:1;min-width:0;text-align:left;text-decoration:none;display:block;background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:#1D4ED8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .docnone{flex:1}
+#rolePick{position:fixed;z-index:9999;display:none;flex-direction:column;overflow:auto;background:#fff;border:1px solid #CBD5E1;border-radius:10px;box-shadow:0 12px 30px rgba(15,23,42,.18);padding:4px}
+#rolePick.show{display:flex}
+#rolePick button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:0;background:none;padding:7px 10px;border-radius:7px;cursor:pointer;font:inherit}
+#rolePick button:hover,#rolePick button.on{background:#EFF6FF}
+#rolePick button b{font-size:13.5px;color:#0F172A}#rolePick button span{font-size:11.5px;color:#64748B}
+#rolePick .rpnone{padding:8px 10px;font-size:12px;color:#64748B}
 .grplist{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
 .grow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #E2E8F0;border-radius:10px;background:#fff}
 .gname{flex:1;min-width:0;display:flex;flex-direction:column}.gname b{font-size:14px}
@@ -2369,7 +2375,7 @@ const FLF=[["no","Flight number","e.g. RRR4401"],["role","Role required","e.g. C
 const flightsOf=t=>{const a=acGet(t);return [a.flight,...(a.more||[])].filter(f=>f&&Object.keys(f).some(k=>!["at","by"].includes(k)&&f[k]))};
 let FLD=[];
 function flRender(){const ed=canNF();
-  $("#flList").innerHTML=FLD.map((f,n)=>`<div class="flcard" data-fn="${n}"><div class="flcard-h"><b>${n===0?"Next flight":"Flight "+(n+1)}</b>${ed&&FLD.length>1?`<button class="linkbtn" data-fldel="${n}">Remove</button>`:""}</div><div class="flgrid">${FLF.map(([k,l,ph,ty])=>`<label class="mv-f"><span>${esc(l)}</span><input data-fk="${k}" ${k==="role"?'list="roleList" autocomplete="off"':""} ${ty?`type="${ty}"`:""} value="${esc(f[k]||"")}" placeholder="${esc(ph||"")}" ${ed?"":"disabled"}></label>`).join("")}</div></div>`).join("");
+  $("#flList").innerHTML=FLD.map((f,n)=>`<div class="flcard" data-fn="${n}"><div class="flcard-h"><b>${n===0?"Next flight":"Flight "+(n+1)}</b>${ed&&FLD.length>1?`<button class="linkbtn" data-fldel="${n}">Remove</button>`:""}</div><div class="flgrid">${FLF.map(([k,l,ph,ty])=>`<label class="mv-f"><span>${esc(l)}</span><input data-fk="${k}" ${k==="role"?'data-rp="1" autocomplete="off"':""} ${ty?`type="${ty}"`:""} value="${esc(f[k]||"")}" placeholder="${esc(ph||"")}" ${ed?"":"disabled"}></label>`).join("")}</div></div>`).join("");
   $("#flAdd").classList.toggle("hide",!ed)}
 const flRead=()=>{document.querySelectorAll("#flList .flcard").forEach(c=>{const f=FLD[+c.dataset.fn];c.querySelectorAll("[data-fk]").forEach(i=>{f[i.dataset.fk]=i.value.trim()})})};
 function openFlight(t){FL_T=t;const ed=canNF(),fs=flightsOf(t);FLD=fs.length?fs.map(f=>({...f})):[{}];
@@ -2523,6 +2529,29 @@ document.addEventListener("change",e=>{const sel=e.target.closest("[data-geadd]"
   j.ges={...(j.ges||{})};const g=gesOf(j,it.t);if(!g.includes(n))j.ges[it.t]=[...g,n];save()},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-geun]");if(!b)return;e.preventDefault();e.stopPropagation();const [id,ix,...rest]=b.dataset.geun.split("|"),n=rest.join("|"),j=job(id);if(!j||!canEdit(ownerOf(j.tail)))return;
   const it=items(j)[+ix];if(!it)return;j.ges={...(j.ges||{})};const g=gesOf(j,it.t).filter(x=>x!==n);if(g.length)j.ges[it.t]=g;else delete j.ges[it.t];save()},true);
+/* ---------- role picker: tap a role box to get the full list (typing filters it) ---------- */
+const RP_OPTS=()=>[...document.querySelectorAll("#roleList option")].map(o=>({v:o.value,d:o.textContent}));
+let RP_IN=null;
+function rpShow(inp){if(inp.disabled)return;RP_IN=inp;let m=$("#rolePick");if(!m){m=document.createElement("div");m.id="rolePick";document.body.append(m);
+    m.addEventListener("mousedown",e=>e.preventDefault());
+    m.addEventListener("click",e=>{const b=e.target.closest("[data-rv]");if(!b||!RP_IN)return;const i=RP_IN;i.value=b.dataset.rv;rpHide();i.dispatchEvent(new Event("change",{bubbles:true}));i.blur()})}
+  rpFill();rpPos();m.classList.add("show")}
+function rpPos(){const m=$("#rolePick"),inp=RP_IN;if(!m||!inp)return;const r=inp.getBoundingClientRect(),vv=window.visualViewport,vt=vv?vv.offsetTop:0,vh=vv?vv.height:innerHeight,vl=vv?vv.offsetLeft:0,vw=vv?vv.width:innerWidth,w=Math.min(Math.max(r.width,230),vw-16);
+  m.style.left=Math.max(vl+8,Math.min(r.left,vl+vw-w-8))+"px";m.style.width=w+"px";m.style.bottom="";
+  const below=vt+vh-r.bottom,above=r.top-vt;
+  if(below<220&&above>below){const h=Math.min(320,above-12);m.style.maxHeight=h+"px";m.style.top=(r.top-4-Math.min(h,m.scrollHeight||h))+"px"}
+  else{m.style.top=(r.bottom+4)+"px";m.style.maxHeight=Math.min(320,below-12)+"px"}}
+function rpFill(){const m=$("#rolePick");if(!m||!RP_IN)return;const q=RP_IN.value.trim().toLowerCase().replace(/[\s-]+/g,""),cur=RP_IN.dataset.rpStart||"";
+  const nz=x=>x.toLowerCase().replace(/[\s-]+/g,"");
+  const l=RP_OPTS().filter(o=>!q||RP_IN.value===cur||nz(o.v).includes(q)||nz(o.d).includes(q));
+  m.innerHTML=l.map(o=>`<button type="button" data-rv="${esc(o.v)}" class="${nz(o.v)===nz(RP_IN.value)?"on":""}"><b>${esc(o.v)}</b>${o.d&&o.d!==o.v?`<span>${esc(o.d)}</span>`:""}</button>`).join("")||`<div class="rpnone">No match – press Enter to keep what you typed</div>`}
+function rpHide(){$("#rolePick")?.classList.remove("show");RP_IN=null}
+document.addEventListener("focusin",e=>{const i=e.target.closest?.("input[data-rp]");if(i){i.dataset.rpStart=i.value;rpShow(i)}});
+document.addEventListener("click",e=>{const i=e.target.closest?.("input[data-rp]");if(i&&RP_IN!==i){i.dataset.rpStart=i.value;rpShow(i)}});
+document.addEventListener("input",e=>{if(e.target===RP_IN)rpFill()});
+document.addEventListener("focusout",e=>{if(e.target===RP_IN)setTimeout(()=>{if(document.activeElement!==RP_IN)rpHide()},150)});
+document.addEventListener("keydown",e=>{if(!RP_IN||e.target!==RP_IN)return;if(e.key==="Escape"){rpHide();RP_IN?.blur()}else if(e.key==="Enter"){e.preventDefault();const i=RP_IN,f=$("#rolePick button[data-rv]");if(f&&i.value.trim()&&i.value!==i.dataset.rpStart)i.value=f.dataset.rv;rpHide();i.blur()}});
+addEventListener("scroll",e=>{if(RP_IN&&!e.target.closest?.("#rolePick"))rpPos()},true);addEventListener("resize",()=>{if(RP_IN)rpPos()});window.visualViewport?.addEventListener("resize",()=>{if(RP_IN)rpPos()});window.visualViewport?.addEventListener("scroll",()=>{if(RP_IN)rpPos()});
 /* ---------- role PDF ---------- */
 document.addEventListener("click",async e=>{const v=e.target.closest("[data-docview]"),x=e.target.closest("[data-docdel]");if(!v&&!x)return;e.preventDefault();e.stopPropagation();
   if(v){const d=docOf(v.dataset.docview);if(!d||!window.__waCloud)return;const w=window.open("","_blank");const u=await window.__waCloud.docUrl(d.path);if(!u){w?.close();toast("Couldn't open the PDF – check connection");return}if(w)w.location=u;else location.href=u;return}
@@ -2914,7 +2943,7 @@ const canDoc=()=>!engMode()&&(isAIOC()||realFlight());
 const docBox=(t,dis)=>{const d=docOf(t),ed=!dis&&canDoc()&&!!window.__waCloud;if(!d&&!ed)return "";
   return `<div class="docbox ${d?"set":""}"><span class="doch" title="Role document (PDF)">PDF</span>${d?`<a href="#" class="doclink" data-docview="${esc(t)}" title="Open ${esc(d.name)}${d.by?" – uploaded by "+esc(d.by):""}">📄 ${esc(d.name)}</a>`:`<span class="sub docnone">No role PDF</span>`}${ed?`<label class="btn sm docup" title="${d?"Replace":"Upload"} role PDF">${d?"Replace":"Upload"}<input type="file" accept="application/pdf" data-docup="${esc(t)}" hidden></label>${d?`<button type="button" class="etsx" data-docdel="${esc(t)}" title="Remove PDF">×</button>`:""}`:""}</div>`};
 const roleState=t=>{const nz=x=>String(x||"").toLowerCase().replace(/[\s-]+/g,""),c=nz(acGet(t).rcfg),r=nz(roleReq(t));if(!r)return "";if(r==="any")return "rok";return c===r?"rok":"rbad"};
-const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&(canEdit(ownerOf(t))||isLW()||(engMode()&&D.jobs.some(j=>active(j)&&j.tail===t&&tileMine(j))));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" list="roleList" autocomplete="off" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" list="roleList" autocomplete="off" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canReq()?"":"disabled"}></label></span>`};
+const roleBoxes=(t,dis)=>{const st=roleState(t),ed=!dis&&(canEdit(ownerOf(t))||isLW()||(engMode()&&D.jobs.some(j=>active(j)&&j.tail===t&&tileMine(j))));return `<span class="rolepair"><label class="rolef"><span>Current role</span><input class="tagf rcfgin ${st}" data-rp="1" autocomplete="off" data-rcfg="${esc(t)}" value="${esc(acGet(t).rcfg||"")}" placeholder="–" title="Current role config${st==="rbad"?" – does not match required":st==="rok"?" – matches required":""}" ${ed?"":"disabled"}></label><label class="rolef"><span>Required role</span><input class="tagf rreqin ${st}" data-rp="1" autocomplete="off" data-rreq="${esc(t)}" value="${esc(roleReq(t))}" placeholder="–" title="Required role config (next flight's role)" ${!dis&&canReq()?"":"disabled"}></label></span>`};
 const FL_ICO={to:`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 1.82 3.16.77 1.33 1.6-.43 5.31-1.42 4.35-1.16L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/></svg>`,
   ld:`<svg class="flico" viewBox="0 0 24 24" aria-label="Landing"><path d="M2.5 19h19v2h-19v-2zm7.18-5.73l4.35 1.16 5.31 1.42c.8.21 1.62-.26 1.84-1.06.21-.8-.26-1.62-1.06-1.84l-5.31-1.42-2.76-9.02L10.12 2v8.28L5.15 8.95l-.93-2.32-1.45-.39v5.17l1.6.43 5.31 1.43z"/></svg>`};
 const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
