@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126180305">
+<meta name="build" content="20261126180733">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2104,7 +2104,9 @@ function renderBoard(){
       const j=jobs.find(x=>x.tail===t),exp=EXP.has(t);
       if(isAIOC()){if(t==="Off Aircraft"||!aiocShows(t))return null;return{f:j?tileHtml(j):tileHtml(blankJob(t))}}
       if(isMgmt()){if(notMine(t))return null;return{f:j?tileHtml(j):t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))}} // managers: every aircraft open, read only
-      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(notMine(t))return null;if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};return{c:collTile(t)}}
+      if(engMode()){if(j&&(tileMine(j)||exp))return{f:tileHtml(j)};if(isLW()&&(t==="Off Aircraft"?"Line":ownerOf(t))==="Line"&&!notMine(t))return{f:j?tileHtml(j):t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};if(notMine(t))return null;if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};return{c:collTile(t)}}
+      // Line Control, SLE and line walkers: every Line aircraft keeps its full tile, jobs or not
+      if((realFlight()||isLW())&&(t==="Off Aircraft"?"Line":ownerOf(t))==="Line"&&!notMine(t))return{f:j?tileHtml(j):t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};
       if(j&&((openT(j)&&!notMine(t))||exp))return{f:tileHtml(j)};
       if(!j&&exp&&!D.jobs.some(x=>active(x)&&x.tail===t))return{f:t==="Off Aircraft"?emptyTile(t):tileHtml(blankJob(t))};
       return{c:collTile(t)}});
