@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126180733">
+<meta name="build" content="20261126180906">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2249,7 +2249,7 @@ function markSeen(id){const j=job(id);if(!j)return;SEEN[id]=jsig(j);ackLines(j);
 function markAllSeen(){D.jobs.forEach(j=>{SEEN[j.id]=jsig(j);ackLines(j)});SEEN.__init=1;seenSave();render()}
 function renderSeenBits(){
   const n=D.jobs.filter(j=>unseen(j)).length;
-  const b=$("#seenAll");if(b){b.classList.toggle("hide",!n);b.querySelector("i").textContent=n}
+  const b=$("#seenAll");if(b){b.classList.remove("hide");b.disabled=!n;b.innerHTML=n?`<i>${n}</i> new or changed · mark all seen`:"Nothing new";b.title=n?"Clear all the new / updated highlights":"No new or changed jobs to clear"}
   document.querySelectorAll("#acBar button[data-jump]").forEach(x=>x.classList.toggle("unseen",D.jobs.some(j=>j.tail===x.dataset.jump&&unseen(j))));
 }
 let hoverT=null;
