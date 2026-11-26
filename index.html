@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126023456">
+<meta name="build" content="20261126023645">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2008,7 +2008,7 @@ function renderBoard(){
   if(OWNV!=="All"&&!owners().includes(OWNV))OWNV="Line";
   const ownCount=o=>TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)===o).length;
   if(isAIOC()&&AIOCF!=="All"&&!owners().includes(AIOCF))AIOCF="All";
-  const vis=isAIOC()?TAILS.filter(t=>t!=="Off Aircraft"&&aiocShows(t)):TAILS;
+  const vis=isAIOC()?TAILS.filter(t=>t!=="Off Aircraft"&&aiocShows(t)):(engMode()||isMgmt()||!OWNV||OWNV==="All")?TAILS:TAILS.filter(t=>(t==="Off Aircraft"?"Line":ownerOf(t))===OWNV);
   $("#acBar").innerHTML=(isAIOC()
     ?`<div class="aiocf"><button data-aiocf="All" class="${AIOCF==="All"?"on":""}">All <i>${TAILS.length-1}</i></button>${owners().map(o=>`<button data-aiocf="${esc(o)}" class="${AIOCF===o?"on":""}">${esc(o)} <i>${ownCount(o)}</i></button>`).join("")}</div>`
     :`<select class="ownview" id="ownView" title="Show aircraft by owner">${owners().map(o=>`<option value="${esc(o)}" ${o===OWNV?"selected":""}>${esc(o)} (${ownCount(o)})</option>`).join("")}<option value="All" ${OWNV==="All"?"selected":""}>All aircraft</option><option value="__edit">Edit owners…</option></select>`)+(isAIOC()?'<div class="acrow">':"")+(vis.map(t=>{const js=act.filter(j=>j.tail===t),c=js.some(j=>j.status==="work")?"w":js.some(j=>j.status==="planned")?"p":js.length?"o":"";
