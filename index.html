@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126191101">
+<meta name="build" content="20261126225805">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -937,6 +937,13 @@ nav .ns{display:none}
 .tptbl td,.tptbl th{white-space:nowrap}
 .mk-c,.mpb.c{background:#EDE9FE;color:#5B21B6;border-color:#A78BFA}.mk-p,.mpb.p{background:#E0F2FE;color:#075985;border-color:#7DD3FC}.mk-a,.mpb.a{background:#DCFCE7;color:#166534;border-color:#86EFAC}.mk-m,.mpb.m{background:#FEF3C7;color:#92400E;border-color:#FCD34D}
 .mpwrap{overflow-x:auto;padding:0 16px 16px}
+.mpg .mh.rl{display:block;position:relative;height:26px}.mpg .mh.rl span{position:absolute;top:0;padding:6px 4px;white-space:nowrap}
+.mpg .lane.rl{background:none;min-height:34px}.mpg .lane.rl .mg{position:absolute;top:0;bottom:0;width:1px;background:#EEF2F7}
+.mpb.rl{color:#0F172A;border-color:rgba(0,0,0,.25);top:3px}.mpb.rl.dk{color:#fff}.mpb.rl.hatch{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.55) 0 3px,transparent 3px 6px)!important}
+.mpfl{position:absolute;bottom:2px;height:5px;border-radius:3px;background:#94A3B8}.mpfl.ns{background:#EAB308}.mpfl.omp{background:#16A34A}
+.mpev{position:absolute;top:3px;height:22px;border-radius:6px;background:repeating-linear-gradient(45deg,#E2E8F0 0 5px,#F8FAFC 5px 10px);border:1px dashed #94A3B8;font-size:10.5px;color:#475569;padding:3px 5px;overflow:hidden;white-space:nowrap;box-sizing:border-box}
+.mpnote{position:absolute;top:1px;font-size:13px;cursor:help;z-index:3}
+.mpkey .k{border:1px solid rgba(0,0,0,.2)}
 .mpg{display:grid;grid-template-columns:70px 1fr;min-width:980px;font-size:12px}
 .mpg .mh{display:grid;grid-template-columns:repeat(12,1fr);border-bottom:1px solid var(--line);font-weight:800;color:var(--mute);text-transform:uppercase;font-size:10.5px}
 .mpg .mh span{padding:6px 4px;border-left:1px solid #EEF2F7}
@@ -1110,20 +1117,20 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </section>
 <section id="tab-mplan" class="hide">
   <div class="card">
-    <div class="card-h"><h2>Maintenance plan</h2><span class="demotag">Demo data</span><span class="sub" style="margin-left:auto">Scheduled checks and hangar inputs – hours-based checks are forecast from the flight plan</span></div>
+    <div class="card-h"><h2>Maintenance plan</h2><span class="demotag" id="mpSrc">Demo data</span><span class="sub" style="margin-left:auto" id="mpSub">Scheduled checks and hangar inputs – hours-based checks are forecast from the flight plan</span></div>
     <div class="stats" id="mpStats" style="padding:12px 16px 0"></div>
-    <div class="card-h" style="border-top:0"><h3 style="margin:0;font-size:14px">Hangar inputs – next 12 months</h3><span class="fpkey" style="border:0;padding:0;margin-left:auto"><span class="k mk-c">C-check</span><span class="k mk-p">Phase check</span><span class="k mk-a">A-check</span><span class="k mk-m">Mod / retrofit</span></span></div>
+    <div class="card-h" style="border-top:0"><h3 style="margin:0;font-size:14px" id="mpGh">Hangar inputs – next 12 months</h3><span class="fpkey" id="mpKey" style="border:0;padding:0;margin-left:auto"><span class="k mk-c">C-check</span><span class="k mk-p">Phase check</span><span class="k mk-a">A-check</span><span class="k mk-m">Mod / retrofit</span></span></div>
     <div class="mpwrap"><div id="mpGantt" class="mpg"></div></div>
   </div>
   <div class="card" style="margin-top:14px">
-    <div class="card-h"><h2>Due list</h2><span class="sub" style="margin-left:auto">Every scheduled item, soonest first</span></div>
+    <div class="card-h"><h2 id="mpLh">Due list</h2><span class="sub" style="margin-left:auto" id="mpLs">Every scheduled item, soonest first</span></div>
     <div class="filters">
       <select id="mpTail"><option value="">All aircraft</option></select>
       <select id="mpType"><option value="">All checks</option></select>
       <select id="mpStat"><option value="">Any status</option><option value="over">Overdue</option><option value="soon">Due within 30 days</option><option value="work">In work</option><option value="ok">In date</option></select>
       <button class="btn" id="mpCsv">Export CSV</button>
     </div>
-    <div class="tbl-wrap" style="padding-top:12px"><table class="tptbl"><thead><tr><th>Aircraft</th><th>Check</th><th>Interval</th><th>Last done</th><th>Due</th><th>Remaining</th><th>Forecast date</th><th>Where</th><th>Status</th></tr></thead><tbody id="mpBody"></tbody></table></div>
+    <div class="tbl-wrap" style="padding-top:12px"><table class="tptbl"><thead id="mpHead"><tr><th>Aircraft</th><th>Check</th><th>Interval</th><th>Last done</th><th>Due</th><th>Remaining</th><th>Forecast date</th><th>Where</th><th>Status</th></tr></thead><tbody id="mpBody"></tbody></table></div>
   </div>
 </section>
 <section id="tab-shift" class="hide">
@@ -2436,7 +2443,7 @@ function openAc(t){
      <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canAc(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
      <div class="mv-f"><span>Role config</span><div class="rolewrap">${roleBoxes(t,false)}${docBox(t,false)}</div></div><div class="mv-f"><span>Estimated time to serviceability</span>${etsBox(t,false)}</div></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canCRS(t)?(techReady(t)?`<button class="btn sm" data-crs="${t}">Undo</button>`:openTasks(t)?`<button class="btn sm" disabled>CRS – ${openTasks(t)} task${openTasks(t)>1?"s":""} still open</button>`:`<button class="btn sm ok" data-crs="${t}">CRS – Tech ready</button>`):""}</div>
-   <div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
+   ${(()=>{const m=mpCurrent(t);if(!m||(!m.now.length&&!m.next))return "";const f=x=>`<b>${esc(x.k)}</b>${x.txt?" – "+esc(x.txt):""} <span class="sub">${fmtD(mpDay(x.from))} → ${fmtD(mpDay(x.to))}</span>`;return `<div class="acp-fl"><div><span class="mv-f"><span>Maintenance plan</span></span><div>${m.now.map(x=>`<div>Now: ${f(x)}</div>`).join("")}${m.next?`<div>Next: ${f(m.next)}</div>`:""}</div><small class="sub">${esc(D.mplan.ver||"")}</small></div></div>`})()}<div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${sentList(t).map(x=>` · ${esc(x.c)} for ${ago(x.at)}`).join("")}</p>
    ${isAIOC()?`<h4 class="mv-h">Jobs</h4>${js.length?js.map(aiocTasks).join(""):'<p class="sub">No open jobs.</p>'}`:""}<h4 class="mv-h ${isAIOC()?"hide":""}">Open jobs</h4>${isAIOC()?"":js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
   $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canAddTask(own));$("#acBody .acp-jobs")?.classList.toggle("hide",isAIOC());$("#acModal").classList.remove("hide");mgLock($("#acBody"));
@@ -2720,7 +2727,50 @@ function mpPlan(){const today=iso(new Date());if(MP_CACHE&&MP_CACHE.today===toda
   // a smaller check that falls inside a C-check is done as part of it
   const cs=inputs.filter(x=>x.c==="c");const keep=inputs.filter(x=>x.c==="c"||!cs.some(c=>c.tail===x.tail&&x.from<c.to&&x.to>c.from));
   MP_CACHE={today,items,inputs:keep,rate};return MP_CACHE}
-function renderMPlan(){const P=mpPlan(),today=iso(new Date()),tails=TAILS.filter(t=>t!=="Off Aircraft");
+/* real maintenance plan (imported from the planners' spreadsheet into D.mplan) – slots are a/p/n = AM / PM / Night thirds of a day */
+const mpReal=()=>!DEMO&&D.mplan&&Array.isArray(D.mplan.items)&&D.mplan.items.length;
+const mpT=(v,end)=>{const m=String(v||"").match(/^(\d{4}-\d{2}-\d{2})([apn])?$/);if(!m)return null;const k={a:0,p:1,n:2}[m[2]||"a"];return{d:m[1],f:(k+(end?1:0))/3}};
+const mpDay=v=>String(v||"").slice(0,10);
+const mpSlot=v=>({a:"AM",p:"PM",n:"Night"})[String(v||"").slice(10)]||"";
+const mpDk=c=>{const h=String(c||"").replace("#","");if(h.length!==6)return false;const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return (r*299+g*587+b*114)/1000<120};
+const mpNowIn=(x,today)=>mpDay(x.from)<=today&&mpDay(x.to)>=today;
+function mpCurrent(t){if(!mpReal())return null;const today=iso(new Date());const L=D.mplan.items.filter(x=>x.tail===t).sort((a,b)=>a.from.localeCompare(b.from));
+  return{now:L.filter(x=>mpNowIn(x,today)),next:L.find(x=>mpDay(x.from)>today)}}
+let MPR_ROWS=[];
+function renderMPReal(){const P=D.mplan,today=iso(new Date()),tails=TAILS.filter(t=>t!=="Off Aircraft");
+  $("#mpSrc").textContent=P.ver||"Maintenance plan";$("#mpSrc").classList.add("real");
+  $("#mpSub").textContent="From the planners' spreadsheet – AM / PM / Night slots"+(P.from?" · history kept from "+fmtD(P.from):"");
+  $("#mpGh").textContent="Plan – 2 weeks back to 4 months ahead";$("#mpLh").textContent="Plan list";$("#mpLs").textContent="Current and upcoming inputs, plus planner notes";
+  const ts=$("#mpTail"),tc=ts.value,ty=$("#mpType"),tyc=ty.value,st=$("#mpStat"),stc=st.value;
+  ts.innerHTML=`<option value="">All aircraft</option>`+tails.map(t=>`<option ${t===tc?"selected":""}>${t}</option>`).join("");
+  const cats=[...new Set(P.items.map(i=>i.k))].sort();
+  ty.innerHTML=`<option value="">All types</option>`+cats.map(k=>`<option ${k===tyc?"selected":""}>${esc(k)}</option>`).join("")+`<option value="__note" ${tyc==="__note"?"selected":""}>Planner notes</option>`;
+  st.innerHTML=[["","Any time"],["work","On now"],["soon","Starts in next 30 days"],["ok","Later"]].map(([v,l])=>`<option value="${v}" ${v===stc?"selected":""}>${l}</option>`).join("");
+  const hangar=x=>/^AAG|C-check|Retrofit|Bournemouth|Boscombe|Prestwick|Farnborough|Waddington/.test(x.k);
+  const nowL=P.items.filter(x=>mpNowIn(x,today)),in30=P.items.filter(x=>mpDay(x.from)>today&&dDiff(today,mpDay(x.from))<=30);
+  $("#mpStats").innerHTML=`<div class="stat"><b>${new Set(nowL.filter(hangar).map(x=>x.tail)).size}</b>aircraft in a hangar input now</div><div class="stat"><b>${new Set(nowL.filter(x=>x.k==="AOG").map(x=>x.tail)).size}</b>shown AOG today</div><div class="stat"><b>${in30.length}</b>inputs starting in 30 days</div><div class="stat"><b>${(P.notes||[]).filter(n=>n.date>=today&&dDiff(today,n.date)<=30).length}</b>planner notes in next 30 days</div>`;
+  $("#mpKey").innerHTML=[...new Map(P.items.map(i=>[i.k,i.col])).entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,c])=>`<span class="k" style="background:${esc(c)};color:${mpDk(c)?"#fff":"#0F172A"}">${esc(k)}</span>`).join("")+`<span class="k" style="background:#94A3B8;color:#fff">Flying</span><span class="k" style="background:#EAB308">NS (Prestwick colour)</span>`;
+  const start=dAdd(today,-14),end=dAdd(today,120),span=dDiff(start,end);
+  const pos=(v,e)=>{const t=mpT(v,e);if(!t)return 0;return Math.max(0,Math.min(100,(dDiff(start,t.d)+t.f)/span*100))};
+  const inWin=x=>mpDay(x.to)>=start&&mpDay(x.from)<=end;
+  const mons=[];{const d=new Date(start+"T12:00");d.setDate(1);d.setMonth(d.getMonth()+1);while(iso(d)<end){mons.push(iso(d));d.setMonth(d.getMonth()+1)}}
+  const grid=mons.map(m=>`<span class="mg" style="left:${pos(m)}%"></span>`).join("")+`<span class="now" style="left:${pos(today)}%" title="Today"></span>`;
+  const bar=x=>{const l=pos(x.from),w=pos(x.to,1)-l,lab=x.txt||x.k;return `<span class="mpb rl ${mpDk(x.col)?"dk":""} ${x.k==="AOG"||/^Parked/.test(x.k)?"hatch":""}" style="left:${l}%;width:max(${w.toFixed(2)}%,6px);background-color:${esc(x.col||"#ccc")}" title="${esc(x.tail+" · "+x.k+(x.txt?" – "+x.txt:"")+" · "+fmtD(mpDay(x.from))+" "+mpSlot(x.from)+" → "+fmtD(mpDay(x.to))+" "+mpSlot(x.to))}">${w>3?esc(lab):""}</span>`};
+  const fl=x=>{const l=pos(x.from),w=pos(x.to,1)-l;return `<span class="mpfl ${x.ns?"ns":x.omp?"omp":""}" style="left:${l}%;width:max(${w.toFixed(2)}%,3px)" title="${esc(x.tail+" flying: "+(x.txt||"planned")+" · "+fmtD(mpDay(x.from))+" → "+fmtD(mpDay(x.to)))}"></span>`};
+  const note=n=>`<span class="mpnote" style="left:calc(${pos(n.date)}% - 6px)" title="${esc(fmtD(n.date)+": "+n.txt)}">📌</span>`;
+  const evs=(P.events||[]).filter(inWin),gn=(P.notes||[]).filter(n=>!n.tail&&n.date>=start&&n.date<=end);
+  $("#mpGantt").innerHTML=`<div></div><div class="mh rl">${mons.map(m=>`<span style="left:${pos(m)}%">${new Date(m+"T12:00").toLocaleDateString("en-GB",{month:"short",year:"2-digit"})}</span>`).join("")}</div>`+
+    `<div class="tl" title="Blocks across the whole fleet and station notes">Fleet</div><div class="lane rl">${grid}${evs.map(x=>{const l=pos(x.from),w=pos(x.to,1)-l;return `<span class="mpev" style="left:${l}%;width:max(${w.toFixed(2)}%,6px)" title="${esc(x.k+" · "+fmtD(mpDay(x.from))+" → "+fmtD(mpDay(x.to)))}"></span>`}).join("")}${gn.map(note).join("")}</div>`+
+    tails.filter(t=>!tc||t===tc).map(t=>`<div class="tl">${esc(t)}</div><div class="lane rl">${grid}${P.items.filter(x=>x.tail===t&&inWin(x)).map(bar).join("")}${(P.flights||[]).filter(x=>x.tail===t&&inWin(x)).map(fl).join("")}${(P.notes||[]).filter(n=>n.tail===t&&n.date>=start&&n.date<=end).map(note).join("")}</div>`).join("");
+  $("#mpHead").innerHTML=`<tr><th>Aircraft</th><th>Type</th><th>Details</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr>`;
+  const stOf=x=>mpNowIn(x,today)?"work":dDiff(today,mpDay(x.from))<=30?"soon":"ok";
+  let rows=P.items.filter(x=>mpDay(x.to)>=today).map(x=>({tail:x.tail,k:x.k,col:x.col,txt:x.txt||"",from:x.from,to:x.to,days:dDiff(mpDay(x.from),mpDay(x.to))+1,stat:stOf(x)}))
+    .concat((P.notes||[]).filter(n=>n.date>=today).map(n=>({tail:n.tail||"Fleet",k:"__note",txt:n.txt,from:n.date,to:n.date,days:"",stat:n.date===today?"work":dDiff(today,n.date)<=30?"soon":"ok"})));
+  rows=rows.filter(r=>(!tc||r.tail===tc)&&(!tyc||r.k===tyc)&&(!stc||r.stat===stc)).sort((a,b)=>a.from.localeCompare(b.from)||a.tail.localeCompare(b.tail));
+  const SN={work:"On now",soon:"Next 30 days",ok:"Later"};
+  $("#mpBody").innerHTML=rows.map(r=>`<tr><td class="tail">${esc(r.tail)}</td><td>${r.k==="__note"?"📌 <b>Planner note</b>":`<span class="k" style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${esc(r.col)};margin-right:6px;border:1px solid rgba(0,0,0,.2)"></span><b>${esc(r.k)}</b>`}</td><td>${esc(r.txt)||"–"}</td><td>${fmtD(mpDay(r.from))} ${mpSlot(r.from)}</td><td>${fmtD(mpDay(r.to))} ${r.k==="__note"?"":mpSlot(r.to)}</td><td class="num">${r.days}</td><td><span class="mst ${r.stat}">${SN[r.stat]}</span></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Nothing matches.</td></tr>`;
+  MPR_ROWS=rows}
+function renderMPlan(){if(mpReal()){renderMPReal();return}const P=mpPlan(),today=iso(new Date()),tails=TAILS.filter(t=>t!=="Off Aircraft");
   const ts=$("#mpTail"),tc=ts.value,ty=$("#mpType"),tyc=ty.value;
   ts.innerHTML=`<option value="">All aircraft</option>`+tails.map(t=>`<option ${t===tc?"selected":""}>${t}</option>`).join("");
   ty.innerHTML=`<option value="">All checks</option>`+[...new Set(P.items.map(i=>i.k))].map(k=>`<option ${k===tyc?"selected":""}>${esc(k)}</option>`).join("");
@@ -2737,6 +2787,7 @@ function renderMPlan(){const P=mpPlan(),today=iso(new Date()),tails=TAILS.filter
 let MP_ROWS=[];
 ["mpTail","mpType","mpStat"].forEach(id=>$("#"+id).addEventListener("input",renderMPlan));
 $("#mpCsv").onclick=()=>{const q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"'$1").replace(/"/g,'""')}"`;
+  if(mpReal()){const L=[["Aircraft","Type","Details","From","From slot","To","To slot","Days","Status"].join(",")];MPR_ROWS.forEach(r=>L.push([r.tail,r.k==="__note"?"Planner note":r.k,r.txt,mpDay(r.from),mpSlot(r.from),mpDay(r.to),r.k==="__note"?"":mpSlot(r.to),r.days,r.stat].map(q).join(",")));download(`maintenance-plan-${iso(new Date())}.csv`,L.join("\n"),"text/csv");return}
   const lines=[["Aircraft","Check","Interval","Last done","Due","Remaining","Forecast date","Where","Status"].join(",")];
   MP_ROWS.forEach(i=>lines.push([i.tail,i.k,i.iv,i.last,i.due,i.rem,i.fore,i.where,i.stat].map(q).join(",")));
   download(`maintenance-plan-${iso(new Date())}.csv`,lines.join("\n"),"text/csv")};
