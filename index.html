@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126185434">
+<meta name="build" content="20261126191101">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -3166,8 +3166,14 @@ const FL_ICO={to:`<svg class="flico" viewBox="0 0 24 24" aria-label="Take off"><
   ld:`<svg class="flico" viewBox="0 0 24 24" aria-label="Landing"><path d="M2.5 19h19v2h-19v-2zm7.18-5.73l4.35 1.16 5.31 1.42c.8.21 1.62-.26 1.84-1.06.21-.8-.26-1.62-1.06-1.84l-5.31-1.42-2.76-9.02L10.12 2v8.28L5.15 8.95l-.93-2.32-1.45-.39v5.17l1.6.43 5.31 1.43z"/></svg>`};
 const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 // next take off / landing events across Line aircraft (a flight stays listed until it has landed, or 1h after take off if no landing time)
+// wall board only lists flights that take off from and land back at EGVN (Brize Norton, IATA BZZ).
+// A route is read from f.route or from the flight text ("RR4174 BZZ–RZE–BZZ", "RR4158 (at TOI)"); no route = local sortie from EGVN.
+const EGVN=c=>/^(BZZ|EGVN)$/i.test(c);
+const flRoute=f=>{if(Array.isArray(f.route)&&f.route.length)return f.route.map(String);const s=String(f.no||"");const at=s.match(/\(at\s+([A-Z]{3,4})\)/i);if(at)return[at[1]];
+  const m=s.match(/\b([A-Z]{3,4}(?:\s*[–—-]\s*[A-Z]{3,4})+)\b/);return m?m[1].split(/\s*[–—-]\s*/):[]};
+const flEGVN=f=>{const r=flRoute(f);return !r.length||(EGVN(r[0])&&EGVN(r[r.length-1]))};
 function upcomingFlights(n){const now=Date.now(),out=[];
-  TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)==="Line").forEach(t=>flightsOf(t).filter(flReal).forEach(f=>{if(!f.time&&!f.ld)return;
+  TAILS.filter(t=>t!=="Off Aircraft"&&ownerOf(t)==="Line").forEach(t=>flightsOf(t).filter(flReal).filter(flEGVN).forEach(f=>{if(!f.time&&!f.ld)return;
     const day=f.date||todayISO(),at=hm=>hm?new Date(day+"T"+hm).getTime():null;let to=at(f.time),ld=at(f.ld);if(to&&ld&&ld<to)ld+=864e5;
     const end=ld||(to?to+36e5:null);if(end&&end<now)return;
     const next=to&&to>now?"to":ld?"ld":"to",when=next==="to"?to:ld;if(!when)return;
