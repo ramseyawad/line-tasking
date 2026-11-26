@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261125202526">
+<meta name="build" content="20261126000239">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -235,6 +235,8 @@ tr:last-child td{border-bottom:0}
 .honext{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .honext .lbl{font-size:12px;font-weight:800;color:var(--mute);text-transform:uppercase}
 .honext input,.honext select{width:auto}
+.honext .switch input{width:36px!important;min-width:36px;height:20px;flex:none;padding:0}
+.honext .switch.keep{flex:1 1 100%;margin-top:2px}
 .drow{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .drow:last-child{border-bottom:0}
 .dbadge{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-weight:900;color:#fff;font-size:16px;flex:none}
@@ -1416,7 +1418,7 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
         <input id="hoOnWhy" class="hide" placeholder="Reason / signed on behalf by…">
       </div>
     </div>
-    <div class="honext"><span class="lbl">Next shift</span><select id="hoCrew"><option value="">Crew…</option><option value="A">A Shift</option><option value="B">B Shift</option><option value="C">C Shift</option><option value="D">D Shift</option></select><input type="date" id="hoDate"><select id="hoType"><option value="E">Earlies</option><option value="L">Lates</option><option value="N">Nights</option></select><label class="switch"><input type="checkbox" id="hoRoster" checked> Put next shift's people on from the roster</label></div>
+    <div class="honext"><span class="lbl">Next shift</span><select id="hoCrew"><option value="">Crew…</option><option value="A">A Shift</option><option value="B">B Shift</option><option value="C">C Shift</option><option value="D">D Shift</option></select><input type="date" id="hoDate"><select id="hoType"><option value="E">Earlies</option><option value="L">Lates</option><option value="N">Nights</option></select><label class="switch"><input type="checkbox" id="hoRoster" checked> Put next shift's people on from the roster</label><label class="switch keep"><input type="checkbox" id="hoKeep"> Keep the board exactly as it is – nothing cleared, nobody taken off</label></div>
     <div id="hoErr" class="gmsg hide" style="margin-top:12px"></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="hoCancel">Cancel</button><button class="btn pri" id="hoGo">Sign &amp; hand over</button></div>
   </div>
@@ -2979,8 +2981,8 @@ $("#hoGo").onclick=async()=>{
   // carry over unfinished work
   // carry over: the diary now holds what was done, so the next shift starts clean –
   // finished task lines come off, nobody stays assigned, and the job goes back to unmanned
-  const t0=now();
-  D.jobs.filter(j=>active(j)&&ownJob(o)(j)).forEach(j=>{
+  const t0=now(),KEEP=$("#hoKeep")?.checked;
+  if(!KEEP)D.jobs.filter(j=>active(j)&&ownJob(o)(j)).forEach(j=>{
     j.cf=(j.cf||0)+1;
     const its=items(j),keep=its.filter(it=>it.info||it.s!=="done");
     if(!keep.some(it=>!it.info)&&its.some(it=>!it.info)){ // every task done – the tile is finished and leaves the board
@@ -2994,7 +2996,8 @@ $("#hoGo").onclick=async()=>{
   const ns={id:uid(),date:nx.date,type:nx.type,crew:$("#hoCrew").value,startedAt:now(),notes:curShift(o).notes||""}; // notes carry through every shift
   if(o==="Line")D.shift=ns;else{D.shifts=D.shifts||{};D.shifts[o]=ns}
   let msg=`${o!=="Line"?o+" handed over":"Handed over"} – ${SHIFT[nx.type]} started`;
-  if(o==="Line"&&$("#hoRoster").checked&&rosterDays().includes(nx.date)){const n=applyRoster(nx.date,SHIFT_CODES[nx.type]);msg+=` · ${n} on shift from roster`}else save();
+  if(KEEP)msg+=" · board kept as it was";
+  if(!KEEP&&o==="Line"&&$("#hoRoster").checked&&rosterDays().includes(nx.date)){const n=applyRoster(nx.date,SHIFT_CODES[nx.type]);msg+=` · ${n} on shift from roster`}else save();
   closeHo();toast(msg);loadDiary();exportRecord(rec,false,win);
 };
 async function saveRecord(rec){
