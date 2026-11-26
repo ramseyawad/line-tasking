@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126000239">
+<meta name="build" content="20261126001202">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -1075,7 +1075,7 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 <!-- HISTORY -->
 <section id="tab-history" class="hide">
   <div class="card">
-    <div class="card-h"><h2>Record of work</h2><span class="sub" style="margin-left:auto">Every completed job, who worked it and for how long</span></div>
+    <div class="card-h"><h2>Record of work</h2><span class="sub" style="margin-left:auto">Every completed task, who did it and how long it took</span></div>
     <div class="filters">
       <select id="fEng"><option value="">All engineers</option></select>
       <select id="fTail"><option value="">All tails</option></select>
@@ -1087,7 +1087,7 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
     <div class="stats" id="stats"></div>
     <div class="tbl-wrap" style="padding-top:12px">
     <table>
-      <thead><tr><th>Completed</th><th>Tail</th><th>Bay</th><th>Task(s)</th><th>Engineer(s)</th><th>Raised</th><th>Duration</th></tr></thead>
+      <thead><tr><th>Completed</th><th>Tail</th><th>Bay</th><th>Task</th><th>Engineer(s)</th><th>Raised</th><th>Duration</th></tr></thead>
       <tbody id="hist"></tbody>
     </table>
     </div>
@@ -1767,7 +1767,7 @@ function items(j){
   const used=new Set();
   j.items=lines.map((t,i)=>{let o=old.findIndex((x,k)=>!used.has(k)&&x.t===t);if(o<0&&old[i]&&!used.has(i)&&!lines.includes(old[i].t))o=i;
     const info=isInfoLine(t);
-    if(o>=0){used.add(o);const r={t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[],info,cf:!!old[o].cf};if(old[o].nw&&old[o].t===t)r.nw=old[o].nw;return r}return {t,s:j.status==="done"?"done":"todo",at:null,who:[],info,cf:false}});
+    if(o>=0){used.add(o);const r={t,s:old[o].s||"todo",at:old[o].at||null,who:old[o].who||[],info,cf:!!old[o].cf};if(old[o].st)r.st=old[o].st;if(old[o].nw&&old[o].t===t)r.nw=old[o].nw;return r}return {t,s:j.status==="done"?"done":"todo",at:null,who:[],info,cf:false}});
   return j.items;
 }
 const shortName=e=>{const x=eng(e)||(D.archived||[]).find(a=>a.id===e);if(!x)return "(removed)";return x.title?x.title+" "+x.name.trim().split(/\s+/).pop():x.name};
@@ -1786,7 +1786,7 @@ function unassignItem(jobId,idx,engId){const j=job(jobId);const it=items(j)[idx]
 const ITEM={todo:{n:"Not started",i:"○",next:"work"},work:{n:"In progress",i:"▶",next:"done"},done:{n:"Done",i:"✓",next:"todo"}};
 function cycleItem(jobId,idx){
   const j=job(jobId);if(!j||j.status==="done")return;const it=items(j)[idx];if(!it||it.info)return;
-  it.s=ITEM[it.s].next;it.at=now();const t=it.at;
+  it.s=ITEM[it.s].next;it.at=now();const t=it.at;if(it.s==="work")it.st=t;else if(it.s==="todo")delete it.st;
   const ppl=it.who.length?it.who:current(j);
   if(it.s==="work"){j.started=j.started||t;j.assignments.forEach(a=>{if(!a.to&&!a.from&&ppl.includes(a.eng))a.from=t})}
   // anyone whose lines on this tile are all done stops the clock and is free again (kept as crew, not working)
@@ -2611,17 +2611,25 @@ function download(name,text,type){const a=document.createElement("a");a.href=URL
 
 /* ---------- history ---------- */
 ["#fEng","#fTail","#fFrom","#fTo","#fText"].forEach(s=>$(s).addEventListener("input",renderHistory));
+// one row per finished task line: live board first, then lines already handed over into the diary
+function histAll(){
+  const rows=[],seen=new Set(),k=(t,x,at)=>t+"|"+x+"|"+(at||"").slice(0,16);
+  D.jobs.forEach(j=>items(j).forEach(it=>{if(it.info||it.s!=="done")return;const at=it.at||j.completed;if(!at)return;
+    const ids=it.who.length?it.who:j.assignments.filter(a=>a.from).map(a=>a.eng);
+    rows.push({at,tail:j.tail,bay:j.bay||"",task:itxt(it),ids:[...new Set(ids)],who:[...new Set(ids)].map(nameOf),raised:j.created,st:it.st||null});seen.add(k(j.tail,itxt(it),at))}));
+  (DIARY||[]).forEach(r=>{const st=r.startedAt?new Date(r.startedAt):null;[...(r.done||[]),...(r.open||[])].forEach(j=>(j.items||[]).forEach(it=>{
+    if(it.info||it.s!=="done")return;const at=it.at||j.completed||r.endedAt;if(!at||(st&&it.at&&new Date(it.at)<st))return;const kk=k(j.tail,it.t,at);if(seen.has(kk))return;seen.add(kk);
+    rows.push({at,tail:j.tail,bay:j.bay||"",task:it.t,ids:[],who:(it.who&&it.who.length?it.who:(j.crew||[]).map(c=>c.n)),raised:j.created,st:null})}))});
+  return rows}
 function histRows(){
-  const fe=$("#fEng").value,ft=$("#fTail").value,ff=$("#fFrom").value,fto=$("#fTo").value,fx=$("#fText").value.toLowerCase();
-  return D.jobs.filter(j=>j.status==="done").filter(j=>{
-    const who=j.assignments.map(a=>a.eng);
-    if(fe&&!who.includes(fe))return false;
-    if(ft&&j.tail!==ft)return false;
-    const d=j.completed.slice(0,10);
-    if(ff&&d<ff)return false;if(fto&&d>fto)return false;
-    if(fx&&!(j.task+" "+j.bay).toLowerCase().includes(fx))return false;
+  const fe=$("#fEng").value,ft=$("#fTail").value,ff=$("#fFrom").value,fto=$("#fTo").value,fx=$("#fText").value.toLowerCase(),fn=fe?nameOf(fe):"";
+  return histAll().filter(r=>{
+    if(fe&&!r.ids.includes(fe)&&!r.who.includes(fn))return false;
+    if(ft&&r.tail!==ft)return false;
+    const d=iso(new Date(r.at));if(ff&&d<ff)return false;if(fto&&d>fto)return false;
+    if(fx&&!(r.task+" "+r.bay).toLowerCase().includes(fx))return false;
     return true;
-  }).sort((a,b)=>b.completed.localeCompare(a.completed));
+  }).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
 }
 function whoDid(j){
   const m={};j.assignments.filter(a=>a.from).forEach(a=>{m[a.eng]=(m[a.eng]||0)+((new Date(a.to||j.completed))-new Date(a.from))});
@@ -2633,17 +2641,17 @@ function renderHistory(){
   $("#fTail").innerHTML=`<option value="">All tails</option>`+TAILS.map(t=>`<option ${t===ft?"selected":""}>${t}</option>`).join("");
   const rows=histRows();
   const tails=new Set(rows.map(r=>r.tail)).size;
-  $("#stats").innerHTML=`<div class="stat"><b>${rows.length}</b>jobs complete</div><div class="stat"><b>${tails}</b>tails worked</div>`;
-  $("#hist").innerHTML=rows.map(j=>`<tr>
-    <td style="white-space:nowrap">${fmt(j.completed)}</td><td class="tail ${j.tail==="Off Aircraft"?"off":""}">${esc(j.tail)}</td><td>${esc(j.bay)}</td>
-    <td class="task-text">${esc(j.task)}</td>
-    <td><div class="chips">${whoDid(j).map(w=>`<span class="chip plain">${av(w.id)}${esc(w.name)} <span class="sub">${w.mins<60?w.mins+"m":Math.floor(w.mins/60)+"h"+String(w.mins%60).padStart(2,"0")}</span></span>`).join("")}</div></td>
-    <td class="sub" style="white-space:nowrap">${fmt(j.created)}</td><td>${dur(j.started||j.created,j.completed)}</td></tr>`).join("")||`<tr><td colspan="7" class="empty">No completed jobs match.</td></tr>`;
+  $("#stats").innerHTML=`<div class="stat"><b>${rows.length}</b>tasks complete</div><div class="stat"><b>${tails}</b>tails worked</div>`;
+  $("#hist").innerHTML=rows.map(r=>`<tr>
+    <td style="white-space:nowrap">${fmt(r.at)}</td><td class="tail ${r.tail==="Off Aircraft"?"off":""}">${esc(r.tail)}</td><td>${esc(r.bay)}</td>
+    <td class="task-text">${esc(r.task)}</td>
+    <td><div class="chips">${r.who.map(n=>`<span class="chip plain">${esc(n)}</span>`).join("")||'<span class="sub">–</span>'}</div></td>
+    <td class="sub" style="white-space:nowrap">${fmt(r.raised)}</td><td>${r.st?dur(r.st,r.at):"–"}</td></tr>`).join("")||`<tr><td colspan="7" class="empty">No completed tasks match.</td></tr>`;
 }
 $("#exportCsv").onclick=()=>{
   const q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"'$1").replace(/"/g,'""')}"`;
   const lines=[["Completed","Tail","Bay","Task","Engineers","Raised","Started","Duration"].join(",")];
-  histRows().forEach(j=>lines.push([fmt(j.completed),j.tail,j.bay,j.task,whoDid(j).map(w=>w.name).join("; "),fmt(j.created),fmt(j.started),dur(j.started||j.created,j.completed)].map(q).join(",")));
+  histRows().forEach(r=>lines.push([fmt(r.at),r.tail,r.bay,r.task,r.who.join("; "),fmt(r.raised),fmt(r.st),r.st?dur(r.st,r.at):""].map(q).join(",")));
   download(`work-record-${new Date().toISOString().slice(0,10)}.csv`,lines.join("\n"),"text/csv");
 };
 
@@ -2912,7 +2920,7 @@ const crewLbl=sh=>sh?.crew?esc(sh.crew)+" Shift":"";
 // Earlies → Lates (same day, 18:00) → Nights (same day, 22:00) → next day's Earlies (06:00)
 const nextShift=(sh)=>{const d=new Date(sh.date+"T12:00");if(sh.type==="N")d.setDate(d.getDate()+1);return{date:iso(d),type:{E:"L",L:"N",N:"E"}[sh.type]}};
 let DIARY=[];
-async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary();if(!$("#tab-stats").classList.contains("hide"))renderStats()}
+async function loadDiary(){DIARY=window.__waCloud?.listDiary?await window.__waCloud.listDiary():(D.diary||[]);renderShiftBar();if(!$("#tab-diary").classList.contains("hide"))renderDiary();if(!$("#tab-stats").classList.contains("hide"))renderStats();if(!$("#tab-history").classList.contains("hide"))renderHistory()}
 const tm=iso=>iso?new Date(iso).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"";
 const dlong=ds=>new Date(ds+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
 function renderShiftBar(){
