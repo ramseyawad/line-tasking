@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126024209">
+<meta name="build" content="20261126024445">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -3056,13 +3056,15 @@ function curShift(o="Line"){
 const SHO=()=>(typeof OWNV==="string"&&OWNV&&OWNV!=="All")?OWNV:"Line"; // whose shift the shift bar, notes, export and handover are working on
 const ownJob=o=>j=>ownerOf(j.tail)===o;
 // admins can edit every owner's aircraft; everyone else can see all but only edit Line
-const isAdmin=()=>!window.__waCloud||window.__waCloud.me?.()?.role==="admin";
+const realAdmin=()=>!window.__waCloud||window.__waCloud.me?.()?.role==="admin";
+const isAdmin=()=>realAdmin()&&!SLEV; // SLE view: an admin sees exactly what a (non-admin) SLE sees
 // each user belongs to a section (an owner – Line, AAG, …); they can edit that section's aircraft, admins can edit all
 const secOf=u=>(D.sec||{})[u]||"Line";
 const mySec=()=>window.__waCloud?secOf(window.__waCloud.me?.()?.username||""):"Line";
 // AIOC: a point of contact for every section. Real AIOC users get it from their position; Line Control / SLE / admins can preview it.
 let AIOCV=false;try{AIOCV=localStorage.getItem("wa-aiocv")==="1"}catch(e){}
 let MGV=false;try{MGV=localStorage.getItem("wa-mgv")==="1"}catch(e){}
+let SLEV=false;try{SLEV=localStorage.getItem("wa-slev")==="1"}catch(e){}
 // AIOC is a section (not an aircraft owner) – anyone in it gets the AIOC view
 const isAIOC=()=>AIOCV||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC");
 // Engineer view: anyone signed in who isn't admin / Line Control / SLE / AIOC. They see the tiles they're tasked on,
@@ -3098,7 +3100,7 @@ const POSITIONS=["Line Control","SLE","Line Walker","B1","B2","A cert"];
 const myUser=()=>window.__waCloud?.me?.()?.username||"";
 const POS_DEF={ramsey:"Line Control",kev:"SLE"}; // starting positions until an admin changes them in Users
 const posOf=u=>(D.pos||{})[u]??POS_DEF[u]??"";
-const myPos=()=>posOf(myUser());
+const myPos=()=>SLEV&&realAdmin()?"SLE":posOf(myUser());
 const realFlight=()=>isAdmin()||["SLE","Line Control"].includes(myPos());
 const canFlight=()=>!isAIOC()&&!engMode()&&!isMgmt()&&realFlight();
 const isLW=()=>!!window.__waCloud&&!isAdmin()&&!AIOCV&&!MGV&&!ENGV&&myPos()==="Line Walker"; // line walker: can set current + required role on any aircraft
@@ -3418,8 +3420,8 @@ if(location.hash==="#display"){$("#display").classList.remove("hide")}
 function applyAIOC(){window.__waPriv=realFlight();const a=isAIOC();document.body.classList.toggle("aioc",a);document.body.classList.toggle("mgmt",isMgmt());
   const ev=engMode();document.body.classList.toggle("engv",ev);
   const es=$("#engvSel");if(es){$("#viewsWrap").classList.toggle("hide",!realFlight());const list=D.engineers.filter(e=>isOn(e)||e.id===ENGV).sort(byTrade);
-    const h=`<option value="">My normal view</option><option value="__aioc">AIOC view</option><option value="__mgmt">Managers view</option><optgroup label="Engineer views (on shift)">`+list.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")+`</optgroup>`;
-    if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=AIOCV?"__aioc":MGV?"__mgmt":ENGV||"";
+    const h=`<option value="">My normal view</option><option value="__aioc">AIOC view</option><option value="__mgmt">Managers view</option><option value="__sle">SLE view</option><optgroup label="Engineer views (on shift)">`+list.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")+`</optgroup>`;
+    if(es.dataset.h!==h){es.innerHTML=h;es.dataset.h=h}es.value=AIOCV?"__aioc":MGV?"__mgmt":SLEV?"__sle":ENGV||"";
     $("#viewsWrap").classList.toggle("on",AIOCV||!!ENGV);$("#viewsWrap .l").textContent=AIOCV?"AIOC view":ENGV?engName(ENGV):"Views"}
   let eb=$("#engBan");if(ev&&!eb){eb=document.createElement("div");eb.id="engBan";$("#acWrap").prepend(eb)}
   if(eb){eb.classList.toggle("hide",!ev);if(ev){const me=myEng(),nm=me?engName(me):"";eb.innerHTML=ENGV&&realFlight()?`<b>Engineer view</b> – what <b>${esc(nm)}</b> sees: just the aircraft and tasks they're on. <button class="btn sm" id="engExit">Exit engineer view</button>`
@@ -3430,7 +3432,9 @@ function applyAIOC(){window.__waPriv=realFlight();const a=isAIOC();document.body
   if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats","fplan","tprog","mplan"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
 function setENGV(id){ENGV=id||"";try{localStorage.setItem("wa-engv",ENGV)}catch(e){}if(ENGV&&AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(e){}}EXP.clear();render();window.scrollTo(0,0);toast(ENGV?"Engineer view – "+engName(ENGV):"Back to the normal view")}
 function setMGV(v){MGV=v;try{localStorage.setItem("wa-mgv",v?"1":"0")}catch(e){}if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}if(ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(_){}}}EXP.clear();render();window.scrollTo(0,0);toast(v?"Managers view – what management see (read only apart from sentencing)":"Back to the normal view")}
-document.addEventListener("change",e=>{if(e.target.id!=="engvSel")return;const v=e.target.value;if(v==="__mgmt"){setMGV(true);return}if(MGV){MGV=false;try{localStorage.setItem("wa-mgv","0")}catch(_){}if(!v){setMGV(false);return}}if(v==="__aioc")setAIOCV(true);else if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}setENGV(v)}else{if(AIOCV)setAIOCV(false);else setENGV("")}});
+function setSLEV(v){SLEV=v;try{localStorage.setItem("wa-slev",v?"1":"0")}catch(e){}if(v){[["wa-aiocv",()=>AIOCV=false],["wa-mgv",()=>MGV=false]].forEach(([k,f])=>{f();try{localStorage.setItem(k,"0")}catch(_){}});if(ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(_){}}}
+  $("#navUsers")?.classList.toggle("hide",!isAdmin());EXP.clear();render();window.scrollTo(0,0);toast(v?"SLE view – what the SLE sees":"Back to the normal view")}
+document.addEventListener("change",e=>{if(e.target.id!=="engvSel")return;const v=e.target.value;if(v==="__sle"){setSLEV(true);return}if(SLEV){if(!v){setSLEV(false);return}SLEV=false;try{localStorage.setItem("wa-slev","0")}catch(_){}$("#navUsers")?.classList.toggle("hide",!isAdmin())}if(v==="__mgmt"){setMGV(true);return}if(MGV){MGV=false;try{localStorage.setItem("wa-mgv","0")}catch(_){}if(!v){setMGV(false);return}}if(v==="__aioc")setAIOCV(true);else if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}setENGV(v)}else{if(AIOCV)setAIOCV(false);else setENGV("")}});
 document.addEventListener("click",e=>{if(e.target.closest("#engExit"))setENGV("")});
 function setAIOCV(v){if(v&&ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(e){}}AIOCV=v;try{localStorage.setItem("wa-aiocv",v?"1":"0")}catch(e){}EXP.clear();if(!v){try{OWNV=localStorage.getItem("wa-ownv")||""}catch(e){OWNV=""}}render();window.scrollTo(0,0);toast(v?"AIOC view – what the AIOC see":"Back to the normal view")}
 document.addEventListener("click",e=>{if(e.target.closest("#aiocBtn"))setAIOCV(!AIOCV);else if(e.target.closest("#aiocExit"))setAIOCV(false)});
@@ -3492,7 +3496,7 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#userBtn").classList.remove("hide");$("#userName").textContent=prof.full_name||prof.username;
     $("#userAv").textContent=(prof.full_name||prof.username).replace(/^(AS1\(T\)|AS1|SAC|Cpl|Sgt|FS|Flt\s*Lt|Mr|Mrs|Ms|CT)\.?\s+/i,"").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
     $("#userAv").style.background="#2563EB";
-    $("#navUsers").classList.toggle("hide",prof.role!=="admin");
+    $("#navUsers").classList.toggle("hide",prof.role!=="admin"||SLEV);
     await pull(true);loadDiary();
     if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){const remote=fix(p.new.data);const dirty=BASED&&stableJ(D)!==stableJ(BASED);
       // someone else saved: fold their change in, keeping anything this device hasn't sent yet
