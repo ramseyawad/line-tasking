@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126005942">
+<meta name="build" content="20261126014526">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -24,6 +24,11 @@ header{background:linear-gradient(90deg,var(--navy),#14233C);color:#fff;height:6
 .logo svg.emtlogo{width:100%;height:100%;display:block;stroke:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
 .brand h1{font-size:16px;margin:0;letter-spacing:.2px;line-height:1.1}
 .brand small{display:block;font-size:11px;color:#94A3B8;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+.brand h1,.brand small{white-space:nowrap}
+@media(max-width:2100px){header .brand small{display:none}}
+@media(min-width:761px){header nav{min-width:0;overflow-x:auto;scrollbar-width:none;flex:0 1 auto}header nav::-webkit-scrollbar{display:none}.hdr-right>*{flex-shrink:0;white-space:nowrap}}
+@media(min-width:761px) and (max-width:2200px){header{gap:12px;padding:0 14px}nav button{padding:7px 9px;gap:5px;font-size:13.5px}.hdr-right{gap:8px}.hdr-right .hbtn .l{display:none}.hdr-right .hbtn{padding:7px 9px}}
+@media(min-width:761px) and (max-width:1600px){nav button svg{display:none}}
 nav{display:flex;gap:2px;background:rgba(255,255,255,.06);padding:4px;border-radius:10px}
 nav button{display:flex;align-items:center;gap:7px;background:transparent;color:#B6C2D4;border:0;padding:7px 14px;border-radius:7px;font:inherit;font-weight:600;cursor:pointer}
 nav button:hover{color:#fff}
@@ -834,7 +839,7 @@ fieldset[disabled] .line-add,fieldset[disabled] .addeng,fieldset[disabled] .addm
 #aiocBan{background:#ECFEFF;border-bottom:1px solid #A5F3FC;color:#155E75;font-size:13px;padding:7px 18px;display:flex;gap:10px;align-items:center}
 #aiocBan .btn{margin-left:auto}
 #aiocBtn.on{background:#0E7490;color:#fff;border-color:#0E7490}
-body.aioc nav button[data-tab]:not([data-tab=board]):not([data-tab=stats]),
+body.aioc nav button[data-tab]:not([data-tab=board]):not([data-tab=stats]):not([data-tab=fplan]):not([data-tab=tprog]),
 body.aioc .kpis,body.aioc #tradeStrip,body.aioc #headSw,body.aioc #pills,body.aioc #openNew,body.aioc #teamOpen,body.aioc #layOpen,body.aioc #seenAll,
 body.aioc #shareAll,body.aioc .jobs-h .search,body.aioc #openDisplay,body.aioc #notesCard,body.aioc #shiftBar,body.aioc .notesbtn,body.aioc .newrib,body.aioc #team,body.aioc #teamBg,
 body.aioc .ct-crs,body.aioc .crsbtn,body.aioc [data-share],body.aioc #acRaise,body.aioc #sxKpis,body.aioc .sx-note,body.aioc #sxCsv,
@@ -905,6 +910,22 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .docbox:not(.set) .doch{background:#94A3B8}
 .doclink{flex:1;min-width:0;text-align:left;text-decoration:none;display:block;background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:#1D4ED8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .docnone{flex:1}
+.demotag{margin-left:8px;font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#B45309;background:#FEF3C7;border:1px solid #FCD34D;border-radius:99px;padding:2px 8px}
+.fpkey{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+.fpkey .k{font-size:12px;font-weight:700;padding:3px 9px;border-radius:7px}
+.k-loc,.fpf.loc{background:#E0F2FE;color:#075985;border-color:#7DD3FC}.k-rte,.fpf.rte{background:#EDE9FE;color:#5B21B6;border-color:#C4B5FD}.k-role,.fpf.role{background:#FFEDD5;color:#9A3412;border-color:#FDBA74}
+.fpwrap{overflow:auto;max-height:calc(100vh - 230px)}
+.fptbl{border-collapse:separate;border-spacing:0;font-size:12px}
+.fptbl th,.fptbl td{border-right:1px solid #EEF2F7;border-bottom:1px solid #EEF2F7;padding:4px;vertical-align:top;min-width:92px}
+.fptbl thead th{position:sticky;top:0;background:#F8FAFC;z-index:2;font-weight:800;text-align:center;white-space:nowrap}
+.fptbl thead th.we{background:#F1F5F9}.fptbl thead th.td{background:#DBEAFE;color:#1D4ED8}
+.fptbl th.tl{position:sticky;left:0;background:#fff;z-index:3;min-width:64px;text-align:left;font-size:13px}
+.fptbl thead th.tl{z-index:4;background:#F8FAFC}
+.fptbl td.we{background:#FAFBFC}.fptbl td.td{background:#F5F9FF}
+.fpf{display:block;width:100%;text-align:left;border:1px solid;border-radius:6px;padding:3px 5px;margin-bottom:3px;font:inherit;font-size:11px;line-height:1.25;cursor:pointer}
+.fpf b{display:block;font-size:11.5px}.fpf:hover{filter:brightness(.96)}
+.tptbl td,.tptbl th{white-space:nowrap}.tptbl td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tptbl tr.flash td{background:#FEF9C3}
 #rolePick{position:fixed;z-index:9999;display:none;flex-direction:column;overflow:auto;background:#fff;border:1px solid #CBD5E1;border-radius:10px;box-shadow:0 12px 30px rgba(15,23,42,.18);padding:4px}
 #rolePick.show{display:flex}
 #rolePick button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:0;background:none;padding:7px 10px;border-radius:7px;cursor:pointer;font:inherit}
@@ -971,6 +992,8 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </svg></div><div><h1>A400 EMT</h1><small>Engineering management tool</small></div></div>
   <nav>
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
+    <button data-tab="fplan"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 14h4M13 17h4"/></svg>Flight planning</button>
+    <button data-tab="tprog"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Task programme</button>
     <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
     <button data-tab="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History</button>
     <button data-tab="stats"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-8"/></svg>Stats</button>
@@ -1043,6 +1066,26 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </section>
 
 <!-- SHIFT -->
+<section id="tab-fplan" class="hide">
+  <div class="card">
+    <div class="card-h"><h2>Flight planning</h2><span class="demotag">Demo data</span><span class="sub" style="margin-left:auto" id="fpSub"></span></div>
+    <div class="fpkey"><span class="k k-loc">Local / training</span><span class="k k-rte">Route</span><span class="k k-role">Role sortie</span><span class="sub">Tap a flight for its details in the task programme</span></div>
+    <div class="fpwrap"><table class="fptbl" id="fpTbl"></table></div>
+  </div>
+</section>
+<section id="tab-tprog" class="hide">
+  <div class="card">
+    <div class="card-h"><h2>Task programme</h2><span class="demotag">Demo data</span><span class="sub" style="margin-left:auto">Every planned flight – route, times, requested hours and role</span></div>
+    <div class="filters">
+      <select id="tpTail"><option value="">All aircraft</option></select>
+      <input type="date" id="tpFrom" title="From"><input type="date" id="tpTo" title="To">
+      <input id="tpText" placeholder="Search flight / place / role">
+      <button class="btn" id="tpCsv">Export CSV</button>
+    </div>
+    <div class="stats" id="tpStats"></div>
+    <div class="tbl-wrap" style="padding-top:12px"><table class="tptbl"><thead><tr><th>Date</th><th>Aircraft</th><th>Flight</th><th>Role</th><th>From</th><th>Take-off</th><th>To</th><th>Landing</th><th>FH</th><th>EH</th><th>LG</th><th>FC</th><th>TG</th><th>DY</th></tr></thead><tbody id="tpBody"></tbody></table></div>
+  </div>
+</section>
 <section id="tab-shift" class="hide">
   <div class="grid" style="grid-template-columns:minmax(0,1fr) 320px">
     <div class="card">
@@ -1604,7 +1647,7 @@ function setOnShift(en,on){en.onShift=on;if(!on){const ts=now();D.jobs.filter(ac
 /* ---------- tabs & clock ---------- */
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{window.scrollTo(0,0);
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
-  ["board","shift","history","stats","info","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="diary")loadDiary();
+  ["board","fplan","tprog","shift","history","stats","info","diary","users"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));if(b.dataset.tab==="fplan")renderFPlan();if(b.dataset.tab==="tprog")renderTProg();if(b.dataset.tab==="diary")loadDiary();
   render();loadDiary();
 });
 const tick=()=>{const d=new Date();$("#clock").textContent=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});if(D.shift)$("#shiftName").textContent=(D.shift.crew?D.shift.crew+" Shift · ":"")+SHIFT_NAME[D.shift.type]+" · "+new Date(D.shift.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});const dt=document.querySelector(".db-title small");if(dt&&D.shift)dt.textContent=(D.shift.crew?D.shift.crew+" SHIFT · ":"")+SHIFT_NAME[D.shift.type].toUpperCase()};
@@ -2529,6 +2572,57 @@ document.addEventListener("change",e=>{const sel=e.target.closest("[data-geadd]"
   j.ges={...(j.ges||{})};const g=gesOf(j,it.t);if(!g.includes(n))j.ges[it.t]=[...g,n];save()},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-geun]");if(!b)return;e.preventDefault();e.stopPropagation();const [id,ix,...rest]=b.dataset.geun.split("|"),n=rest.join("|"),j=job(id);if(!j||!canEdit(ownerOf(j.tail)))return;
   const it=items(j)[+ix];if(!it)return;j.ges={...(j.ges||{})};const g=gesOf(j,it.t).filter(x=>x!==n);if(g.length)j.ges[it.t]=g;else delete j.ges[it.t];save()},true);
+/* ---------- flight planning + task programme (made-up demo plan: same answer every time for a given aircraft and day) ---------- */
+const FP_PLACES={EGVN:"Brize Norton",EGQS:"Lossiemouth",EGXE:"Leeming",EGWU:"Northolt",LCRA:"Akrotiri",LXGB:"Gibraltar",EGYP:"Mount Pleasant",FHAW:"Ascension",ETAR:"Ramstein",OTBH:"Al Udeid",KDOV:"Dover AFB",LIPA:"Aviano",EKVD:"Vojens"};
+const FP_ROUTES=[["LCRA",4.5],["LXGB",3],["ETAR",1.8],["OTBH",7],["LIPA",2.6],["EKVD",1.9],["KDOV",8.2],["FHAW",8.5]];
+const FP_ROLES=["ANY","CS00-00","UK STD","CDS 1","CDS 2","LLP 1","LLP 2","HAAD 1","Light Stores Role 1","MMP 1","Medical"];
+function fpRng(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+  return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return((h^=h>>>16)>>>0)/4294967296}}
+const fpAdd=(d,n)=>{const x=new Date(d+"T12:00");x.setDate(x.getDate()+n);return iso(x)};
+const fpHM=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(Math.round(m%60)).padStart(2,"0");
+const FP_DAYS=30;
+let FP_CACHE=null;
+function fpPlan(){const start=iso(new Date());if(FP_CACHE&&FP_CACHE.start===start)return FP_CACHE.list;
+  const tails=TAILS.filter(t=>t!=="Off Aircraft"),list=[];let away={};
+  for(let n=0;n<FP_DAYS;n++){const day=fpAdd(start,n),dow=new Date(day+"T12:00").getDay();
+    tails.forEach((t,ti)=>{const R=fpRng(t+"|"+day);
+      if(away[t]&&away[t].back>day)return;                       // still down route
+      if(away[t]&&away[t].back===day){const a=away[t];delete away[t];         // the return leg
+        const dep=6*60+Math.floor(R()*8)*30,fh=a.fh+Math.round((R()-.5)*6)/10;
+        list.push(fpFlight(t,day,"RRR"+(4000+Math.floor(R()*900)),a.role,a.to,"EGVN",dep,fh,R,"rte"));return}
+      const p=(dow===0||dow===6)?.12:.42;if(R()>p)return;
+      const kind=R(),dep=(7+Math.floor(R()*11))*60+(R()<.5?0:30);
+      if(kind<.55){const fh=Math.round((1.5+R()*2.5)*10)/10,role=R()<.6?"ANY":FP_ROLES[1+Math.floor(R()*(FP_ROLES.length-1))];
+        list.push(fpFlight(t,day,(role==="ANY"?"ASCOT":"TANGO")+(10+Math.floor(R()*89)),role,"EGVN","EGVN",dep,fh,R,role==="ANY"?"loc":"role"))}
+      else{const [to,fh0]=FP_ROUTES[Math.floor(R()*FP_ROUTES.length)],fh=Math.round((fh0+(R()-.5)*.6)*10)/10,role=R()<.5?"UK STD":"CS00-00",stay=fh0>5?2+Math.floor(R()*2):1+Math.floor(R()*2);
+        list.push(fpFlight(t,day,"RRR"+(4000+Math.floor(R()*900)),role,"EGVN",to,dep,fh,R,"rte"));away[t]={to,fh:fh0,role,back:fpAdd(day,stay)}}});}
+  FP_CACHE={start,list};return list}
+function fpFlight(tail,date,no,role,from,to,dep,fh,R,kind){const loc=from===to,tg=loc?Math.floor(R()*7):0,ld=loc?1+Math.floor(R()*3):1;
+  return{id:tail+"-"+date+"-"+no,tail,date,no,role,from,to,dep:fpHM(dep),arr:fpHM(dep+fh*60),fh:fh.toFixed(1),eh:(fh+.3+Math.round(R()*3)/10).toFixed(1),lg:ld,fc:ld,tg,dy:loc&&R()<.35?1+Math.floor(R()*2):0,kind,next:dep+fh*60>=1440}}
+const fpPlace=c=>FP_PLACES[c]?FP_PLACES[c]+" ("+c+")":c;
+function renderFPlan(){const l=fpPlan(),start=iso(new Date()),days=[...Array(FP_DAYS)].map((_,i)=>fpAdd(start,i)),tails=TAILS.filter(t=>t!=="Off Aircraft");
+  const by={};l.forEach(f=>{(by[f.tail+"|"+f.date]=by[f.tail+"|"+f.date]||[]).push(f)});
+  const we=d=>[0,6].includes(new Date(d+"T12:00").getDay());
+  $("#fpSub").textContent=`${l.length} flights · ${tails.length} aircraft · ${new Date(start+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${new Date(days.at(-1)+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
+  $("#fpTbl").innerHTML=`<thead><tr><th class="tl">Aircraft</th>${days.map((d,i)=>`<th class="${we(d)?"we":""} ${i===0?"td":""}">${new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</th>`).join("")}</tr></thead><tbody>`
+    +tails.map(t=>`<tr><th class="tl">${esc(t)}</th>${days.map((d,i)=>`<td class="${we(d)?"we":""} ${i===0?"td":""}">${(by[t+"|"+d]||[]).map(f=>`<button type="button" class="fpf ${f.kind}" data-fpgo="${esc(f.id)}" title="${esc(f.no)} · ${esc(fpPlace(f.from))} → ${esc(fpPlace(f.to))} · role ${esc(f.role)}"><b>${esc(f.no)}</b>${esc(f.dep)}–${esc(f.arr)}${f.next?"+1":""}<br>${f.from===f.to?"Local":esc(f.from)+"→"+esc(f.to)} · ${esc(f.role)}</button>`).join("")}</td>`).join("")}</tr>`).join("")+`</tbody>`}
+let TP_FLASH=null;
+function tpRows(){const ft=$("#tpTail").value,fa=$("#tpFrom").value,fb=$("#tpTo").value,fx=$("#tpText").value.toLowerCase();
+  return fpPlan().filter(f=>(!ft||f.tail===ft)&&(!fa||f.date>=fa)&&(!fb||f.date<=fb)&&(!fx||[f.no,f.role,f.from,f.to,fpPlace(f.from),fpPlace(f.to)].join(" ").toLowerCase().includes(fx)))
+    .sort((a,b)=>(a.date+a.dep).localeCompare(b.date+b.dep)||a.tail.localeCompare(b.tail))}
+function renderTProg(){const sel=$("#tpTail"),cur=sel.value;sel.innerHTML=`<option value="">All aircraft</option>`+TAILS.filter(t=>t!=="Off Aircraft").map(t=>`<option ${t===cur?"selected":""}>${t}</option>`).join("");
+  if(!$("#tpFrom").value&&!$("#tpTo").value&&!TP_FLASH){$("#tpFrom").value=iso(new Date());$("#tpTo").value=fpAdd(iso(new Date()),6)}
+  const r=tpRows(),sum=k=>r.reduce((a,f)=>a+ +f[k],0);
+  $("#tpStats").innerHTML=`<div class="stat"><b>${r.length}</b>flights</div><div class="stat"><b>${sum("fh").toFixed(1)}</b>FH requested</div><div class="stat"><b>${sum("eh").toFixed(1)}</b>EH requested</div><div class="stat"><b>${sum("lg")}</b>landings</div><div class="stat"><b>${sum("tg")}</b>touch &amp; goes</div>`;
+  $("#tpBody").innerHTML=r.map(f=>`<tr data-fpid="${esc(f.id)}" class="${TP_FLASH===f.id?"flash":""}"><td>${new Date(f.date+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</td><td class="tail">${esc(f.tail)}</td><td><b>${esc(f.no)}</b></td><td>${esc(f.role)}</td><td>${esc(fpPlace(f.from))}</td><td>${esc(f.dep)}</td><td>${esc(fpPlace(f.to))}</td><td>${esc(f.arr)}${f.next?" (+1)":""}</td><td class="num">${f.fh}</td><td class="num">${f.eh}</td><td class="num">${f.lg}</td><td class="num">${f.fc}</td><td class="num">${f.tg}</td><td class="num">${f.dy}</td></tr>`).join("")||`<tr><td colspan="14" class="empty">No flights match.</td></tr>`;
+  if(TP_FLASH){const tr=document.querySelector(`#tpBody tr[data-fpid="${CSS.escape(TP_FLASH)}"]`);tr?.scrollIntoView({block:"center"});TP_FLASH=null}}
+["tpTail","tpFrom","tpTo","tpText"].forEach(id=>$("#"+id).addEventListener("input",renderTProg));
+document.addEventListener("click",e=>{const b=e.target.closest("[data-fpgo]");if(!b)return;const f=fpPlan().find(x=>x.id===b.dataset.fpgo);if(!f)return;
+  TP_FLASH=f.id;$("#tpTail").value="";$("#tpText").value="";$("#tpFrom").value=f.date;$("#tpTo").value=fpAdd(f.date,6);document.querySelector('nav button[data-tab="tprog"]').click()});
+$("#tpCsv").onclick=()=>{const q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"'$1").replace(/"/g,'""')}"`;
+  const lines=[["Date","Aircraft","Flight","Role","From","Take-off","To","Landing","FH","EH","LG","FC","TG","DY"].join(",")];
+  tpRows().forEach(f=>lines.push([f.date,f.tail,f.no,f.role,fpPlace(f.from),f.dep,fpPlace(f.to),f.arr+(f.next?" (+1)":""),f.fh,f.eh,f.lg,f.fc,f.tg,f.dy].map(q).join(",")));
+  download(`task-programme-${iso(new Date())}.csv`,lines.join("\n"),"text/csv")};
 /* ---------- role picker: tap a role box to get the full list (typing filters it) ---------- */
 const RP_OPTS=()=>[...document.querySelectorAll("#roleList option")].map(o=>({v:o.value,d:o.textContent}));
 let RP_IN=null;
@@ -3235,7 +3329,7 @@ function applyAIOC(){window.__waPriv=realFlight();const a=isAIOC();document.body
   const b=$("#aiocBtn");if(b){b.classList.toggle("hide",true||!realFlight()||(!!window.__waCloud&&!isAdmin()&&mySec()==="AIOC"));b.classList.toggle("on",AIOCV);b.querySelector(".l").textContent=AIOCV?"Exit AIOC view":"AIOC view"}
   let bn=$("#aiocBan");if(a&&!bn){bn=document.createElement("div");bn.id="aiocBan";$("#acWrap").prepend(bn)}if(bn){bn.classList.toggle("hide",!a);bn.innerHTML=AIOCV?`<b>AIOC view</b> – this is what the AIOC see. You can try their edits here. <button class="btn sm" id="aiocExit">Exit AIOC view</button>`:`<b>AIOC</b> – all aircraft and who they belong to. Tasks show as a count; lines Line Control highlight to you appear in full.`}
   if(ev){const on=document.querySelector("nav button.on");if(on&&on.dataset.tab!=="board")document.querySelector('nav button[data-tab="board"]').click()}
-  if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
+  if(a){const on=document.querySelector("nav button.on");if(on&&!["board","stats","fplan","tprog"].includes(on.dataset.tab))document.querySelector('nav button[data-tab="board"]').click()}}
 function setENGV(id){ENGV=id||"";try{localStorage.setItem("wa-engv",ENGV)}catch(e){}if(ENGV&&AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(e){}}EXP.clear();render();window.scrollTo(0,0);toast(ENGV?"Engineer view – "+engName(ENGV):"Back to the normal view")}
 function setMGV(v){MGV=v;try{localStorage.setItem("wa-mgv",v?"1":"0")}catch(e){}if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}if(ENGV){ENGV="";try{localStorage.setItem("wa-engv","")}catch(_){}}}EXP.clear();render();window.scrollTo(0,0);toast(v?"Managers view – what management see (read only apart from sentencing)":"Back to the normal view")}
 document.addEventListener("change",e=>{if(e.target.id!=="engvSel")return;const v=e.target.value;if(v==="__mgmt"){setMGV(true);return}if(MGV){MGV=false;try{localStorage.setItem("wa-mgv","0")}catch(_){}if(!v){setMGV(false);return}}if(v==="__aioc")setAIOCV(true);else if(v){if(AIOCV){AIOCV=false;try{localStorage.setItem("wa-aiocv","0")}catch(_){}}setENGV(v)}else{if(AIOCV)setAIOCV(false);else setENGV("")}});
