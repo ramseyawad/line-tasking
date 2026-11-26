@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126023839">
+<meta name="build" content="20261126024209">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -911,6 +911,9 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .doclink{flex:1;min-width:0;text-align:left;text-decoration:none;display:block;background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:#1D4ED8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .docnone{flex:1}
 #pills,#openNew{display:none!important}
+nav .ns{display:none}
+@media(min-width:761px) and (max-width:1750px){nav .nl{display:none}nav .ns{display:inline}}
+@media(min-width:761px) and (max-width:1200px){header{height:auto;flex-wrap:wrap;padding:8px 14px;row-gap:8px}header nav{order:3;flex:1 1 100%;justify-content:space-between}header nav button{flex:1;justify-content:center}}
 .demotag{margin-left:8px;font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#B45309;background:#FEF3C7;border:1px solid #FCD34D;border-radius:99px;padding:2px 8px}
 .fpkey{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
 .fpkey .k{font-size:12px;font-weight:700;padding:3px 9px;border-radius:7px}
@@ -1004,13 +1007,13 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </svg></div><div><h1>A400 EMT</h1><small>Engineering management tool</small></div></div>
   <nav>
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
-    <button data-tab="fplan"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 14h4M13 17h4"/></svg>Flight planning</button>
-    <button data-tab="tprog"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Task programme</button>
-    <button data-tab="mplan"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>Maintenance plan</button>
-    <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
+    <button data-tab="fplan"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 14h4M13 17h4"/></svg><span class="nl">Flight planning</span><span class="ns">Flights</span></button>
+    <button data-tab="tprog"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg><span class="nl">Task programme</span><span class="ns">Programme</span></button>
+    <button data-tab="mplan"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span class="nl">Maintenance plan</span><span class="ns">Maint</span></button>
+    <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nl">Shift list</span><span class="ns">Shift</span></button>
     <button data-tab="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History</button>
     <button data-tab="stats"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-8"/></svg>Stats</button>
-    <button data-tab="info"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Useful info</button>
+    <button data-tab="info"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><span class="nl">Useful info</span><span class="ns">Info</span></button>
     <button data-tab="diary"><svg class="i" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M8 7h8M8 11h6"/></svg>Diary</button>
     <button data-tab="users" id="navUsers" class="hide"><svg class="i" viewBox="0 0 24 24"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users<i class="nbadge hide" id="reqBadge">0</i></button>
   </nav>
