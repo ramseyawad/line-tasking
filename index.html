@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126024445">
+<meta name="build" content="20261126180305">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -910,6 +910,10 @@ body.engv #nj label:has(#nPri),body.engv #nj label:has(#nBay),body.engv #nSt,bod
 .docbox:not(.set) .doch{background:#94A3B8}
 .doclink{flex:1;min-width:0;text-align:left;text-decoration:none;display:block;background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:#1D4ED8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .docnone{flex:1}
+#demoBar{position:sticky;top:0;z-index:30;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:7px 16px;background:#7C2D12;color:#FFEDD5;font-size:13px}
+#demoBar b{background:#FDBA74;color:#7C2D12;border-radius:6px;padding:2px 8px;letter-spacing:.06em}
+#demoBar button,#demoBar a{margin-left:auto;font:inherit;font-weight:700;color:#7C2D12;background:#FFEDD5;border:0;border-radius:7px;padding:4px 10px;cursor:pointer;text-decoration:none}
+#demoBar a{margin-left:0}
 #pills,#openNew{display:none!important}
 nav .ns{display:none}
 @media(min-width:761px) and (max-width:1750px){nav .nl{display:none}nav .ns{display:inline}}
@@ -1561,7 +1565,8 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </div>
 <script>
 (()=>{
-const KEY="wa-data-v1";
+const DEMO=/[?&]demo\b/.test(location.search); // demo copy: a frozen snapshot of the board, never saved back to the live one
+const KEY=DEMO?"wa-demo-v1":"wa-data-v1";
 const TAILS=[...Array(22)].map((_,i)=>"ZM"+(400+i)).concat(["Off Aircraft"]);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -2721,6 +2726,11 @@ $("#mpCsv").onclick=()=>{const q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"
   const lines=[["Aircraft","Check","Interval","Last done","Due","Remaining","Forecast date","Where","Status"].join(",")];
   MP_ROWS.forEach(i=>lines.push([i.tail,i.k,i.iv,i.last,i.due,i.rem,i.fore,i.where,i.stat].map(q).join(",")));
   download(`maintenance-plan-${iso(new Date())}.csv`,lines.join("\n"),"text/csv")};
+/* ---------- demo copy banner ---------- */
+function demoBanner(){if(!DEMO||$("#demoBar"))return;const b=document.createElement("div");b.id="demoBar";
+  b.innerHTML=`<b>DEMO COPY</b><span>${esc(D.__demo||"Frozen board")} – changes here stay on this device and never touch the live board</span><button type="button" id="demoReset">Reset demo</button><a href="./">Open live board</a>`;
+  document.body.prepend(b);$("#demoReset").onclick=()=>{if(!confirm("Put the demo back to the original snapshot?"))return;try{localStorage.removeItem(KEY)}catch(e){}location.reload()}}
+if(DEMO)document.title="DEMO – "+document.title;
 /* ---------- role picker: tap a role box to get the full list (typing filters it) ---------- */
 const RP_OPTS=()=>[...document.querySelectorAll("#roleList option")].map(o=>({v:o.value,d:o.textContent}));
 let RP_IN=null;
@@ -3498,18 +3508,22 @@ if(SB_URL&&SB_KEY&&window.supabase){
     $("#userAv").style.background="#2563EB";
     $("#navUsers").classList.toggle("hide",prof.role!=="admin"||SLEV);
     await pull(true);loadDiary();
-    if(!chan)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){const remote=fix(p.new.data);const dirty=BASED&&stableJ(D)!==stableJ(BASED);
+    if(!chan&&!DEMO)chan=sb.channel("wa").on("postgres_changes",{event:"UPDATE",schema:"public",table:"wa_state"},p=>{if(p.new.version>VER){const remote=fix(p.new.data);const dirty=BASED&&stableJ(D)!==stableJ(BASED);
       // someone else saved: fold their change in, keeping anything this device hasn't sent yet
       D=dirty?sanitize(merge3(BASED,D,remote,"")):remote;BASED=clone(remote);VER=p.new.version;window.__waRemote?.();cache();render();if(dirty)push()}}).subscribe(st=>{$("#syncDot").classList.remove("hide");$("#syncDot").classList.toggle("off",st!=="SUBSCRIBED");$("#syncDot").title=st==="SUBSCRIBED"?"Live – synced":"Reconnecting…"});
     // safety net for screens left running (wall board): realtime can drop silently after sleep / network blips,
     // so re-check the server every minute and whenever the screen wakes or the network comes back
-    if(!window.__waPoll){window.__waPoll=setInterval(()=>{if(!pushing)pullIfNewer()},60000);
+    if(!window.__waPoll&&!DEMO){window.__waPoll=setInterval(()=>{if(!pushing)pullIfNewer()},60000);
       document.addEventListener("visibilitychange",()=>{if(!document.hidden)pullIfNewer()});addEventListener("online",()=>pullIfNewer());addEventListener("focus",()=>pullIfNewer())}
     if(prof.role==="admin"){loadUsers();sb.channel("wa-p").on("postgres_changes",{event:"*",schema:"public",table:"wa_profiles"},loadUsers).subscribe()}
   }
   const fix=d=>sanitize(d);
   const cache=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}};
   async function pull(first){
+    if(DEMO){if(first){let cached=null;try{cached=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+        if(!cached||!cached.__demo){const {data:snap,error:se}=await sb.from("wa_diary").select("data,created_at").eq("data->>kind","snapshot").order("created_at",{ascending:false}).limit(1);
+          if(se||!snap||!snap.length){toast("No demo snapshot found");return}cached={...snap[0].data.board,__demo:snap[0].data.label||"snapshot"}}
+        D=fix(cached);D.__demo=cached.__demo;cache();render();demoBanner()}return}
     const {data,error}=await sb.from("wa_state").select("data,version").eq("id",1).single();
     if(error){toast("Couldn't load the board – check connection");return}
     const remote=fix(data.data),empty=!remote.engineers.length&&!remote.jobs.length;
@@ -3518,11 +3532,11 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const dirty=!first&&BASED&&stableJ(D)!==stableJ(BASED); // unsent changes on this device are merged, not dropped
     D=dirty?sanitize(merge3(BASED,D,remote,"")):remote;BASED=clone(remote);window.__waRemote?.(first);cache();render();if(dirty)push();
   }
-  async function pullIfNewer(){if(!ME)return;try{const {data,error}=await sb.from("wa_state").select("version").eq("id",1).single();
+  async function pullIfNewer(){if(!ME||DEMO)return;try{const {data,error}=await sb.from("wa_state").select("version").eq("id",1).single();
     if(!error&&data&&data.version>VER){await pull(false)}
     if(chan&&chan.state&&!["joined","joining"].includes(chan.state)){try{chan.subscribe()}catch(e){}}}catch(e){}}
   async function push(){
-    if(!ME)return;if(pushing){again=true;return}pushing=true;
+    if(!ME||DEMO)return;if(pushing){again=true;return}pushing=true;
     let tries=0;
     while(true){
       const sent=clone(D);
@@ -3554,11 +3568,13 @@ if(SB_URL&&SB_KEY&&window.supabase){
     const {error}=await sb.rpc("wa_restore",{hist_id:+b.dataset.bkrestore});if(error){toast("Restore failed – "+error.message);return}
     toast("Board restored to "+b.dataset.bkwhen);await pull(true);loadBackups()});
   window.__waCloud={push,me:()=>ME,
-    async docUp(path,file){const {error}=await sb.storage.from("wa-docs").upload(path,file,{contentType:"application/pdf",upsert:true});return error?error.message:null},
+    async docUp(path,file){if(DEMO)return "not available in the demo copy";const {error}=await sb.storage.from("wa-docs").upload(path,file,{contentType:"application/pdf",upsert:true});return error?error.message:null},
     async docUrl(path){const {data,error}=await sb.storage.from("wa-docs").createSignedUrl(path,600);return error?null:data.signedUrl},
     async docDel(path){await sb.storage.from("wa-docs").remove([path])},
-    async addDiary(rec){const {error}=await sb.from("wa_diary").insert({shift_date:rec.date,shift_type:rec.type,data:rec});if(error){toast("Diary not saved – "+error.message);return false}return true},
-    async listDiary(){const {data,error}=await sb.from("wa_diary").select("id,data,created_at").order("created_at",{ascending:false}).limit(200);if(error)return [];return data.map(r=>({...r.data,id:r.id}))}};
+    async addDiary(rec){if(DEMO){D.diary=[...(D.diary||[]),rec];return true}const {error}=await sb.from("wa_diary").insert({shift_date:rec.date,shift_type:rec.type,data:rec});if(error){toast("Diary not saved – "+error.message);return false}return true},
+    async listDiary(){const {data,error}=await sb.from("wa_diary").select("id,data,created_at").order("created_at",{ascending:false}).limit(200);if(error)return [];return data.filter(r=>r.data&&r.data.kind!=="snapshot").map(r=>({...r.data,id:r.id}))},
+    async saveSnapshot(label){const {data:row,error}=await sb.from("wa_state").select("data,version").eq("id",1).single();if(error)return error.message;
+      const {error:e2}=await sb.from("wa_diary").insert({shift_date:iso(new Date()),shift_type:"L",data:{kind:"snapshot",label,version:row.version,at:now(),board:row.data}});return e2?e2.message:"ok v"+row.version}};
   // ---- profile ----
   $("#userBtn").onclick=()=>{$("#pfInfo").innerHTML=`<b>${esc(ME.full_name||"")}</b><div class="sub">Username: ${esc(ME.username)} · ${ME.role==="admin"?"Admin":"User"}</div>`;$("#prof").classList.remove("hide")};
   $("#pfClose").onclick=()=>$("#prof").classList.add("hide");
