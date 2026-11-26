@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126001202">
+<meta name="build" content="20261126001345">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F172A">
-<title>Line Tasking</title>
+<title>A400 EMT – Engineering Management Tool</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%3Cdefs%3E%3ClinearGradient%20id%3D%22emtg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%230B1E3F%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231D4ED8%22/%3E%3C/linearGradient%3E%3C/defs%3E%0A%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22url%28%23emtg%29%22/%3E%0A%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2226%22%20fill%3D%22none%22%20stroke%3D%22%2338BDF8%22%20stroke-opacity%3D%22.3%22%20stroke-width%3D%221.4%22/%3E%0A%3Cg%20fill%3D%22%23fff%22%3E%0A%3Cpath%20d%3D%22M29.5%2024%206.5%2031v4L29.5%2032.5zM34.5%2024%2057.5%2031v4L34.5%2032.5z%22/%3E%0A%3Crect%20x%3D%2228.8%22%20y%3D%226.5%22%20width%3D%226.4%22%20height%3D%2250%22%20rx%3D%223.2%22/%3E%0A%3Cpath%20d%3D%22M29.3%2049.5%2018.5%2054.5v2.4l10.8-2.6zM34.7%2049.5l10.8%205v2.4l-10.8-2.6z%22/%3E%0A%3Crect%20x%3D%2212.4%22%20y%3D%2225.2%22%20width%3D%224%22%20height%3D%229%22%20rx%3D%222%22/%3E%3Crect%20x%3D%2220.2%22%20y%3D%2222.8%22%20width%3D%224%22%20height%3D%229%22%20rx%3D%222%22/%3E%0A%3Crect%20x%3D%2239.8%22%20y%3D%2222.8%22%20width%3D%224%22%20height%3D%229%22%20rx%3D%222%22/%3E%3Crect%20x%3D%2247.6%22%20y%3D%2225.2%22%20width%3D%224%22%20height%3D%229%22%20rx%3D%222%22/%3E%0A%3C/g%3E%0A%3Cg%20stroke%3D%22%23F59E0B%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%3E%0A%3Cpath%20d%3D%22M11.4%2024.3h6M19.2%2021.9h6M38.8%2021.9h6M46.6%2024.3h6%22/%3E%0A%3C/g%3E%0A%3C/svg%3E">
+<meta name="apple-mobile-web-app-title" content="A400 EMT">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#F3F5F9;--card:#fff;--ink:#0B1220;--ink2:#334155;--mute:#64748B;--line:#E5E9F0;--line2:#D5DCE6;
@@ -18,8 +20,8 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 /* app bar */
 header{background:linear-gradient(90deg,var(--navy),#14233C);color:#fff;height:60px;padding:0 20px;display:flex;align-items:center;gap:22px;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15)}
 .brand{display:flex;align-items:center;gap:10px}
-.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#38BDF8,#2563EB);display:grid;place-items:center;box-shadow:0 0 0 1px rgba(255,255,255,.15) inset}
-.logo svg{width:20px;height:20px;stroke:#fff}
+.logo{width:36px;height:36px;flex:none;display:block}
+.logo svg.emtlogo{width:100%;height:100%;display:block;stroke:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
 .brand h1{font-size:16px;margin:0;letter-spacing:.2px;line-height:1.1}
 .brand small{display:block;font-size:11px;color:#94A3B8;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
 nav{display:flex;gap:2px;background:rgba(255,255,255,.06);padding:4px;border-radius:10px}
@@ -946,7 +948,21 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div><div><h1>Line Tasking</h1><small>Work allocation</small></div></div>
+  <div class="brand"><div class="logo"><svg class="emtlogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<defs><linearGradient id="emtg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B1E3F"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient></defs>
+<rect width="64" height="64" rx="14" fill="url(#emtg1)"/>
+<circle cx="32" cy="32" r="26" fill="none" stroke="#38BDF8" stroke-opacity=".3" stroke-width="1.4"/>
+<g fill="#fff">
+<path d="M29.5 24 6.5 31v4L29.5 32.5zM34.5 24 57.5 31v4L34.5 32.5z"/>
+<rect x="28.8" y="6.5" width="6.4" height="50" rx="3.2"/>
+<path d="M29.3 49.5 18.5 54.5v2.4l10.8-2.6zM34.7 49.5l10.8 5v2.4l-10.8-2.6z"/>
+<rect x="12.4" y="25.2" width="4" height="9" rx="2"/><rect x="20.2" y="22.8" width="4" height="9" rx="2"/>
+<rect x="39.8" y="22.8" width="4" height="9" rx="2"/><rect x="47.6" y="25.2" width="4" height="9" rx="2"/>
+</g>
+<g stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round">
+<path d="M11.4 24.3h6M19.2 21.9h6M38.8 21.9h6M46.6 24.3h6"/>
+</g>
+</svg></div><div><h1>A400 EMT</h1><small>Engineering management tool</small></div></div>
   <nav>
     <button data-tab="board" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Board</button>
     <button data-tab="shift"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shift list</button>
@@ -960,7 +976,7 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
     <span class="syncdot hide" id="syncDot" title="Live – synced"></span>
     <span class="shiftpill"><i></i><span id="shiftName">Early shift</span></span>
     <span class="clock" id="clock"></span>
-    <button class="hbtn" id="guideOpen" title="How to use Line Tasking (?)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="l">How to</span></button>
+    <button class="hbtn" id="guideOpen" title="How to use A400 EMT (?)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="l">How to</span></button>
     <button class="hbtn" id="shareAll" title="Send the whole board as a text"><svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg><span class="l">Send to group</span></button>
     <button class="hbtn solid" id="openDisplay" title="Full-screen board for the hangar screen"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="l">Wall board</span></button>
     <label class="hbtn viewswrap hide" id="viewsWrap" title="See the board as the AIOC or a particular engineer sees it"><svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="l">Views</span><select id="engvSel"></select></label>
@@ -1172,7 +1188,21 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 <datalist id="roleList"><option value="ANY">Any role</option><option value="CS00-00">Airbus Standard Role Configuration (sidewall seats 533mm)</option><option value="UK STD">UK Standard Role Configuration (sidewall seats 686mm)</option><option value="Medical">Falklands Multi Role Configuration</option><option value="Light Stores Role 1"></option><option value="Light Stores Role 2"></option><option value="Light Stores Role 3"></option><option value="CDS 1">Container Delivery System</option><option value="CDS 2">Container Delivery System</option><option value="CDS 3">Container Delivery System</option><option value="CDS 4">Container Delivery System</option><option value="MMP 1">Marine Modular Platform</option><option value="MMP 2">Marine Modular Platform</option><option value="MMP 3">Marine Modular Platform</option><option value="HAAD 1">High Altitude Aerial Delivery</option><option value="HAAD 2">High Altitude Aerial Delivery</option><option value="LLP 1">Low Level Para</option><option value="LLP 2">Low Level Para</option><option value="LLP 3">Low Level Para</option><option value="LLP 4">Low Level Para</option><option value="GLI Echo II">GPS Re-Broadcast System</option><option value="SOLR-MPOS">Special Operation Long Range – Military Parachutist Oxygen System</option><option value="AMOS">Aircraft Modular Oxygen System</option><option value="MTTB">Military Tethered Tandem Bundle</option><option value="CCAST MEDEVAC"></option><option value="Seat Rail">L-Track protection tape</option><option value="Auxiliary Crew Pallet"></option><option value="MRA">MANTARAY</option><option value="RAS WEDGE">Pre Collection Configuration</option><option value="Low Level Para RAS WEDGE"></option><option value="LBAD">Large Boat Aerial Delivery</option></datalist>
 <div id="gate" class="gate hide">
   <div class="gcard">
-    <div class="brand" style="justify-content:center;margin-bottom:18px"><div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div><div><h1 style="color:var(--ink)">Line Tasking</h1><small>Work allocation</small></div></div>
+    <div class="brand" style="justify-content:center;margin-bottom:18px"><div class="logo"><svg class="emtlogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<defs><linearGradient id="emtg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B1E3F"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient></defs>
+<rect width="64" height="64" rx="14" fill="url(#emtg2)"/>
+<circle cx="32" cy="32" r="26" fill="none" stroke="#38BDF8" stroke-opacity=".3" stroke-width="1.4"/>
+<g fill="#fff">
+<path d="M29.5 24 6.5 31v4L29.5 32.5zM34.5 24 57.5 31v4L34.5 32.5z"/>
+<rect x="28.8" y="6.5" width="6.4" height="50" rx="3.2"/>
+<path d="M29.3 49.5 18.5 54.5v2.4l10.8-2.6zM34.7 49.5l10.8 5v2.4l-10.8-2.6z"/>
+<rect x="12.4" y="25.2" width="4" height="9" rx="2"/><rect x="20.2" y="22.8" width="4" height="9" rx="2"/>
+<rect x="39.8" y="22.8" width="4" height="9" rx="2"/><rect x="47.6" y="25.2" width="4" height="9" rx="2"/>
+</g>
+<g stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round">
+<path d="M11.4 24.3h6M19.2 21.9h6M38.8 21.9h6M46.6 24.3h6"/>
+</g>
+</svg></div><div><h1 style="color:var(--ink)">A400 EMT</h1><small>Engineering management tool</small></div></div>
     <div id="gMsg" class="gmsg hide"></div>
     <div class="pills gtabs" id="gTabs"><button data-g="in" class="on">Sign in</button><button data-g="req">Request access</button></div>
     <form id="fIn">
@@ -1238,7 +1268,7 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 </div>
 
 <div id="guide" class="modal hide"><div class="mcard card guide" style="width:min(860px,100%)">
-  <div class="mhead"><h2>How to use Line Tasking</h2><span class="sub">Press ? any time</span><button class="btn icon" id="guideClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mhead"><h2>How to use A400 EMT</h2><span class="sub">Press ? any time</span><button class="btn icon" id="guideClose"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="card-b">
   <nav class="gnav" id="gnav"><a href="#g-start">Start of shift</a><a href="#g-raise">Raise a job</a><a href="#g-crew">Crew a job</a><a href="#g-tasks">Task lines</a><a href="#g-progress">Progress</a><a href="#g-card">Card details</a><a href="#g-find">Finding things</a><a href="#g-own">Owners</a><a href="#g-new">New &amp; updated</a><a href="#g-team">Team &amp; manning</a><a href="#g-send">Send to group</a><a href="#g-wall">Wall board</a><a href="#g-hand">Handover</a><a href="#g-tabs">Other tabs</a><a href="#g-keys">Shortcuts</a></nav>
 
@@ -1432,7 +1462,7 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 <div id="display" class="hide">
   <button class="db-exit" id="dbExit">✕ Exit (Esc)</button><button class="db-exit" id="dbLayout" style="right:7.5vw">▦ Squares</button><div class="db-exit db-speed" id="dbSpeed" style="right:15.5vw"><span>Scroll</span><button data-s="20">Slow</button><button data-s="40">Normal</button><button data-s="65">Fast</button><button data-s="95">Very fast</button></div>
   <div class="db-top">
-    <div class="db-title">Line Tasking<small>LIVE JOBS</small></div>
+    <div class="db-title">A400 EMT<small>LIVE JOBS</small></div>
     <div class="db-legend">
       <span class="lg red"><i></i><b id="kOpen">0</b> Not started</span>
       <span class="lg amber"><i></i><b id="kWork">0</b> In progress</span>
@@ -2782,7 +2812,7 @@ const inRange=(j,S)=>[j.created,j.completed,j.started].some(d=>d&&new Date(d)>=S
 $("#sxRange").onclick=e=>{const x=e.target.closest("button");if(!x)return;SXR=x.dataset.r;renderStats()};
 ["#sxFrom","#sxTo"].forEach(id=>$(id).onchange=()=>{SXR="custom";renderStats()});
 $("#sxCsv").onclick=()=>{const S=statsData(),q=v=>`"${String(v??"").replace(/^([=+\-@\t\r])/,"'$1").replace(/"/g,'""')}"`,L=[];
-  L.push(q(`Line Tasking stats ${iso(S.a)} to ${iso(S.b)}`),"");
+  L.push(q(`A400 EMT stats ${iso(S.a)} to ${iso(S.b)}`),"");
   L.push(["Engineer","Trade","Hours on jobs","Tasks done"].map(q).join(","));
   Object.entries(S.E).sort((x,y)=>y[1].ms-x[1].ms).forEach(([id,v])=>{const e=allNames().find(x=>x.id===id);L.push([e?.name,e?catShort(e):"",hnum(v.ms).toFixed(2),v.jobs.size].map(q).join(","))});
   L.push("",["Tail","Hours worked","Tasks done","Jobs raised","Carry-overs","AOG hours"].map(q).join(","));
