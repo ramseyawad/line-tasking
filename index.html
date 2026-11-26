@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126180906">
+<meta name="build" content="20261126185434">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -921,6 +921,8 @@ nav .ns{display:none}
 .demotag{margin-left:8px;font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#B45309;background:#FEF3C7;border:1px solid #FCD34D;border-radius:99px;padding:2px 8px}
 .fpkey{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
 .fpkey .k{font-size:12px;font-weight:700;padding:3px 9px;border-radius:7px}
+.fpf.gnd{background:#F1F5F9;color:#334155;border-color:#CBD5E1}
+.demotag.real{color:#166534;background:#DCFCE7;border-color:#86EFAC}
 .k-loc,.fpf.loc{background:#E0F2FE;color:#075985;border-color:#7DD3FC}.k-rte,.fpf.rte{background:#EDE9FE;color:#5B21B6;border-color:#C4B5FD}.k-role,.fpf.role{background:#FFEDD5;color:#9A3412;border-color:#FDBA74}
 .fpwrap{overflow:auto;max-height:calc(100vh - 230px)}
 .fptbl{border-collapse:separate;border-spacing:0;font-size:12px}
@@ -1088,14 +1090,14 @@ body.aioc .aiocf{flex:0 0 100%;flex-wrap:wrap;margin:0}
 <!-- SHIFT -->
 <section id="tab-fplan" class="hide">
   <div class="card">
-    <div class="card-h"><h2>Flight planning</h2><span class="demotag">Demo data</span><span class="sub" style="margin-left:auto" id="fpSub"></span></div>
-    <div class="fpkey"><span class="k k-loc">Local / training</span><span class="k k-rte">Route</span><span class="k k-role">Role sortie</span><span class="sub">Tap a flight for its details in the task programme</span></div>
+    <div class="card-h"><h2>Flight planning</h2><span class="demotag fpsrc">Demo data</span><span class="sub" style="margin-left:auto" id="fpSub"></span></div>
+    <div class="fpkey"><span class="k k-loc">Local / training</span><span class="k k-rte">Route</span><span class="k k-role">Role sortie</span><span class="k fpf gnd" style="display:inline;width:auto;margin:0">Ground / task</span><span class="sub">Tap a flight for its details in the task programme</span></div>
     <div class="fpwrap"><table class="fptbl" id="fpTbl"></table></div>
   </div>
 </section>
 <section id="tab-tprog" class="hide">
   <div class="card">
-    <div class="card-h"><h2>Task programme</h2><span class="demotag">Demo data</span><span class="sub" style="margin-left:auto">Every planned flight – route, times, requested hours and role</span></div>
+    <div class="card-h"><h2>Task programme</h2><span class="demotag fpsrc">Demo data</span><span class="sub" style="margin-left:auto">Every planned flight – route, times, requested hours and role</span></div>
     <div class="filters">
       <select id="tpTail"><option value="">All aircraft</option></select>
       <input type="date" id="tpFrom" title="From"><input type="date" id="tpTo" title="To">
@@ -2629,7 +2631,16 @@ const fpAdd=(d,n)=>{const x=new Date(d+"T12:00");x.setDate(x.getDate()+n);return
 const fpHM=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(Math.round(m%60)).padStart(2,"0");
 const FP_DAYS=30;
 let FP_CACHE=null;
-function fpPlan(){const start=iso(new Date());if(FP_CACHE&&FP_CACHE.start===start)return FP_CACHE.list;
+// the real flying programme (loaded from the tasking programme spreadsheet) replaces the made-up plan
+const FP_CODES={BZZ:"Brize Norton",AKT:"Akrotiri",NHT:"Northolt",CGN:"Cologne",BOD:"Bordeaux",TRD:"Trondheim",OSL:"Oslo",CPH:"Copenhagen",ARN:"Stockholm",MRS:"Marseille",TER:"Lajes",BFS:"Belfast",TUN:"Tunis",RZE:"Rzeszów",TMP:"Tampere",WTN:"Waddington",GIB:"Gibraltar",MPN:"Mount Pleasant",ASI:"Ascension"};
+const fpReal=()=>!DEMO&&D.flypro&&Array.isArray(D.flypro.items)&&D.flypro.items.length;
+function fpFromReal(){const mins=t=>{if(!t)return null;const [h,m]=t.split(":").map(Number);return h*60+m};
+  return D.flypro.items.filter(x=>x&&typeof x.tail==="string"&&typeof x.date==="string").map((x,i)=>{const r=Array.isArray(x.route)?x.route:[],a=mins(x.dep),b=mins(x.arr),days=x.arrDate?dDiff(x.date,x.arrDate):0,
+    fh=a!=null&&b!=null?((b-a+days*1440+(b<a&&!days?1440:0))/60):null;
+    return{id:x.tail+"-"+x.date+"-"+i,tail:x.tail,date:x.date,no:x.title||x.no||"–",role:x.unit||"",from:r.length===1?"At "+r[0]:r[0]||(x.kind==="flight"?"Local":"Ground"),to:r.length>1?r[r.length-1]:(x.kind==="flight"&&!r.length?"Local":""),route:r,dep:x.dep||"–",arr:x.arr||"–",
+      fh:fh!=null?fh.toFixed(1):"–",eh:"–",lg:"–",fc:"–",tg:"–",dy:"–",kind:x.kind!=="flight"?"gnd":r.length>1?"rte":"loc",next:!!x.arrDate||(a!=null&&b!=null&&b<a),real:true}})}
+function fpPlan(){if(fpReal()){const k="real|"+D.flypro.ver+"|"+D.flypro.items.length;if(FP_CACHE&&FP_CACHE.start===k)return FP_CACHE.list;FP_CACHE={start:k,list:fpFromReal()};return FP_CACHE.list}
+  const start=iso(new Date());if(FP_CACHE&&FP_CACHE.start===start)return FP_CACHE.list;
   const tails=TAILS.filter(t=>t!=="Off Aircraft"),list=[];let away={};
   for(let n=0;n<FP_DAYS;n++){const day=fpAdd(start,n),dow=new Date(day+"T12:00").getDay();
     tails.forEach((t,ti)=>{const R=fpRng(t+"|"+day);
@@ -2646,21 +2657,22 @@ function fpPlan(){const start=iso(new Date());if(FP_CACHE&&FP_CACHE.start===star
   FP_CACHE={start,list};return list}
 function fpFlight(tail,date,no,role,from,to,dep,fh,R,kind){const loc=from===to,tg=loc?Math.floor(R()*7):0,ld=loc?1+Math.floor(R()*3):1;
   return{id:tail+"-"+date+"-"+no,tail,date,no,role,from,to,dep:fpHM(dep),arr:fpHM(dep+fh*60),fh:fh.toFixed(1),eh:(fh+.3+Math.round(R()*3)/10).toFixed(1),lg:ld,fc:ld,tg,dy:loc&&R()<.35?1+Math.floor(R()*2):0,kind,next:dep+fh*60>=1440}}
-const fpPlace=c=>FP_PLACES[c]?FP_PLACES[c]+" ("+c+")":c;
-function renderFPlan(){const l=fpPlan(),start=iso(new Date()),days=[...Array(FP_DAYS)].map((_,i)=>fpAdd(start,i)),tails=TAILS.filter(t=>t!=="Off Aircraft");
+const fpPlace=c=>FP_PLACES[c]?FP_PLACES[c]+" ("+c+")":FP_CODES[c]?FP_CODES[c]+" ("+c+")":c||"–";
+function fpSrc(){document.querySelectorAll(".fpsrc").forEach(e=>{e.textContent=fpReal()?(D.flypro.ver||"Flying programme"):"Demo data";e.classList.toggle("real",!!fpReal())})}
+function renderFPlan(){fpSrc();const l=fpPlan(),start=iso(new Date()),days=[...Array(fpReal()?7:FP_DAYS)].map((_,i)=>fpAdd(start,i)),tails=TAILS.filter(t=>t!=="Off Aircraft");
   const by={};l.forEach(f=>{(by[f.tail+"|"+f.date]=by[f.tail+"|"+f.date]||[]).push(f)});
   const we=d=>[0,6].includes(new Date(d+"T12:00").getDay());
-  $("#fpSub").textContent=`${l.length} flights · ${tails.length} aircraft · ${new Date(start+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${new Date(days.at(-1)+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
+  $("#fpSub").textContent=`${l.filter(f=>f.kind!=="gnd").length} flights · ${tails.length} aircraft · ${new Date(start+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${new Date(days.at(-1)+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
   $("#fpTbl").innerHTML=`<thead><tr><th class="tl">Aircraft</th>${days.map((d,i)=>`<th class="${we(d)?"we":""} ${i===0?"td":""}">${new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</th>`).join("")}</tr></thead><tbody>`
-    +tails.map(t=>`<tr><th class="tl">${esc(t)}</th>${days.map((d,i)=>`<td class="${we(d)?"we":""} ${i===0?"td":""}">${(by[t+"|"+d]||[]).map(f=>`<button type="button" class="fpf ${f.kind}" data-fpgo="${esc(f.id)}" title="${esc(f.no)} · ${esc(fpPlace(f.from))} → ${esc(fpPlace(f.to))} · role ${esc(f.role)}"><b>${esc(f.no)}</b>${esc(f.dep)}–${esc(f.arr)}${f.next?"+1":""}<br>${f.from===f.to?"Local":esc(f.from)+"→"+esc(f.to)} · ${esc(f.role)}</button>`).join("")}</td>`).join("")}</tr>`).join("")+`</tbody>`}
+    +tails.map(t=>`<tr><th class="tl">${esc(t)}</th>${days.map((d,i)=>`<td class="${we(d)?"we":""} ${i===0?"td":""}">${(by[t+"|"+d]||[]).map(f=>`<button type="button" class="fpf ${f.kind}" data-fpgo="${esc(f.id)}" title="${esc(f.no)} · ${esc(fpPlace(f.from))} → ${esc(fpPlace(f.to))} · role ${esc(f.role)}"><b>${esc(f.no)}</b>${f.dep==="–"&&f.arr==="–"?"":esc(f.dep)+"–"+esc(f.arr)+(f.next?"+1":"")}<br>${f.real?(f.route&&f.route.length>1?esc(f.route.join("–")):f.route&&f.route.length===1?"At "+esc(f.route[0]):f.kind==="gnd"?"":"Local"):(f.from===f.to?"Local":esc(f.from)+"→"+esc(f.to))}${f.role?" · "+esc(f.role):""}</button>`).join("")}</td>`).join("")}</tr>`).join("")+`</tbody>`}
 let TP_FLASH=null;
 function tpRows(){const ft=$("#tpTail").value,fa=$("#tpFrom").value,fb=$("#tpTo").value,fx=$("#tpText").value.toLowerCase();
   return fpPlan().filter(f=>(!ft||f.tail===ft)&&(!fa||f.date>=fa)&&(!fb||f.date<=fb)&&(!fx||[f.no,f.role,f.from,f.to,fpPlace(f.from),fpPlace(f.to)].join(" ").toLowerCase().includes(fx)))
     .sort((a,b)=>(a.date+a.dep).localeCompare(b.date+b.dep)||a.tail.localeCompare(b.tail))}
-function renderTProg(){const sel=$("#tpTail"),cur=sel.value;sel.innerHTML=`<option value="">All aircraft</option>`+TAILS.filter(t=>t!=="Off Aircraft").map(t=>`<option ${t===cur?"selected":""}>${t}</option>`).join("");
+function renderTProg(){fpSrc();const sel=$("#tpTail"),cur=sel.value;sel.innerHTML=`<option value="">All aircraft</option>`+TAILS.filter(t=>t!=="Off Aircraft").map(t=>`<option ${t===cur?"selected":""}>${t}</option>`).join("");
   if(!$("#tpFrom").value&&!$("#tpTo").value&&!TP_FLASH){$("#tpFrom").value=iso(new Date());$("#tpTo").value=fpAdd(iso(new Date()),6)}
-  const r=tpRows(),sum=k=>r.reduce((a,f)=>a+ +f[k],0);
-  $("#tpStats").innerHTML=`<div class="stat"><b>${r.length}</b>flights</div><div class="stat"><b>${sum("fh").toFixed(1)}</b>FH requested</div><div class="stat"><b>${sum("eh").toFixed(1)}</b>EH requested</div><div class="stat"><b>${sum("lg")}</b>landings</div><div class="stat"><b>${sum("tg")}</b>touch &amp; goes</div>`;
+  const r=tpRows(),sum=k=>r.reduce((a,f)=>a+(+f[k]||0),0);
+  $("#tpStats").innerHTML=fpReal()?`<div class="stat"><b>${r.filter(f=>f.kind!=="gnd").length}</b>flights</div><div class="stat"><b>${r.filter(f=>f.kind==="gnd").length}</b>ground tasks</div><div class="stat"><b>${sum("fh").toFixed(1)}</b>FH planned</div>`:`<div class="stat"><b>${r.length}</b>flights</div><div class="stat"><b>${sum("fh").toFixed(1)}</b>FH requested</div><div class="stat"><b>${sum("eh").toFixed(1)}</b>EH requested</div><div class="stat"><b>${sum("lg")}</b>landings</div><div class="stat"><b>${sum("tg")}</b>touch &amp; goes</div>`;
   $("#tpBody").innerHTML=r.map(f=>`<tr data-fpid="${esc(f.id)}" class="${TP_FLASH===f.id?"flash":""}"><td>${new Date(f.date+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</td><td class="tail">${esc(f.tail)}</td><td><b>${esc(f.no)}</b></td><td>${esc(f.role)}</td><td>${esc(fpPlace(f.from))}</td><td>${esc(f.dep)}</td><td>${esc(fpPlace(f.to))}</td><td>${esc(f.arr)}${f.next?" (+1)":""}</td><td class="num">${f.fh}</td><td class="num">${f.eh}</td><td class="num">${f.lg}</td><td class="num">${f.fc}</td><td class="num">${f.tg}</td><td class="num">${f.dy}</td></tr>`).join("")||`<tr><td colspan="14" class="empty">No flights match.</td></tr>`;
   if(TP_FLASH){const tr=document.querySelector(`#tpBody tr[data-fpid="${CSS.escape(TP_FLASH)}"]`);tr?.scrollIntoView({block:"center"});TP_FLASH=null}}
 ["tpTail","tpFrom","tpTo","tpText"].forEach(id=>$("#"+id).addEventListener("input",renderTProg));
@@ -2685,7 +2697,7 @@ const dAdd=(d,n)=>{const x=new Date(d+"T12:00");x.setDate(x.getDate()+Math.round
 const fmtD=d=>new Date(d+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"});
 let MP_CACHE=null;
 function mpPlan(){const today=iso(new Date());if(MP_CACHE&&MP_CACHE.today===today)return MP_CACHE;
-  const fp=fpPlan(),rate={};TAILS.filter(t=>t!=="Off Aircraft").forEach(t=>{const fh=fp.filter(f=>f.tail===t).reduce((a,f)=>a+ +f.fh,0);rate[t]=Math.max(.4,fh/FP_DAYS)});
+  const fp=fpPlan(),rate={};TAILS.filter(t=>t!=="Off Aircraft").forEach(t=>{const fh=fp.filter(f=>f.tail===t).reduce((a,f)=>a+(+f.fh||0),0);rate[t]=Math.max(.4,fh/FP_DAYS)});
   const items=[],inputs=[];
   TAILS.filter(t=>t!=="Off Aircraft").forEach((t,ti)=>{const R=fpRng("mp|"+t),fh=Math.round(2500+R()*7000),fc=Math.round(fh*.45+R()*400);
     // C-check: two aircraft are in one now, one is slightly overdue on a small item
