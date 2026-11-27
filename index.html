@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta name="build" content="20261126225805">
+<meta name="build" content="20261127014520">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -2443,7 +2443,7 @@ function openAc(t){
      <label class="mv-f"><span>DASS config</span><select class="acsel" data-dass="${t}" ${canAc(own)?"":"disabled"} style="height:38px"><option value="">–</option>${DASS.map(d=>`<option ${acGet(t).dass===d?"selected":""}>${d}</option>`).join("")}</select></label>
      <div class="mv-f"><span>Role config</span><div class="rolewrap">${roleBoxes(t,false)}${docBox(t,false)}</div></div><div class="mv-f"><span>Estimated time to serviceability</span>${etsBox(t,false)}</div></div>
    <div class="acp-tr ${techReady(t)?"on":""}">${techReady(t)?`<b>✓ TECH READY</b> <span>CRS ${fmt(techReady(t).at)}${techReady(t).by?" · "+esc(techReady(t).by):""}</span>`:`<b>Not tech ready</b>`}${canCRS(t)?(techReady(t)?`<button class="btn sm" data-crs="${t}">Undo</button>`:openTasks(t)?`<button class="btn sm" disabled>CRS – ${openTasks(t)} task${openTasks(t)>1?"s":""} still open</button>`:`<button class="btn sm ok" data-crs="${t}">CRS – Tech ready</button>`):""}</div>
-   ${(()=>{const m=mpCurrent(t);if(!m||(!m.now.length&&!m.next))return "";const f=x=>`<b>${esc(x.k)}</b>${x.txt?" – "+esc(x.txt):""} <span class="sub">${fmtD(mpDay(x.from))} → ${fmtD(mpDay(x.to))}</span>`;return `<div class="acp-fl"><div><span class="mv-f"><span>Maintenance plan</span></span><div>${m.now.map(x=>`<div>Now: ${f(x)}</div>`).join("")}${m.next?`<div>Next: ${f(m.next)}</div>`:""}</div><small class="sub">${esc(D.mplan.ver||"")}</small></div></div>`})()}<div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
+   ${(()=>{const m=mpCurrent(t);if(!m||(!m.now.length&&!m.next))return "";const f=x=>`<b>${esc(x.k)}</b>${x.txt?" – "+esc(x.txt):""} <span class="sub">${fmtD(mpDay(x.from))} → ${fmtD(mpDay(x.to))}</span>`;return `<div class="acp-fl"><div><span class="mv-f"><span>Maintenance plan</span></span><div>${m.now.map(x=>`<div>Now: ${f(x)}</div>`).join("")}${m.next?`<div>Next: ${f(m.next)}</div>`:""}</div><small class="sub">${esc(MPD().ver||"")}</small></div></div>`})()}<div class="acp-fl"><div><span class="mv-f"><span>Next flight</span></span><div>${flightsOf(t).some(flReal)?flightsOf(t).filter(flReal).map(f=>`<div>✈ ${fl1(f)}</div>`).join(""):'<span class="sub">Not set</span>'}</div>${acGet(t).flight?.by?`<small class="sub">Updated ${fmt(acGet(t).flight.at)} by ${esc(acGet(t).flight.by)}</small>`:""}</div><button class="btn sm" data-flight="${t}">${canNF()?"Edit":"View"}</button></div>
    <p class="sub" style="margin:6px 0 12px">${own==="Line"?"Owned by us (Line).":`With <b>${esc(own)}</b>`}${ac.at?` · since ${fmt(ac.at)}${ac.by?" ("+esc(ac.by)+")":""}`:""}${sentList(t).map(x=>` · ${esc(x.c)} for ${ago(x.at)}`).join("")}</p>
    ${isAIOC()?`<h4 class="mv-h">Jobs</h4>${js.length?js.map(aiocTasks).join(""):'<p class="sub">No open jobs.</p>'}`:""}<h4 class="mv-h ${isAIOC()?"hide":""}">Open jobs</h4>${isAIOC()?"":js.length?`<div class="acp-jobs">${js.map(j=>`<button class="acp-job" data-gojob="${j.id}"><b>${esc(j.status==="work"?"In work":j.status==="planned"?"Not started":"Unmanned")}</b>${esc(j.task.split("\n")[0].slice(0,70))}${j.task.split("\n").length>1?` <small>+${j.task.split("\n").length-1} more</small>`:""}</button>`).join("")}</div>`:`<div class="sx-empty">No open jobs on ${t}.</div>`}`;
   $("#acRaise").dataset.tail=t;$("#acRaise").classList.toggle("hide",!canAddTask(own));$("#acBody .acp-jobs")?.classList.toggle("hide",isAIOC());$("#acModal").classList.remove("hide");mgLock($("#acBody"));
@@ -2639,14 +2639,63 @@ const fpHM=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(Math.round(
 const FP_DAYS=30;
 let FP_CACHE=null;
 // the real flying programme (loaded from the tasking programme spreadsheet) replaces the made-up plan
-const FP_CODES={BZZ:"Brize Norton",AKT:"Akrotiri",NHT:"Northolt",CGN:"Cologne",BOD:"Bordeaux",TRD:"Trondheim",OSL:"Oslo",CPH:"Copenhagen",ARN:"Stockholm",MRS:"Marseille",TER:"Lajes",BFS:"Belfast",TUN:"Tunis",RZE:"Rzeszów",TMP:"Tampere",WTN:"Waddington",GIB:"Gibraltar",MPN:"Mount Pleasant",ASI:"Ascension"};
-const fpReal=()=>!DEMO&&D.flypro&&Array.isArray(D.flypro.items)&&D.flypro.items.length;
+const FP_CODES={BZZ:"Brize Norton",AKT:"Akrotiri",NHT:"Northolt",CGN:"Cologne",BOD:"Bordeaux",TRD:"Trondheim",OSL:"Oslo",CPH:"Copenhagen",ARN:"Stockholm",MRS:"Marseille",TER:"Lajes",BFS:"Belfast",TUN:"Tunis",RZE:"Rzeszów",TMP:"Tampere",WTN:"Waddington",GIB:"Gibraltar",MPN:"Mount Pleasant",ASI:"Ascension",TOI:"Toulouse"};
+/* ---------- demo copy: made-up flying programme + maintenance plan in exactly the same shape as the real imports ---------- */
+const MP_COL={"AAG Bay 1":"#8FAADC","AAG Bay 2":"#CC0066","AAG Bay 3":"#009999","AAG Bay 4":"#FFD966","Retrofit":"#BFBFBF","A/C wash":"#DDC3D6","CWR":"#DDEBF7","AOG":"#FF0000","Unlisted (grey dots)":"#AEAAAA","Prestwick":"#FFFF00","Boscombe Down":"#FF0066"};
+let DMP_C=null,DFP_C=null;
+function demoMplan(){const today=iso(new Date());if(DMP_C&&DMP_C.k===today)return DMP_C.v;
+  const tails=TAILS.filter(t=>t!=="Off Aircraft"),items=[],flights=[],notes=[],S=["a","p","n"];
+  const it=(tail,f,t,k,txt,fs="a",ts="n")=>items.push({tail,from:f+fs,to:t+ts,k,col:MP_COL[k]||"#CCCCCC",...(txt?{txt}:{})});
+  // long hangar inputs: fixed slots so the picture is the same every day
+  const LONG={ZM401:["AAG Bay 1",-190,32],ZM403:["AAG Bay 3",-120,95],ZM404:["AAG Bay 2",-150,45,"C-CHECK + MODS"],ZM406:["Retrofit",-200,75],ZM412:["Retrofit",-230,40],ZM407:["Retrofit",-30,110]};
+  const LATER={ZM405:["AAG Bay 1",38,120],ZM413:["AAG Bay 4",52,40],ZM408:["AAG Bay 2",48,140,"THSA REPLACEMENT + TRANSFER TUBE"],ZM402:["Boscombe Down",20,9,"Spec task"]};
+  tails.forEach(t=>{const R=fpRng("dmp|"+t+"|"+today.slice(0,7));
+    const L=LONG[t];if(L){it(t,dAdd(today,L[1]),dAdd(today,L[2]),L[0],L[3]);if(t==="ZM401"){it(t,dAdd(today,L[2]+1),dAdd(today,L[2]+1),"Unlisted (grey dots)");it(t,dAdd(today,L[2]+2),dAdd(today,L[2]+3),"AOG")}return}
+    const N=LATER[t];
+    // short stuff: AOG blocks, washes, CWR – walk forward from 60 days back
+    let d=-60+Math.floor(R()*12);const stop=N?N[1]-2:150;
+    while(d<stop){const r=R();
+      if(r<.45){const len=1+Math.floor(R()*4);if(R()<.35)it(t,dAdd(today,d),dAdd(today,d),"Unlisted (grey dots)");it(t,dAdd(today,d+1),dAdd(today,d+len),"AOG");d+=len+1}
+      else if(r<.62){it(t,dAdd(today,d),dAdd(today,d+1),"A/C wash",R()<.5?"Full Wash WOP "+(30100+Math.floor(R()*90)):"");d+=2}
+      else if(r<.72){it(t,dAdd(today,d),dAdd(today,d),"CWR","CWR",S[Math.floor(R()*3)],"n");d+=1}
+      // flying in between
+      const gap=5+Math.floor(R()*14),fs=dAdd(today,d),k=R();
+      if(k<.18)flights.push({tail:t,from:fs+"a",to:dAdd(today,d+Math.min(gap,9))+"n",txt:R()<.5?"PHOENIX":"MITS"});
+      else if(k<.3){flights.push({tail:t,from:fs+"a",to:fs+"n",txt:"TX to BOH"});flights.push({tail:t,from:dAdd(today,d+Math.min(gap-1,6))+"a",to:dAdd(today,d+Math.min(gap-1,6))+"n",txt:"TX to QBD"})}
+      else if(k<.45){const n=1+Math.floor(R()*3);flights.push({tail:t,from:fs+"a",to:dAdd(today,d+n)+"n",txt:"NS",ns:1})}
+      else{const n=Math.floor(R()*4),fh=4+Math.floor(R()*(n+1)*9),fc=1+Math.floor(fh/(3+R()*3));flights.push({tail:t,from:fs+"a",to:dAdd(today,d+n)+"n",txt:`${fh}FH ${fc}FC ${Math.round(fh*1.2)}EH`})}
+      d+=gap}
+    if(N){it(t,dAdd(today,N[1]),dAdd(today,N[1]+N[2]),N[0],N[3])}
+    if(R()<.45){const nd=dAdd(today,Math.floor(R()*70)-10);notes.push({tail:t,date:nd,txt:["CWR due WOR "+(720000+Math.floor(R()*9000)),"Life raft due","PBE due","Portable fire ext due","15 day pres due","Oxy tasks due WOR "+(706000+Math.floor(R()*900)),"x4 O2 generators to be filled","IFF crypto battery due"][Math.floor(R()*8)]})}});
+  notes.push({tail:"",date:dAdd(today,-12),txt:"MDS upgrade 0600 – 1800"},{tail:"",date:dAdd(today,9),txt:"H94 crane serviced – bay 2 unavailable"},{tail:"",date:dAdd(today,23),txt:"Hangar power outage – asbestos works"});
+  const events=[{from:dAdd(today,-25)+"a",to:dAdd(today,-21)+"n",k:"Fleet-wide block on the plan (not in legend)"},{from:dAdd(today,23)+"a",to:dAdd(today,24)+"n",k:"Fleet-wide block on the plan (not in legend)"}];
+  const v={ver:"Maintenance Plan (demo)",from:dAdd(today,-60),items,flights,events,notes,demo:true};DMP_C={k:today,v};return v}
+function demoFlypro(){const today=iso(new Date());if(DFP_C&&DFP_C.k===today)return DFP_C.v;
+  const P=demoMplan(),tails=TAILS.filter(t=>t!=="Off Aircraft"),items=[],R=fpRng("dfp|"+today);
+  const down=(t,day)=>P.items.some(x=>x.tail===t&&/AAG|Retrofit|AOG|Boscombe/.test(x.k)&&mpDay(x.from)<=day&&mpDay(x.to)>=day);
+  const CS=["JIGSW","TARUS","GRZLY","PLMTR","TRUSK","CNTOR","BLNHM","EVAL"],UN=["24 SQN OPS2","24 SQN OPS2 NVG","30/70 CDS OPS2","30/70 LS OPS2","OCU FLY2 OPS2","206 OPS2 AD","30/70 NVG NPAT"];
+  const AWAY=Object.keys(FP_CODES).filter(c=>!["BZZ","TOI","MPN","ASI"].includes(c)),pick=a=>a[Math.floor(R()*a.length)];
+  // one aircraft away on detachment for the first few days, coming home at the end
+  const det=tails.filter(t=>!down(t,today))[3];let rr=4100+Math.floor(R()*60);const DET=rr;rr+=2;
+  for(let n=0;n<7;n++){const day=fpAdd(today,n),free=tails.filter(t=>!down(t,day)&&t!==det),used=new Set();
+    if(det){if(n<4)items.push({tail:det,date:day,no:"RR"+DET,title:"RR"+DET,route:["TOI"],kind:"flight"});else if(n===4)items.push({tail:det,date:day,no:"RR"+(DET+1),title:"RR"+(DET+1),route:["TOI","BZZ"],dep:"11:05",arr:"13:20",kind:"flight"})}
+    const nLoc=2+Math.floor(R()*3),nRte=R()<.75?1+Math.floor(R()*2):0,nGnd=1+Math.floor(R()*2);
+    const take=()=>{const c=free.filter(t=>!used.has(t));if(!c.length)return null;const t=pick(c);used.add(t);return t};
+    for(let i=0;i<nLoc;i++){const t=take();if(!t)break;const dep=8*60+Math.floor(R()*44)*15,len=(2+Math.floor(R()*3))*60,cs=pick(CS)+(10+Math.floor(R()*89));
+      items.push({tail:t,date:day,no:cs,title:cs,unit:pick(UN),dep:fpHM(dep),arr:fpHM(dep+len),kind:"flight"})}
+    for(let i=0;i<nRte;i++){const t=take();if(!t)break;const a=pick(AWAY),b=R()<.4?pick(AWAY.filter(x=>x!==a)):null,dep=6*60+30+Math.floor(R()*26)*15,len=(5+Math.floor(R()*5))*60+Math.floor(R()*4)*15,no="RR"+(++rr+10);
+      const end=dep+len,over=end>=1440;items.push({tail:t,date:day,no,title:no,route:b?["BZZ",a,b,"BZZ"]:["BZZ",a,"BZZ"],dep:fpHM(dep),arr:fpHM(end),...(over?{arrDate:fpAdd(day,1)}:{}),kind:"flight"})}
+    for(let i=0;i<nGnd;i++){const t=take();if(!t)break;items.push({tail:t,date:day,title:pick(["MITS","Engine ground run","Compass swing","Fuel sample","Weighing"]),kind:"task"})}}
+  items.sort((a,b)=>(a.date+(a.dep||"99")).localeCompare(b.date+(b.dep||"99")));
+  const v={ver:"A400M Tasking Programme (demo)",from:today,items,demo:true};DFP_C={k:today,v};return v}
+const FPD=()=>DEMO?demoFlypro():D.flypro,MPD=()=>DEMO?demoMplan():D.mplan;
+const fpReal=()=>{const f=FPD();return !!(f&&Array.isArray(f.items)&&f.items.length)};
 function fpFromReal(){const mins=t=>{if(!t)return null;const [h,m]=t.split(":").map(Number);return h*60+m};
-  return D.flypro.items.filter(x=>x&&typeof x.tail==="string"&&typeof x.date==="string").map((x,i)=>{const r=Array.isArray(x.route)?x.route:[],a=mins(x.dep),b=mins(x.arr),days=x.arrDate?dDiff(x.date,x.arrDate):0,
+  return FPD().items.filter(x=>x&&typeof x.tail==="string"&&typeof x.date==="string").map((x,i)=>{const r=Array.isArray(x.route)?x.route:[],a=mins(x.dep),b=mins(x.arr),days=x.arrDate?dDiff(x.date,x.arrDate):0,
     fh=a!=null&&b!=null?((b-a+days*1440+(b<a&&!days?1440:0))/60):null;
     return{id:x.tail+"-"+x.date+"-"+i,tail:x.tail,date:x.date,no:x.title||x.no||"–",role:x.unit||"",from:r.length===1?"At "+r[0]:r[0]||(x.kind==="flight"?"Local":"Ground"),to:r.length>1?r[r.length-1]:(x.kind==="flight"&&!r.length?"Local":""),route:r,dep:x.dep||"–",arr:x.arr||"–",
       fh:fh!=null?fh.toFixed(1):"–",eh:"–",lg:"–",fc:"–",tg:"–",dy:"–",kind:x.kind!=="flight"?"gnd":r.length>1?"rte":"loc",next:!!x.arrDate||(a!=null&&b!=null&&b<a),real:true}})}
-function fpPlan(){if(fpReal()){const k="real|"+D.flypro.ver+"|"+D.flypro.items.length;if(FP_CACHE&&FP_CACHE.start===k)return FP_CACHE.list;FP_CACHE={start:k,list:fpFromReal()};return FP_CACHE.list}
+function fpPlan(){if(fpReal()){const k="real|"+FPD().ver+"|"+FPD().items.length+"|"+(DEMO?iso(new Date()):"");if(FP_CACHE&&FP_CACHE.start===k)return FP_CACHE.list;FP_CACHE={start:k,list:fpFromReal()};return FP_CACHE.list}
   const start=iso(new Date());if(FP_CACHE&&FP_CACHE.start===start)return FP_CACHE.list;
   const tails=TAILS.filter(t=>t!=="Off Aircraft"),list=[];let away={};
   for(let n=0;n<FP_DAYS;n++){const day=fpAdd(start,n),dow=new Date(day+"T12:00").getDay();
@@ -2665,7 +2714,7 @@ function fpPlan(){if(fpReal()){const k="real|"+D.flypro.ver+"|"+D.flypro.items.l
 function fpFlight(tail,date,no,role,from,to,dep,fh,R,kind){const loc=from===to,tg=loc?Math.floor(R()*7):0,ld=loc?1+Math.floor(R()*3):1;
   return{id:tail+"-"+date+"-"+no,tail,date,no,role,from,to,dep:fpHM(dep),arr:fpHM(dep+fh*60),fh:fh.toFixed(1),eh:(fh+.3+Math.round(R()*3)/10).toFixed(1),lg:ld,fc:ld,tg,dy:loc&&R()<.35?1+Math.floor(R()*2):0,kind,next:dep+fh*60>=1440}}
 const fpPlace=c=>FP_PLACES[c]?FP_PLACES[c]+" ("+c+")":FP_CODES[c]?FP_CODES[c]+" ("+c+")":c||"–";
-function fpSrc(){document.querySelectorAll(".fpsrc").forEach(e=>{e.textContent=fpReal()?(D.flypro.ver||"Flying programme"):"Demo data";e.classList.toggle("real",!!fpReal())})}
+function fpSrc(){document.querySelectorAll(".fpsrc").forEach(e=>{e.textContent=fpReal()?(FPD().ver||"Flying programme"):"Demo data";e.classList.toggle("real",!!fpReal()&&!DEMO)})}
 function renderFPlan(){fpSrc();const l=fpPlan(),start=iso(new Date()),days=[...Array(fpReal()?7:FP_DAYS)].map((_,i)=>fpAdd(start,i)),tails=TAILS.filter(t=>t!=="Off Aircraft");
   const by={};l.forEach(f=>{(by[f.tail+"|"+f.date]=by[f.tail+"|"+f.date]||[]).push(f)});
   const we=d=>[0,6].includes(new Date(d+"T12:00").getDay());
@@ -2728,18 +2777,18 @@ function mpPlan(){const today=iso(new Date());if(MP_CACHE&&MP_CACHE.today===toda
   const cs=inputs.filter(x=>x.c==="c");const keep=inputs.filter(x=>x.c==="c"||!cs.some(c=>c.tail===x.tail&&x.from<c.to&&x.to>c.from));
   MP_CACHE={today,items,inputs:keep,rate};return MP_CACHE}
 /* real maintenance plan (imported from the planners' spreadsheet into D.mplan) – slots are a/p/n = AM / PM / Night thirds of a day */
-const mpReal=()=>!DEMO&&D.mplan&&Array.isArray(D.mplan.items)&&D.mplan.items.length;
+const mpReal=()=>{const m=MPD();return !!(m&&Array.isArray(m.items)&&m.items.length)};
 const mpT=(v,end)=>{const m=String(v||"").match(/^(\d{4}-\d{2}-\d{2})([apn])?$/);if(!m)return null;const k={a:0,p:1,n:2}[m[2]||"a"];return{d:m[1],f:(k+(end?1:0))/3}};
 const mpDay=v=>String(v||"").slice(0,10);
 const mpSlot=v=>({a:"AM",p:"PM",n:"Night"})[String(v||"").slice(10)]||"";
 const mpDk=c=>{const h=String(c||"").replace("#","");if(h.length!==6)return false;const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return (r*299+g*587+b*114)/1000<120};
 const mpNowIn=(x,today)=>mpDay(x.from)<=today&&mpDay(x.to)>=today;
-function mpCurrent(t){if(!mpReal())return null;const today=iso(new Date());const L=D.mplan.items.filter(x=>x.tail===t).sort((a,b)=>a.from.localeCompare(b.from));
+function mpCurrent(t){if(!mpReal())return null;const today=iso(new Date());const L=MPD().items.filter(x=>x.tail===t).sort((a,b)=>a.from.localeCompare(b.from));
   return{now:L.filter(x=>mpNowIn(x,today)),next:L.find(x=>mpDay(x.from)>today)}}
 let MPR_ROWS=[];
-function renderMPReal(){const P=D.mplan,today=iso(new Date()),tails=TAILS.filter(t=>t!=="Off Aircraft");
-  $("#mpSrc").textContent=P.ver||"Maintenance plan";$("#mpSrc").classList.add("real");
-  $("#mpSub").textContent="From the planners' spreadsheet – AM / PM / Night slots"+(P.from?" · history kept from "+fmtD(P.from):"");
+function renderMPReal(){const P=MPD(),today=iso(new Date()),tails=TAILS.filter(t=>t!=="Off Aircraft");
+  $("#mpSrc").textContent=P.ver||"Maintenance plan";$("#mpSrc").classList.toggle("real",!DEMO);
+  $("#mpSub").textContent=(DEMO?"Made-up demo data in the planners' spreadsheet format":"From the planners' spreadsheet")+" – AM / PM / Night slots"+(P.from&&!DEMO?" · history kept from "+fmtD(P.from):"");
   $("#mpGh").textContent="Plan – 2 weeks back to 4 months ahead";$("#mpLh").textContent="Plan list";$("#mpLs").textContent="Current and upcoming inputs, plus planner notes";
   const ts=$("#mpTail"),tc=ts.value,ty=$("#mpType"),tyc=ty.value,st=$("#mpStat"),stc=st.value;
   ts.innerHTML=`<option value="">All aircraft</option>`+tails.map(t=>`<option ${t===tc?"selected":""}>${t}</option>`).join("");
